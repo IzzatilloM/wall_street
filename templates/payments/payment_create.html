@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}New Payment — Wall Street CMS{% endblock %}
+{% block header_section %}New Payment{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'payments:payment_list' %}">Payments</a>
+  <span>•</span> Add new
+{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --p: #0E5C60; --pd: #093D40; --pl: #e6f4f5;
+  --gold: #C9A84C; --gold-lt: #fdf4df;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group.full { grid-column: 1 / -1; }
+
+.form-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--p);
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.form-label .req { color: #ef4444; }
+
+.form-control {
+  height: 50px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 2px solid rgba(14,92,96,0.15);
+  background: #fff;
+  color: #0a2426;
+  font-size: 14px;
+  font-weight: 600;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--p);
+  box-shadow: 0 0 0 5px rgba(14,92,96,0.10);
+  transform: translateY(-1px);
+}
+
+textarea.form-control {
+  height: auto;
+  padding: 14px 16px;
+  resize: vertical;
+}
+
+.form-section {
+  margin-bottom: 28px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--p);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  padding: 0 0 12px;
+  border-bottom: 2px solid rgba(14,92,96,0.12);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Amount preview box ── */
+.amount-preview {
+  padding: 22px 24px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--p), var(--pd));
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+.ap-item { display: flex; flex-direction: column; gap: 4px; }
+.ap-label { font-size: 10px; font-weight: 800; opacity: .7; text-transform: uppercase; letter-spacing: .1em; }
+.ap-val { font-size: 20px; font-weight: 900; }
+.ap-net { color: var(--gold); }
+
+/* ── Submit area ── */
+.form-submit {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(14,92,96,0.10);
+}
+
+.btn-submit {
+  padding: 14px 32px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all .28s ease;
+  border: none;
+}
+.btn-save {
+  background: linear-gradient(135deg, var(--p), var(--pd));
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(14,92,96,0.30);
+}
+.btn-save:hover { transform: translateY(-4px); box-shadow: 0 14px 32px rgba(14,92,96,0.40); }
+.btn-cancel {
+  background: rgba(14,92,96,0.08);
+  color: var(--p);
+  border: 2px solid rgba(14,92,96,0.20);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-cancel:hover { background: rgba(14,92,96,0.15); }
+
+/* ── Autofill hint ── */
+.autofill-hint {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--gold-lt);
+  border: 1.5px solid rgba(201,168,76,0.30);
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a5c10;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.autofill-hint.show { display: flex; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="post" id="paymentForm">
+  {% csrf_token %}
+
+  <!-- ── Student & Course ── -->
+  <div class="form-section">
+    <div class="section-title">👤 Student &amp; course details</div>
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label class="form-label">Student <span class="req">*</span></label>
+        <select name="student" class="form-control" required>
+          <option value="">— Select student —</option>
+          {% for s in students %}
+            <option value="{{ s.pk }}">{{ s.first_name }} {{ s.last_name }}
+              {% if s.phone %} | {{ s.phone }}{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Course <span class="req">*</span></label>
+        <select name="course" class="form-control" id="courseSelect" required>
+          <option value="">— Select course —</option>
+          {% for c in courses %}
+            <option value="{{ c.pk }}">{{ c.title }}
+              {% if c.price %} — {{ c.price|floatformat:0 }} UZS{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+        <div class="autofill-hint" id="autofillHint">
+          ✨ Course price filled automatically
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Teacher</label>
+        <select name="instructor" class="form-control" id="instructorSelect">
+          <option value="">— Select teacher —</option>
+          {% for i in instructors %}
+            <option value="{{ i.pk }}">{{ i.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Payment info ── -->
+  <div class="form-section">
+    <div class="section-title">💳 Payment details</div>
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label class="form-label">Amount (UZS) <span class="req">*</span></label>
+        <input type="number" name="amount" id="amountInput" min="0" step="1000"
+               class="form-control" placeholder="0" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Discount (UZS)</label>
+        <input type="number" name="discount" id="discountInput" min="0" step="1000"
+               class="form-control" placeholder="0" value="0">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Payment method <span class="req">*</span></label>
+        <select name="payment_method" class="form-control" required>
+          {% for val, label in payment_methods %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-control">
+          {% for val, label in statuses %}
+            <option value="{{ val }}" {% if val == 'paid' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Month <span class="req">*</span></label>
+        <select name="payment_month" class="form-control" required>
+          {% for val, label in months %}
+            <option value="{{ val }}" {% if val == current_month %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Year <span class="req">*</span></label>
+        <select name="payment_year" class="form-control" required>
+          {% for y in years %}
+            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Amount preview -->
+      <div class="form-group full">
+        <div class="amount-preview" id="amountPreview">
+          <div class="ap-item">
+            <span class="ap-label">Payment amount</span>
+            <span class="ap-val" id="previewAmount">0 UZS</span>
+          </div>
+          <div class="ap-item">
+            <span class="ap-label">Discount</span>
+            <span class="ap-val" id="previewDiscount">0 UZS</span>
+          </div>
+          <div class="ap-item">
+            <span class="ap-label">Net total</span>
+            <span class="ap-val ap-net" id="previewNet">0 UZS</span>
+          </div>
+          <div class="ap-item">
+            <span class="ap-label">Status</span>
+            <span class="ap-val" style="font-size:14px">✅ Calculated</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group full">
+        <label class="form-label">Note</label>
+        <textarea name="note" class="form-control" rows="3"
+                  placeholder="Additional info..."></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="form-submit">
+    <a href="{% url 'payments:payment_list' %}" class="btn-submit btn-cancel">✖ Cancel</a>
+    <button type="submit" class="btn-submit btn-save">💾 Save &amp; issue receipt</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Amount preview ──
+function updatePreview() {
+  const amt  = parseFloat(document.getElementById('amountInput').value)  || 0;
+  const disc = parseFloat(document.getElementById('discountInput').value) || 0;
+  const net  = Math.max(amt - disc, 0);
+  const fmt  = n => n.toLocaleString('uz-UZ') + ' UZS';
+  document.getElementById('previewAmount').textContent   = fmt(amt);
+  document.getElementById('previewDiscount').textContent = fmt(disc);
+  document.getElementById('previewNet').textContent      = fmt(net);
+}
+document.getElementById('amountInput').addEventListener('input', updatePreview);
+document.getElementById('discountInput').addEventListener('input', updatePreview);
+
+// ── Course autofill ──
+document.getElementById('courseSelect').addEventListener('change', function() {
+  const id = this.value;
+  if (!id) return;
+  fetch(`{% url 'payments:get_course_price' %}?course_id=${id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.price) {
+        document.getElementById('amountInput').value = data.price;
+        updatePreview();
+        document.getElementById('autofillHint').classList.add('show');
+        setTimeout(() => document.getElementById('autofillHint').classList.remove('show'), 3000);
+      }
+      if (data.instructor_id) {
+        const sel = document.getElementById('instructorSelect');
+        sel.value = data.instructor_id;
+      }
+    })
+    .catch(() => {});
+});
+</script>
+{% endblock %}

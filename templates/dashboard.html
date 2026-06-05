@@ -1,0 +1,1648 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard — Wall Street{% endblock %}
+{% block header_section %}Control  Panel{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #0E5C60;
+        --primary-dark: #0A4548;
+        --primary-light: #127277;
+        --accent: #D7B56D;
+        --success: #1F9D67;
+        --danger: #D64545;
+        --warning: #D49B1D;
+        --purple: #7B61FF;
+        --dark: #111827;
+        --text-primary: #17292B;
+        --text-secondary: #6B8385;
+        --text-tertiary: #728A8C;
+        --bg-light: rgba(255,255,255,0.95);
+        --shadow-sm: 0 2px 8px rgba(12,33,35,0.08);
+        --shadow-md: 0 8px 20px rgba(12,33,35,0.10);
+        --shadow-lg: 0 14px 32px rgba(12,33,35,0.12);
+        --shadow-xl: 0 20px 48px rgba(12,33,35,0.16);
+    }
+
+    /* ====================== DASHBOARD SHELL ====================== */
+    .dashboard-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        animation: fadeIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ====================== HERO PANEL ====================== */
+    .hero-panel {
+        position: relative;
+        overflow: hidden;
+        border-radius: 32px;
+        padding: 36px;
+        background:
+            linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%),
+            radial-gradient(circle at top right, rgba(255,255,255,0.18), transparent 26%),
+            radial-gradient(circle at bottom left, rgba(215,181,109,0.14), transparent 24%);
+        color: #fff;
+        box-shadow: 0 28px 72px rgba(14,92,96,0.28);
+        animation: heroScale 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    @keyframes heroScale {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .hero-panel::before {
+        content: "";
+        position: absolute;
+        inset: -50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+        filter: blur(60px);
+        pointer-events: none;
+        animation: drift 8s ease-in-out infinite;
+    }
+
+    @keyframes drift {
+        0%, 100% { transform: translateX(0) translateY(0); }
+        50% { transform: translateX(20px) translateY(-10px); }
+    }
+
+    .hero-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 32px;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-content {
+        min-width: 0;
+    }
+
+    .hero-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1.3;
+        margin-bottom: 14px;
+        background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.95) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.3px;
+    }
+
+    .hero-text {
+        max-width: 580px;
+        color: rgba(255,255,255,0.82);
+        font-size: 15px;
+        line-height: 1.8;
+        font-weight: 500;
+    }
+
+    .hero-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        animation: staggerIn 0.9s ease forwards;
+        animation-delay: 0.1s;
+    }
+
+    @keyframes staggerIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hero-mini {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.10);
+        border: 1px solid rgba(255,255,255,0.12);
+        backdrop-filter: blur(12px);
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .hero-mini::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+        opacity: 0;
+        transition: opacity 0.28s;
+    }
+
+    .hero-mini:hover {
+        background: rgba(255,255,255,0.15);
+        border-color: rgba(255,255,255,0.18);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.20);
+    }
+
+    .hero-mini:hover::before {
+        opacity: 1;
+    }
+
+    .hero-mini-label {
+        font-size: 12px;
+        color: rgba(255,255,255,0.74);
+        margin-bottom: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .hero-mini-value {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 24px;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.2px;
+    }
+
+    .hero-mini-sub {
+        font-size: 11px;
+        color: rgba(255,255,255,0.62);
+        margin-top: 6px;
+        font-weight: 500;
+    }
+
+    /* ====================== STATS GRID ====================== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+    }
+
+    .stat-card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.90));
+        border: 1px solid rgba(14,92,96,0.10);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: var(--shadow-md);
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        overflow: hidden;
+        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+        from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .stat-card::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(14,92,96,0.08), transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        transition: all 0.32s;
+        filter: blur(40px);
+    }
+
+    .stat-card:hover::before {
+        top: -30%;
+        right: -30%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-6px);
+        box-shadow: var(--shadow-lg);
+        border-color: rgba(14,92,96,0.16);
+    }
+
+    .stat-card:active {
+        transform: translateY(-2px);
+    }
+
+    .stat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        background: linear-gradient(135deg, rgba(14,92,96,0.12), rgba(14,92,96,0.06));
+        border: 1px solid rgba(14,92,96,0.10);
+        transition: all 0.28s;
+        position: relative;
+    }
+
+    .stat-card:hover .stat-icon {
+        background: linear-gradient(135deg, rgba(14,92,96,0.18), rgba(14,92,96,0.10));
+        transform: scale(1.12) rotate(6deg);
+        box-shadow: 0 8px 20px rgba(14,92,96,0.16);
+    }
+
+    .stat-badge {
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        transition: all 0.28s;
+    }
+
+    .up {
+        background: rgba(31,157,103,0.14);
+        color: var(--success);
+        border: 1px solid rgba(31,157,103,0.20);
+    }
+
+    .down {
+        background: rgba(214,69,69,0.14);
+        color: var(--danger);
+        border: 1px solid rgba(214,69,69,0.20);
+    }
+
+    .neutral {
+        background: rgba(14,92,96,0.12);
+        color: var(--primary);
+        border: 1px solid rgba(14,92,96,0.18);
+    }
+
+    .stat-card:hover .stat-badge {
+        transform: scale(1.05);
+    }
+
+    .stat-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-value {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 34px;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1;
+        margin-bottom: 10px;
+        letter-spacing: -0.3px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-meta {
+        font-size: 13px;
+        color: var(--text-tertiary);
+        font-weight: 500;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ====================== DASHBOARD GRID ====================== */
+    .dash-grid {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 24px;
+    }
+
+    .card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(255,255,255,0.91));
+        border: 1px solid rgba(14,92,96,0.10);
+        border-radius: 28px;
+        padding: 28px;
+        box-shadow: var(--shadow-md);
+        animation: slideUp 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition: all 0.28s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card::before {
+        content: "";
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(14,92,96,0.08), transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        filter: blur(60px);
+    }
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: rgba(14,92,96,0.16);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .card-header-left {
+        flex: 1;
+    }
+
+    .card-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--text-primary);
+        letter-spacing: -0.2px;
+    }
+
+    .card-subtitle {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .chip {
+        border: none;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(14,92,96,0.10), rgba(14,92,96,0.05));
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.28s;
+        border: 1px solid rgba(14,92,96,0.12);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .chip:hover {
+        background: linear-gradient(135deg, rgba(14,92,96,0.16), rgba(14,92,96,0.10));
+        border-color: rgba(14,92,96,0.20);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(14,92,96,0.12);
+    }
+
+    .chip:active {
+        transform: translateY(0);
+    }
+
+    .chip::before {
+        content: "";
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--primary);
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    /* ====================== CHART BOX ====================== */
+    .chart-box {
+        height: 360px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .chart-box.small {
+        height: 300px;
+    }
+
+    /* ====================== SIDE STACK ====================== */
+    .side-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* ====================== BREAKDOWN LIST ====================== */
+    .breakdown-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .breakdown-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(14,92,96,0.04), rgba(14,92,96,0.02));
+        border: 1px solid rgba(14,92,96,0.08);
+        transition: all 0.28s;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .breakdown-item::before {
+        content: "";
+        position: absolute;
+        left: -100%;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(14,92,96,0.08), transparent);
+        transition: left 0.6s;
+    }
+
+    .breakdown-item:hover {
+        background: linear-gradient(135deg, rgba(14,92,96,0.08), rgba(14,92,96,0.04));
+        border-color: rgba(14,92,96,0.14);
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(14,92,96,0.08);
+    }
+
+    .breakdown-item:hover::before {
+        left: 100%;
+    }
+
+    .breakdown-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+        position: relative;
+        z-index: 1;
+    }
+
+    .color-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 6px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        transition: all 0.28s;
+    }
+
+    .breakdown-item:hover .color-dot {
+        transform: scale(1.15);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    .break-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .break-sub {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        margin-top: 4px;
+    }
+
+    .break-right {
+        text-align: right;
+        position: relative;
+        z-index: 1;
+    }
+
+    .break-amount {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .break-percent {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        margin-top: 4px;
+    }
+
+    /* ====================== TABLE ====================== */
+    .table-wrap {
+        overflow: auto;
+        position: relative;
+        z-index: 1;
+        margin-top: 24px;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+        background: rgba(14,92,96,0.12);
+        border-radius: 10px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb:hover {
+        background: rgba(14,92,96,0.20);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    .data-table thead th {
+        text-align: left;
+        font-size: 11px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        padding: 0 14px 12px;
+        font-weight: 800;
+        border-bottom: 1px solid rgba(14,92,96,0.10);
+    }
+
+    .data-table tbody tr {
+        background: linear-gradient(135deg, rgba(14,92,96,0.04), rgba(14,92,96,0.02));
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+    }
+
+    .data-table tbody tr::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, var(--primary), transparent);
+        border-radius: 8px 0 0 8px;
+        opacity: 0;
+        transition: opacity 0.28s;
+    }
+
+    .data-table tbody tr:hover {
+        background: linear-gradient(135deg, rgba(14,92,96,0.10), rgba(14,92,96,0.06));
+        transform: translateX(4px);
+        box-shadow: 0 6px 16px rgba(14,92,96,0.10);
+    }
+
+    .data-table tbody tr:hover::before {
+        opacity: 1;
+    }
+
+    .data-table tbody td {
+        padding: 16px 14px;
+        font-size: 14px;
+        color: var(--text-primary);
+        vertical-align: middle;
+        font-weight: 500;
+    }
+
+    .data-table tbody tr td:first-child {
+        border-top-left-radius: 16px;
+        border-bottom-left-radius: 16px;
+    }
+
+    .data-table tbody tr td:last-child {
+        border-top-right-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+
+    /* ====================== STUDENT CHIP ====================== */
+    .student-chip {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.28s;
+    }
+
+    .student-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        flex-shrink: 0;
+        box-shadow: 0 8px 20px rgba(14,92,96,0.20);
+        font-size: 16px;
+        transition: all 0.28s;
+    }
+
+    .data-table tbody tr:hover .student-avatar {
+        transform: scale(1.12);
+        box-shadow: 0 12px 28px rgba(14,92,96,0.28);
+    }
+
+    .student-name {
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .student-meta {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        margin-top: 3px;
+    }
+
+    /* ====================== STATUS PILLS ====================== */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        transition: all 0.28s;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid transparent;
+    }
+
+    .status-pill::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.4), transparent);
+        opacity: 0;
+        transition: opacity 0.28s;
+    }
+
+    .status-pill:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+
+    .status-pill:hover::before {
+        opacity: 1;
+    }
+
+    .status-completed {
+        background: rgba(31,157,103,0.14);
+        color: var(--success);
+        border-color: rgba(31,157,103,0.20);
+    }
+
+    .status-pending {
+        background: rgba(212,155,29,0.16);
+        color: var(--warning);
+        border-color: rgba(212,155,29,0.22);
+    }
+
+    .status-cancelled {
+        background: rgba(214,69,69,0.14);
+        color: var(--danger);
+        border-color: rgba(214,69,69,0.20);
+    }
+
+    .status-present {
+        background: rgba(31,157,103,0.14);
+        color: var(--success);
+        border-color: rgba(31,157,103,0.20);
+    }
+
+    .status-absent {
+        background: rgba(214,69,69,0.14);
+        color: var(--danger);
+        border-color: rgba(214,69,69,0.20);
+    }
+
+    .status-late {
+        background: rgba(212,155,29,0.16);
+        color: var(--warning);
+        border-color: rgba(212,155,29,0.22);
+    }
+
+    .status-excused {
+        background: rgba(14,92,96,0.12);
+        color: var(--primary);
+        border-color: rgba(14,92,96,0.18);
+    }
+
+    /* ====================== EMPTY BOX ====================== */
+    .empty-box {
+        text-align: center;
+        padding: 48px 20px;
+        color: var(--text-tertiary);
+        animation: fadeIn 0.4s;
+    }
+
+    .empty-box .emoji {
+        font-size: 48px;
+        margin-bottom: 14px;
+        opacity: 0.6;
+        display: block;
+        animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+    }
+
+    .empty-box-text {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* ====================== RESPONSIVE ====================== */
+    @media (max-width: 1400px) {
+        .hero-grid {
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        }
+
+        .dash-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .hero-metrics {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .card {
+            padding: 20px;
+        }
+
+        .chart-box {
+            height: 300px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .hero-panel {
+            padding: 24px;
+        }
+
+        .hero-title {
+            font-size: 26px;
+        }
+
+        .hero-mini-value {
+            font-size: 20px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+        }
+
+        .chart-box,
+        .chart-box.small {
+            height: 280px;
+        }
+
+        .data-table tbody td {
+            padding: 12px 10px;
+            font-size: 13px;
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 14px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-metrics {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-value {
+            font-size: 24px;
+        }
+
+        .card-header {
+            flex-direction: column;
+        }
+
+        .data-table {
+            font-size: 12px;
+        }
+
+        .data-table tbody td {
+            padding: 10px 8px;
+        }
+
+        .student-meta {
+            display: none;
+        }
+    }
+
+    /* ====================== DARK MODE ====================== */
+    html[data-theme="dark"] .stat-card,
+    html[data-theme="dark"] .card {
+        background: linear-gradient(180deg, rgba(19,42,46,0.94), rgba(14,28,30,0.88));
+        border-color: rgba(255,255,255,0.08);
+    }
+
+    html[data-theme="dark"] .card:hover {
+        border-color: rgba(255,255,255,0.12);
+    }
+
+    html[data-theme="dark"] .stat-value,
+    html[data-theme="dark"] .card-title,
+    html[data-theme="dark"] .break-amount {
+        color: var(--bg-light);
+    }
+
+    html[data-theme="dark"] .hero-mini {
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(255,255,255,0.10);
+    }
+
+    html[data-theme="dark"] .breakdown-item {
+        background: rgba(14,92,96,0.08);
+        border-color: rgba(255,255,255,0.06);
+    }
+
+    html[data-theme="dark"] .data-table tbody tr {
+        background: rgba(14,92,96,0.06);
+    }
+
+    html[data-theme="dark"] .data-table tbody tr:hover {
+        background: rgba(14,92,96,0.12);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-shell">
+
+    <!-- HERO PANEL -->
+    <section class="hero-panel">
+        <div class="hero-grid">
+            <div class="hero-content">
+                <div class="hero-title">Wall Street Education Centre</div>
+                <div class="hero-text">
+                    📊 Professional analytics dashboard for comprehensive student management, course monitoring,
+                    payment tracking, attendance records, instructor oversight, and expense analysis.
+                    Real-time insights for better decision making.
+                </div>
+            </div>
+
+            <div class="hero-metrics">
+                <div class="hero-mini">
+                    <div class="hero-mini-label">📈 Monthly Income</div>
+                    <div class="hero-mini-value">${{ month_income|floatformat:0 }}</div>
+                    <div class="hero-mini-sub">Completed payments</div>
+                </div>
+                <div class="hero-mini">
+                    <div class="hero-mini-label">⏳ Pending Amount</div>
+                    <div class="hero-mini-value">${{ pending_pay_amount|floatformat:0 }}</div>
+                    <div class="hero-mini-sub">Awaiting confirmation</div>
+                </div>
+                <div class="hero-mini">
+                    <div class="hero-mini-label">👥 Active Students</div>
+                    <div class="hero-mini-value">{{ active_students }}</div>
+                    <div class="hero-mini-sub">Currently enrolled</div>
+                </div>
+                <div class="hero-mini">
+                    <div class="hero-mini-label">👨‍🏫 Instructors</div>
+                    <div class="hero-mini-value">{{ total_teachers }}</div>
+                    <div class="hero-mini-sub">Teaching staff</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS GRID -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">🎓</div>
+                <div class="stat-badge neutral">{{ total_students }}</div>
+            </div>
+            <div class="stat-title">Total Students</div>
+            <div class="stat-value counter" data-target="{{ total_students }}">0</div>
+            <div class="stat-meta">{{ active_students }} active • {{ new_students_week }} new this week</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">📚</div>
+                <div class="stat-badge neutral">{{ active_courses }} running</div>
+            </div>
+            <div class="stat-title">Active Courses</div>
+            <div class="stat-value counter" data-target="{{ total_courses }}">0</div>
+            <div class="stat-meta">{{ total_courses }} total programs available</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">💰</div>
+                <div class="stat-badge {% if income_growth_percent > 0 %}up{% elif income_growth_percent < 0 %}down{% else %}neutral{% endif %}">
+                    {% if income_growth_percent > 0 %}↑ +{{ income_growth_percent }}%{% elif income_growth_percent < 0 %}↓ {{ income_growth_percent }}%{% else %}→ 0%{% endif %}
+                </div>
+            </div>
+            <div class="stat-title">Monthly Revenue</div>
+            <div class="stat-value">${{ month_income|floatformat:0 }}</div>
+            <div class="stat-meta">${{ week_income|floatformat:0 }} earned in last 7 days</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-badge neutral">{{ pending_pay_count }}</div>
+            </div>
+            <div class="stat-title">Pending Payments</div>
+            <div class="stat-value">${{ pending_pay_amount|floatformat:0 }}</div>
+            <div class="stat-meta">Awaiting confirmation from students</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">📋</div>
+                <div class="stat-badge neutral">{{ total_attendance_records }}</div>
+            </div>
+            <div class="stat-title">Attendance Records</div>
+            <div class="stat-value counter" data-target="{{ total_attendance_records }}">0</div>
+            <div class="stat-meta">Complete attendance history</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">✅</div>
+                <div class="stat-badge up">{{ present_count }}</div>
+            </div>
+            <div class="stat-title">Present</div>
+            <div class="stat-value counter" data-target="{{ present_count }}">0</div>
+            <div class="stat-meta">Students present in class</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">❌</div>
+                <div class="stat-badge down">{{ absent_count }}</div>
+            </div>
+            <div class="stat-title">Absent</div>
+            <div class="stat-value counter" data-target="{{ absent_count }}">0</div>
+            <div class="stat-meta">Students absent from class</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon">🕐</div>
+                <div class="stat-badge neutral">{{ late_count }}</div>
+            </div>
+            <div class="stat-title">Late Arrivals</div>
+            <div class="stat-value counter" data-target="{{ late_count }}">0</div>
+            <div class="stat-meta">Students who arrived late</div>
+        </div>
+    </section>
+
+    <!-- MAIN DASHBOARD GRID -->
+    <section class="dash-grid">
+        <div>
+            <!-- INCOME CHART -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">💹 Revenue Trends</div>
+                        <div class="card-subtitle">Monthly income analysis for the last 6 months</div>
+                    </div>
+                    <button class="chip">Live Data</button>
+                </div>
+                <div class="chart-box">
+                    <canvas id="incomeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- RECENT PAYMENTS TABLE -->
+            <div class="card" style="margin-top: 24px;">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">💳 Recent Transactions</div>
+                        <div class="card-subtitle">Latest 10 payment records from the system</div>
+                    </div>
+                    <button class="chip">View All</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Amount</th>
+                            <th>Receipt</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for pay in recent_payments %}
+                        <tr>
+                            <td>
+                                <div class="student-chip">
+                                    <div class="student-avatar">
+                                        {{ pay.student.first_name|default:"S"|first|upper }}{{ pay.student.last_name|default:"U"|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="student-name">
+                                            {% if pay.student.full_name %}
+                                                {{ pay.student.full_name }}
+                                            {% else %}
+                                                {{ pay.student.first_name }} {{ pay.student.last_name }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="student-meta">Student</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if pay.course %}
+                                    <strong>{{ pay.course.name }}</strong>
+                                {% else %}
+                                    <span style="color: #999;">—</span>
+                                {% endif %}
+                            </td>
+                            <td><strong style="font-size: 15px;">${{ pay.amount|floatformat:0 }}</strong></td>
+                            <td>
+                                <code style="background: rgba(14,92,96,0.08); padding: 4px 8px; border-radius: 6px; font-size: 12px;">
+                                    {{ pay.receipt_number|default:"—" }}
+                                </code>
+                            </td>
+                            <td>{{ pay.date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="status-pill
+                                    {% if pay.status == 'completed' %}status-completed
+                                    {% elif pay.status == 'pending' %}status-pending
+                                    {% else %}status-cancelled{% endif %}">
+                                    {{ pay.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-box">
+                                    <span class="emoji">💳</span>
+                                    <div class="empty-box-text">No payment records found</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RECENT ATTENDANCE TABLE -->
+            <div class="card" style="margin-top: 24px;">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">📍 Recent Attendance</div>
+                        <div class="card-subtitle">Latest attendance records and class participation</div>
+                    </div>
+                    <a href="#" class="chip">View All</a>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Instructor</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in recent_attendances %}
+                        <tr>
+                            <td>
+                                <div class="student-chip">
+                                    <div class="student-avatar">
+                                        {{ item.student.first_name|default:"S"|first|upper }}{{ item.student.last_name|default:"U"|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="student-name">
+                                            {% if item.student.full_name %}
+                                                {{ item.student.full_name }}
+                                            {% else %}
+                                                {{ item.student.first_name }} {{ item.student.last_name }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="student-meta">Student</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><strong>{{ item.course }}</strong></td>
+                            <td>
+                                {% if item.teacher %}
+                                    {% if item.teacher.get_full_name %}
+                                        {{ item.teacher.get_full_name }}
+                                    {% else %}
+                                        {{ item.teacher.username }}
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: #999;">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="status-pill
+                                    {% if item.status == 'present' %}status-present
+                                    {% elif item.status == 'absent' %}status-absent
+                                    {% elif item.status == 'late' %}status-late
+                                    {% else %}status-excused{% endif %}">
+                                    {{ item.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-box">
+                                    <span class="emoji">📘</span>
+                                    <div class="empty-box-text">No attendance records found</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR CHARTS -->
+        <div class="side-stack">
+            <!-- PAYMENT STATUS CHART -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">📊 Payment Status</div>
+                        <div class="card-subtitle">Completed, pending, cancelled breakdown</div>
+                    </div>
+                </div>
+                <div class="chart-box small">
+                    <canvas id="paymentStatusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- EXPENSE BREAKDOWN CHART -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">💸 Expenses</div>
+                        <div class="card-subtitle">Current month expense distribution</div>
+                    </div>
+                    <div class="chip">
+                        {% if expense_this_month %}
+                            <span>${{ expense_this_month|floatformat:0 }}</span>
+                        {% else %}
+                            <span>No Data</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="chart-box small">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+
+                <div class="breakdown-list">
+                    {% for item in expense_breakdown %}
+                    <div class="breakdown-item">
+                        <div class="breakdown-left">
+                            <div class="color-dot"
+                                 style="background: {% cycle '#0E5C60' '#D7B56D' '#1F9D67' '#D64545' '#7B61FF' '#111827' %};"></div>
+                            <div>
+                                <div class="break-title">{{ item.label }}</div>
+                                <div class="break-sub">Current month</div>
+                            </div>
+                        </div>
+                        <div class="break-right">
+                            <div class="break-amount">${{ item.amount|floatformat:0 }}</div>
+                            <div class="break-percent">{{ item.percent }}%</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-box">
+                        <span class="emoji">📉</span>
+                        <div class="empty-box-text">No expense data available</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- TOP COURSES CHART -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">🏆 Top Courses</div>
+                        <div class="card-subtitle">Courses with highest attendance</div>
+                    </div>
+                </div>
+                <div class="chart-box small">
+                    <canvas id="courseChart"></canvas>
+                </div>
+            </div>
+
+            <!-- TEACHER ACTIVITY CHART -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">👨‍🏫 Teacher Activity</div>
+                        <div class="card-subtitle">Attendance records by instructor</div>
+                    </div>
+                </div>
+                <div class="chart-box small">
+                    <canvas id="teacherChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    'use strict';
+
+    const primaryColor = '#0E5C60';
+    const goldColor = '#D7B56D';
+    const greenColor = '#1F9D67';
+    const redColor = '#D64545';
+    const purpleColor = '#7B61FF';
+    const darkColor = '#111827';
+
+    // ======================== NUMBER COUNTERS ========================
+    function initializeCounters() {
+        document.querySelectorAll('.counter').forEach(el => {
+            const target = parseInt(el.dataset.target || '0');
+            let current = 0;
+            const step = Math.max(1, Math.ceil(target / 60));
+            const increment = () => {
+                current = Math.min(current + step, target);
+                el.textContent = current.toLocaleString();
+                if (current < target) {
+                    requestAnimationFrame(increment);
+                }
+            };
+            increment();
+        });
+    }
+
+    initializeCounters();
+
+    // ======================== CHART CONFIGURATION ========================
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    font: { weight: '700', size: 12 },
+                    color: '#6B8385',
+                    padding: 16,
+                    usePointStyle: true,
+                    pointStyle: 'circle'
+                }
+            },
+            tooltip: {
+                backgroundColor: '#132A2E',
+                titleColor: '#fff',
+                bodyColor: '#DCE9E9',
+                borderColor: 'rgba(14,92,96,0.20)',
+                borderWidth: 1,
+                padding: 14,
+                cornerRadius: 12,
+                displayColors: true,
+                boxPadding: 10
+            }
+        }
+    };
+
+    // ======================== INCOME CHART ========================
+    const incomeLabels = {{ chart_labels_json|safe }};
+    const incomeValues = {{ chart_income_json|safe }};
+
+    const incomeCtx = document.getElementById('incomeChart');
+    if (incomeCtx) {
+        new Chart(incomeCtx, {
+            type: 'bar',
+            data: {
+                labels: incomeLabels,
+                datasets: [{
+                    label: 'Monthly Income',
+                    data: incomeValues,
+                    backgroundColor: [
+                        '#0E5C60', '#127277', '#159096',
+                        '#1AA9B0', '#1FC0C8', '#28D7DF'
+                    ],
+                    borderRadius: 12,
+                    borderSkipped: false,
+                    maxBarThickness: 52,
+                    hoverBackgroundColor: '#0E5C60'
+                }]
+            },
+            options: {
+                ...chartOptions,
+                animation: {
+                    duration: 1600,
+                    easing: 'easeOutQuart'
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#6E8688',
+                            font: { weight: '700', size: 12 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(14,92,96,0.08)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6E8688',
+                            font: { weight: '600' },
+                            callback: value => '$' + Number(value).toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ======================== PAYMENT STATUS CHART ========================
+    const paymentStatusLabels = {{ payment_status_labels_json|safe }};
+    const paymentStatusValues = {{ payment_status_values_json|safe }};
+
+    const paymentCtx = document.getElementById('paymentStatusChart');
+    if (paymentCtx) {
+        new Chart(paymentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: paymentStatusLabels,
+                datasets: [{
+                    data: paymentStatusValues,
+                    backgroundColor: [primaryColor, goldColor, redColor, purpleColor],
+                    borderColor: '#fff',
+                    borderWidth: 3,
+                    hoverBorderWidth: 4
+                }]
+            },
+            options: {
+                ...chartOptions,
+                cutout: '70%',
+                animation: {
+                    duration: 1400,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+
+    // ======================== EXPENSE CHART ========================
+    const expenseLabels = {{ expense_chart_labels_json|safe }};
+    const expenseValues = {{ expense_chart_values_json|safe }};
+
+    const expenseCtx = document.getElementById('expenseChart');
+    if (expenseCtx) {
+        new Chart(expenseCtx, {
+            type: 'pie',
+            data: {
+                labels: expenseLabels,
+                datasets: [{
+                    data: expenseValues,
+                    backgroundColor: [primaryColor, goldColor, greenColor, redColor, purpleColor, darkColor],
+                    borderColor: '#fff',
+                    borderWidth: 3,
+                    hoverBorderWidth: 4
+                }]
+            },
+            options: {
+                ...chartOptions,
+                animation: {
+                    duration: 1400,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+
+    // ======================== COURSE CHART ========================
+    const courseLabels = {{ top_courses_labels_json|safe }};
+    const courseValues = {{ top_courses_values_json|safe }};
+
+    const courseCtx = document.getElementById('courseChart');
+    if (courseCtx) {
+        new Chart(courseCtx, {
+            type: 'bar',
+            data: {
+                labels: courseLabels,
+                datasets: [{
+                    label: 'Attendance Count',
+                    data: courseValues,
+                    backgroundColor: primaryColor,
+                    borderRadius: 12,
+                    borderSkipped: false,
+                    hoverBackgroundColor: '#127277'
+                }]
+            },
+            options: {
+                ...chartOptions,
+                indexAxis: 'y',
+                animation: {
+                    duration: 1400,
+                    easing: 'easeOutQuart'
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(14,92,96,0.08)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6E8688',
+                            font: { weight: '600' }
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#4F6769',
+                            font: { weight: '700', size: 12 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ======================== TEACHER CHART ========================
+    const teacherLabels = {{ teacher_labels_json|safe }};
+    const teacherValues = {{ teacher_values_json|safe }};
+
+    const teacherCtx = document.getElementById('teacherChart');
+    if (teacherCtx) {
+        new Chart(teacherCtx, {
+            type: 'bar',
+            data: {
+                labels: teacherLabels,
+                datasets: [{
+                    label: 'Records Count',
+                    data: teacherValues,
+                    backgroundColor: goldColor,
+                    borderRadius: 12,
+                    borderSkipped: false,
+                    hoverBackgroundColor: '#B8933D'
+                }]
+            },
+            options: {
+                ...chartOptions,
+                animation: {
+                    duration: 1400,
+                    easing: 'easeOutQuart'
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(14,92,96,0.08)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6E8688',
+                            font: { weight: '600' }
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#4F6769',
+                            font: { weight: '700', size: 12 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ======================== INTERACTIVE ANIMATIONS ========================
+    document.querySelectorAll('.stat-card, .card').forEach(element => {
+        element.addEventListener('mousedown', function() {
+            this.style.transform = 'scale(0.985)';
+        });
+        element.addEventListener('mouseup', function() {
+            this.style.transform = '';
+        });
+    });
+
+    // ======================== TABLE ROW INTERACTIONS ========================
+    document.querySelectorAll('.data-table tbody tr').forEach(row => {
+        row.addEventListener('mouseover', function() {
+            this.style.zIndex = '10';
+        });
+        row.addEventListener('mouseout', function() {
+            this.style.zIndex = 'auto';
+        });
+    });
+</script>
+{% endblock %}

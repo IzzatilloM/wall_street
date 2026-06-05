@@ -1,0 +1,35 @@
+<div class="events-list-container">
+    {% if events %}
+    {% for evt in events %}
+    <div class="evt-list-item
+                {% if evt.type == 'mock_day' %}mock-day
+                {% elif evt.type == 'mock_result' %}mock-result
+                {% elif evt.type == 'holiday' %}holiday
+                {% elif evt.type == 'study_break' %}study-break{% endif %}">
+        <div class="evt-list-emo">{{ evt.icon }}</div>
+        <div class="evt-list-body">
+            <div class="evt-list-date">{{ evt.date_str }} · {{ evt.day_name }}</div>
+            <div class="evt-list-title">{{ evt.title }}</div>
+            {% if evt.description %}
+            <div class="evt-list-desc">{{ evt.description }}</div>
+            {% endif %}
+        </div>
+        <div class="evt-list-pill
+                    {% if evt.type == 'mock_day' %}pill-red
+                    {% elif evt.type == 'mock_result' %}pill-green
+                    {% elif evt.type == 'holiday' %}pill-amber
+                    {% else %}pill-teal{% endif %}">
+            {% if evt.type == 'mock_day' %}Mock Day
+            {% elif evt.type == 'mock_result' %}Mock Result
+            {% elif evt.type == 'holiday' %}Holiday
+            {% elif evt.type == 'study_break' %}Study Break
+            {% else %}{{ evt.type }}{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color: var(--text-faint); font-size: 14px; padding: 20px 0;">
+        📭 No events of the selected type this month.
+    </p>
+    {% endif %}
+</div>

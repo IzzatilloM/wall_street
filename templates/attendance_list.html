@@ -1,0 +1,881 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance — Wall Street{% endblock %}
+{% block header_section %}Attendance{% endblock %}
+{% block breadcrumb %}Attendance{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --att-primary: #0E5C60;
+        --att-primary-dark: #0A4548;
+        --att-primary-light: #127277;
+        --att-accent: #D7B56D;
+        --att-success: #1F9D67;
+        --att-danger: #D64545;
+        --att-warning: #D49B1D;
+        --att-text: #17292B;
+        --att-text-soft: #6B8385;
+        --att-line: rgba(14,92,96,0.10);
+        --att-shadow-sm: 0 2px 8px rgba(12,33,35,0.08);
+        --att-shadow-md: 0 8px 20px rgba(12,33,35,0.10);
+        --att-shadow-lg: 0 14px 32px rgba(12,33,35,0.14);
+    }
+
+    .att-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+        animation: attFade 0.55s cubic-bezier(0.34,1.56,0.64,1);
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    @keyframes attFade {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ───────── HERO ───────── */
+    .att-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 30px;
+        padding: 30px 34px;
+        background:
+            linear-gradient(135deg, var(--att-primary-dark) 0%, var(--att-primary) 52%, var(--att-primary-light) 100%),
+            radial-gradient(circle at top right, rgba(255,255,255,0.18), transparent 28%);
+        color: #fff;
+        box-shadow: 0 26px 64px rgba(14,92,96,0.30);
+        border: 1px solid rgba(255,255,255,0.12);
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        flex-wrap: wrap;
+    }
+    .att-hero::before {
+        content: "";
+        position: absolute;
+        inset: -50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+        filter: blur(60px);
+        pointer-events: none;
+        animation: attDrift 9s ease-in-out infinite;
+    }
+    @keyframes attDrift {
+        0%,100% { transform: translateX(0) translateY(0); }
+        50%     { transform: translateX(22px) translateY(-12px); }
+    }
+    .att-hero-id { display: flex; align-items: center; gap: 18px; position: relative; z-index: 2; }
+
+    /* TEACHER AVATAR */
+    .att-avatar {
+        width: 74px; height: 74px; flex-shrink: 0;
+        border-radius: 22px;
+        background: rgba(255,255,255,0.14);
+        border: 2px solid rgba(255,255,255,0.30);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 26px; font-weight: 800; color: #fff;
+        overflow: hidden;
+        box-shadow: 0 10px 26px rgba(0,0,0,0.22), inset 0 0 0 4px rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
+        transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .att-avatar:hover { transform: rotate(-4deg) scale(1.06); }
+    .att-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .att-avatar .att-av-ring {
+        position: absolute; width: 74px; height: 74px; border-radius: 22px;
+        box-shadow: 0 0 0 0 rgba(215,181,109,0.55);
+        animation: attPulse 2.4s ease-out infinite; pointer-events: none;
+    }
+    @keyframes attPulse {
+        0%   { box-shadow: 0 0 0 0 rgba(215,181,109,0.5); }
+        70%  { box-shadow: 0 0 0 14px rgba(215,181,109,0); }
+        100% { box-shadow: 0 0 0 0 rgba(215,181,109,0); }
+    }
+    .att-hero-meta .att-greet {
+        font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+        color: rgba(255,255,255,0.72); font-weight: 700; margin-bottom: 4px;
+    }
+    .att-hero-meta .att-uname {
+        font-size: 25px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.15;
+    }
+    .att-hero-meta .att-role {
+        display: inline-flex; align-items: center; gap: 7px; margin-top: 9px;
+        padding: 5px 13px; border-radius: 999px;
+        background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.2);
+        font-size: 12px; font-weight: 700;
+    }
+    .att-role .att-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: var(--att-accent); box-shadow: 0 0 8px var(--att-accent);
+    }
+    .att-hero-rate {
+        margin-left: auto; position: relative; z-index: 2; text-align: center;
+        padding: 16px 26px; border-radius: 22px;
+        background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16);
+        backdrop-filter: blur(12px);
+        transition: transform 0.3s, background 0.3s;
+    }
+    .att-hero-rate:hover { transform: translateY(-4px); background: rgba(255,255,255,0.16); }
+    .att-hero-rate .num { font-size: 34px; font-weight: 800; line-height: 1; }
+    .att-hero-rate .lbl { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+        color: rgba(255,255,255,0.78); margin-top: 8px; font-weight: 700; }
+
+    /* ───────── STAT CARDS ───────── */
+    .att-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    .att-stat {
+        background: #fff;
+        border: 1px solid var(--att-line);
+        border-radius: 22px;
+        padding: 20px 22px;
+        box-shadow: var(--att-shadow-sm);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.28s, border-color 0.28s;
+    }
+    .att-stat::after {
+        content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+        background: var(--c, var(--att-primary)); opacity: 0.9;
+        transition: width 0.28s;
+    }
+    .att-stat:hover { transform: translateY(-6px); box-shadow: var(--att-shadow-lg); border-color: var(--c, var(--att-primary)); }
+    .att-stat:hover::after { width: 7px; }
+    .att-stat-top { display: flex; align-items: center; justify-content: space-between; }
+    .att-stat-ico {
+        width: 44px; height: 44px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center; font-size: 20px;
+        background: color-mix(in srgb, var(--c, var(--att-primary)) 13%, #fff);
+        color: var(--c, var(--att-primary));
+        transition: transform 0.3s;
+    }
+    .att-stat:hover .att-stat-ico { transform: scale(1.12) rotate(-6deg); }
+    .att-stat-trend { font-size: 11px; font-weight: 700; color: var(--att-text-soft); }
+    .att-stat-val {
+        font-size: 30px; font-weight: 800; color: var(--att-text);
+        margin-top: 14px; letter-spacing: -0.5px; line-height: 1;
+    }
+    .att-stat-lbl { font-size: 12.5px; color: var(--att-text-soft); margin-top: 6px; font-weight: 600; }
+
+    /* ───────── TOOLBAR / FILTERS ───────── */
+    .att-panel {
+        background: #fff;
+        border: 1px solid var(--att-line);
+        border-radius: 26px;
+        box-shadow: var(--att-shadow-md);
+        overflow: hidden;
+    }
+    .att-toolbar {
+        display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--att-line);
+        background: linear-gradient(180deg, rgba(14,92,96,0.04), transparent);
+    }
+    .att-toolbar .att-title-wrap { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+    .att-toolbar .att-title-ico {
+        width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, var(--att-primary), var(--att-primary-light)); color: #fff; font-size: 18px;
+        box-shadow: 0 6px 16px rgba(14,92,96,0.30);
+    }
+    .att-toolbar h3 { font-size: 16px; font-weight: 800; color: var(--att-text); letter-spacing: -0.2px; }
+    .att-toolbar .att-sub { font-size: 12px; color: var(--att-text-soft); font-weight: 600; }
+
+    .att-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 22px; }
+    .att-ctrl {
+        height: 42px; padding: 0 14px; border-radius: 12px;
+        border: 1px solid var(--att-line); background: #fff; color: var(--att-text);
+        font-size: 13px; font-weight: 600; font-family: inherit; outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .att-ctrl:focus { border-color: var(--att-primary); box-shadow: 0 0 0 3px rgba(14,92,96,0.12); }
+    .att-ctrl:hover { border-color: var(--att-primary-light); }
+    .att-search { flex: 1; min-width: 200px; }
+
+    .att-btn {
+        height: 42px; padding: 0 18px; border-radius: 12px; border: none; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 13px; font-weight: 700; font-family: inherit; text-decoration: none;
+        transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+        white-space: nowrap;
+    }
+    .att-btn-primary { background: linear-gradient(135deg, var(--att-primary), var(--att-primary-light)); color: #fff;
+        box-shadow: 0 8px 20px rgba(14,92,96,0.28); }
+    .att-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(14,92,96,0.38); }
+    .att-btn-outline { background: #fff; color: var(--att-primary); border: 1px solid var(--att-line); }
+    .att-btn-outline:hover { background: rgba(14,92,96,0.06); border-color: var(--att-primary); transform: translateY(-2px); }
+    .att-btn-danger { background: linear-gradient(135deg, var(--att-danger), #b83a3a); color: #fff;
+        box-shadow: 0 8px 20px rgba(214,69,69,0.28); }
+    .att-btn-danger:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(214,69,69,0.4); }
+
+    /* ───────── TABLE ───────── */
+    .att-table-wrap { overflow-x: auto; }
+    table.att-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .att-table thead th {
+        text-align: left; padding: 14px 22px; font-size: 11px; font-weight: 800;
+        letter-spacing: 0.08em; text-transform: uppercase; color: var(--att-text-soft);
+        background: rgba(14,92,96,0.035); border-bottom: 1px solid var(--att-line);
+        position: sticky; top: 0;
+    }
+    .att-table tbody td { padding: 14px 22px; border-bottom: 1px solid rgba(14,92,96,0.06); vertical-align: middle; }
+    .att-table tbody tr { transition: background 0.18s; }
+    .att-table tbody tr:hover { background: rgba(14,92,96,0.045); }
+    .att-table tbody tr:last-child td { border-bottom: none; }
+
+    .att-student { display: flex; align-items: center; gap: 12px; }
+    .att-st-av {
+        width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 14px; color: #fff;
+        background: linear-gradient(135deg, var(--att-primary), var(--att-primary-light));
+        box-shadow: 0 4px 12px rgba(14,92,96,0.25);
+    }
+    .att-st-name { font-weight: 700; color: var(--att-text); }
+    .att-st-id { font-size: 11.5px; color: var(--att-text-soft); font-weight: 600; }
+    .att-co-name { font-weight: 700; color: var(--att-text); }
+    .att-co-code { font-size: 11.5px; color: var(--att-text-soft); font-weight: 600; }
+    .att-dt-date { font-weight: 700; color: var(--att-text); }
+    .att-dt-day { font-size: 11.5px; color: var(--att-text-soft); font-weight: 600; }
+
+    .att-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 800;
+    }
+    .att-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .att-pill-present { color: var(--att-success); background: rgba(31,157,103,0.12); }
+    .att-pill-absent  { color: var(--att-danger);  background: rgba(214,69,69,0.12); }
+    .att-pill-late    { color: var(--att-warning); background: rgba(212,155,29,0.14); }
+
+    .att-pct { display: flex; align-items: center; gap: 10px; min-width: 130px; }
+    .att-pct-bar { flex: 1; height: 7px; border-radius: 999px; background: rgba(14,92,96,0.10); overflow: hidden; }
+    .att-pct-fill { height: 100%; border-radius: 999px; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+    .att-pf-hi  { background: linear-gradient(90deg, var(--att-success), #34c98a); }
+    .att-pf-mid { background: linear-gradient(90deg, var(--att-warning), #e6b94d); }
+    .att-pf-lo  { background: linear-gradient(90deg, var(--att-danger), #e36a6a); }
+    .att-pct-num { font-size: 12px; font-weight: 800; color: var(--att-text); min-width: 42px; text-align: right; }
+
+    .att-actions { display: flex; gap: 6px; }
+    .att-act {
+        width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--att-line);
+        background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+        font-size: 14px; text-decoration: none; color: var(--att-text);
+        transition: transform 0.18s, box-shadow 0.18s, background 0.18s, border-color 0.18s;
+    }
+    .att-act:hover { transform: translateY(-2px); box-shadow: var(--att-shadow-sm); background: rgba(14,92,96,0.06); border-color: var(--att-primary); }
+    .att-act.del:hover { background: rgba(214,69,69,0.10); border-color: var(--att-danger); }
+    .att-act.coin:hover { background: rgba(215,181,109,0.18); border-color: var(--att-accent); }
+
+    /* COIN PILL */
+    .att-coin-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 800;
+        color: #8a6a10; background: linear-gradient(135deg, rgba(215,181,109,0.22), rgba(215,181,109,0.12));
+        border: 1px solid rgba(215,181,109,0.4);
+    }
+
+    /* COIN QUICK BUTTONS */
+    .att-coin-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+    .att-coin-qbtn {
+        flex: 1; min-width: 56px; padding: 9px 0; border-radius: 10px; cursor: pointer;
+        font-weight: 800; font-size: 13px; border: 1px solid var(--att-line);
+        background: #fff; color: var(--att-text); transition: all .18s;
+    }
+    .att-coin-qbtn:hover { background: rgba(215,181,109,0.16); border-color: var(--att-accent); transform: translateY(-2px); }
+    .att-coin-qbtn.minus:hover { background: rgba(214,69,69,0.12); border-color: var(--att-danger); }
+    .att-coin-current {
+        text-align: center; font-size: 13px; color: var(--att-text-soft);
+        margin-bottom: 14px; font-weight: 600;
+    }
+    .att-coin-current b { color: #8a6a10; font-size: 16px; }
+
+    /* EMPTY */
+    .att-empty { text-align: center; padding: 60px 20px; }
+    .att-empty-ico { font-size: 46px; opacity: 0.5; }
+    .att-empty-title { font-size: 16px; font-weight: 800; color: var(--att-text); margin-top: 12px; }
+    .att-empty-sub { font-size: 13px; color: var(--att-text-soft); margin-top: 6px; }
+
+    /* PAGINATION */
+    .att-pag { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+        padding: 16px 22px; border-top: 1px solid var(--att-line); flex-wrap: wrap; }
+    .att-pag-info { font-size: 12.5px; color: var(--att-text-soft); font-weight: 600; }
+    .att-pag-info b { color: var(--att-text); }
+    .att-pag-btns { display: flex; gap: 6px; }
+    .att-pag-btn {
+        min-width: 36px; height: 36px; padding: 0 12px; border-radius: 10px;
+        border: 1px solid var(--att-line); background: #fff; color: var(--att-text);
+        font-size: 13px; font-weight: 700; text-decoration: none;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: transform 0.18s, background 0.18s, color 0.18s, border-color 0.18s;
+    }
+    .att-pag-btn:hover { background: rgba(14,92,96,0.06); border-color: var(--att-primary); transform: translateY(-2px); }
+    .att-pag-btn.active { background: linear-gradient(135deg, var(--att-primary), var(--att-primary-light)); color: #fff; border-color: transparent; }
+    .att-pag-btn.off { opacity: 0.4; pointer-events: none; }
+
+    /* ───────── MODALS ───────── */
+    .att-modal { position: fixed; inset: 0; z-index: 2000; display: none;
+        align-items: center; justify-content: center; padding: 20px;
+        background: rgba(10,33,35,0.55); backdrop-filter: blur(6px); }
+    .att-modal.open { display: flex; animation: attFadeM 0.2s ease; }
+    @keyframes attFadeM { from { opacity: 0; } to { opacity: 1; } }
+    .att-modal-box { width: 100%; max-width: 460px; background: #fff; border-radius: 24px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.35); overflow: hidden;
+        animation: attPop 0.32s cubic-bezier(0.34,1.56,0.64,1); }
+    .att-modal-box.sm { max-width: 380px; }
+    @keyframes attPop { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: none; } }
+    .att-modal-head { display: flex; align-items: center; justify-content: space-between;
+        padding: 20px 24px; border-bottom: 1px solid var(--att-line); }
+    .att-modal-title { font-size: 16px; font-weight: 800; color: var(--att-text); }
+    .att-modal-close { width: 32px; height: 32px; border-radius: 10px; border: none; background: rgba(14,92,96,0.07);
+        cursor: pointer; font-size: 18px; color: var(--att-text-soft); transition: background 0.18s, color 0.18s; }
+    .att-modal-close:hover { background: rgba(214,69,69,0.12); color: var(--att-danger); }
+    .att-modal-body { padding: 22px 24px; }
+    .att-fg { margin-bottom: 16px; }
+    .att-fg label { display: block; font-size: 12px; font-weight: 700; color: var(--att-text-soft); margin-bottom: 7px; }
+    .att-fg .att-ctrl { width: 100%; }
+    .att-modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+    .att-del-body { text-align: center; padding: 26px 24px; }
+    .att-del-ico { font-size: 42px; }
+    .att-del-title { font-size: 17px; font-weight: 800; color: var(--att-text); margin-top: 10px; }
+    .att-del-sub { font-size: 13px; color: var(--att-text-soft); margin-top: 6px; }
+
+    @media (max-width: 720px) {
+        .att-hero { padding: 24px; }
+        .att-hero-rate { margin-left: 0; width: 100%; }
+        .att-hero-meta .att-uname { font-size: 21px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="att-shell">
+
+    {# ───────── HERO ───────── #}
+    <div class="att-hero">
+        <div class="att-hero-id">
+            <div class="att-avatar">
+                <span class="att-av-ring"></span>
+                {% if request.user.avatar %}
+                    <img src="{{ request.user.avatar.url }}" alt="avatar">
+                {% else %}
+                    {{ request.user.first_name|first|default:"U"|upper }}{{ request.user.last_name|first|default:""|upper }}
+                {% endif %}
+            </div>
+            <div class="att-hero-meta">
+                <div class="att-greet">Attendance management</div>
+                <div class="att-uname">{{ request.user.get_full_name|default:request.user.username }}</div>
+                <span class="att-role">
+                    <span class="att-dot"></span>
+                    {% if request.user.role == 'teacher' %}Teacher{% else %}{{ request.user.role|default:"Administrator"|capfirst }}{% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="att-hero-rate">
+            <div class="num">{{ present_rate|default:0 }}%</div>
+            <div class="lbl">Attendance rate</div>
+        </div>
+    </div>
+
+    {# ───────── STAT CARDS ───────── #}
+    <div class="att-stats">
+        <div class="att-stat" style="--c: var(--att-primary);">
+            <div class="att-stat-top">
+                <div class="att-stat-ico">📋</div>
+                <div class="att-stat-trend">Total</div>
+            </div>
+            <div class="att-stat-val">{{ total_records|default:0 }}</div>
+            <div class="att-stat-lbl">Attendance records</div>
+        </div>
+        <div class="att-stat" style="--c: var(--att-success);">
+            <div class="att-stat-top">
+                <div class="att-stat-ico">✅</div>
+                <div class="att-stat-trend">Present</div>
+            </div>
+            <div class="att-stat-val">{{ present_count|default:0 }}</div>
+            <div class="att-stat-lbl">Present</div>
+        </div>
+        <div class="att-stat" style="--c: var(--att-danger);">
+            <div class="att-stat-top">
+                <div class="att-stat-ico">❌</div>
+                <div class="att-stat-trend">Absent</div>
+            </div>
+            <div class="att-stat-val">{{ absent_count|default:0 }}</div>
+            <div class="att-stat-lbl">Absent</div>
+        </div>
+        <div class="att-stat" style="--c: var(--att-warning);">
+            <div class="att-stat-top">
+                <div class="att-stat-ico">⏰</div>
+                <div class="att-stat-trend">Late</div>
+            </div>
+            <div class="att-stat-val">{{ late_count|default:0 }}</div>
+            <div class="att-stat-lbl">Late</div>
+        </div>
+        <div class="att-stat" style="--c: var(--att-accent);">
+            <div class="att-stat-top">
+                <div class="att-stat-ico">📅</div>
+                <div class="att-stat-trend">Today</div>
+            </div>
+            <div class="att-stat-val">{{ today_count|default:0 }}</div>
+            <div class="att-stat-lbl">Today's records</div>
+        </div>
+    </div>
+
+    {# ───────── PANEL ───────── #}
+    <div class="att-panel">
+
+        <div class="att-toolbar">
+            <div class="att-title-wrap">
+                <div class="att-title-ico">✅</div>
+                <div>
+                    <h3>Attendance list</h3>
+                    <div class="att-sub">{{ total_records|default:0 }} records · {{ courses_count|default:0 }} courses</div>
+                </div>
+            </div>
+
+            <a href="{% url 'attendance:export_attendance' %}?course={{ selected_course|default:'' }}&date={{ selected_date|default:'' }}"
+               class="att-btn att-btn-outline">⬇ Export CSV</a>
+
+            {% if request.user.is_staff or request.user.role == 'teacher' %}
+            <button type="button" class="att-btn att-btn-outline" onclick="attCoinPicker()" style="border-color:rgba(215,181,109,.5);color:#8a6a10;">🪙 Coin berish</button>
+            <button type="button" class="att-btn att-btn-primary" onclick="attOpen('markModal')">＋ Mark attendance</button>
+            {% endif %}
+        </div>
+
+        {# FILTERS #}
+        <form method="GET" action="{% url 'attendance:attendance_list' %}" id="attFilterForm" class="att-filters">
+            <select class="att-ctrl" name="course" id="courseFilter" onchange="this.form.submit()">
+                <option value="">All courses</option>
+                {% for course in courses %}
+                <option value="{{ course.id }}">{{ course.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="date" class="att-ctrl" name="date" id="dateFilter" onchange="this.form.submit()">
+            <select class="att-ctrl" name="status" id="statusFilter" onchange="this.form.submit()">
+                <option value="">All statuses</option>
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+                <option value="late">Late</option>
+            </select>
+            <input type="text" class="att-ctrl att-search" name="search" id="searchInput"
+                   placeholder="🔍 Search by student name or ID..."
+                   value="{{ search_query|default:'' }}">
+            <a href="{% url 'attendance:attendance_list' %}" class="att-btn att-btn-outline">↺ Tozalash</a>
+        </form>
+
+        {# TABLE #}
+        <div class="att-table-wrap">
+            <table class="att-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Sana</th>
+                        <th>Attendance %</th>
+                        <th>🪙 Coins</th>
+                        {% if request.user.is_staff or request.user.role == 'teacher' %}
+                        <th style="text-align:right;">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if attendances %}
+                    {% for item in attendances %}
+                    <tr>
+                        <td>
+                            <div class="att-student">
+                                <div class="att-st-av">{{ item.student.user.first_name|first|upper }}{{ item.student.user.last_name|first|upper }}</div>
+                                <div>
+                                    <div class="att-st-name">{{ item.student.user.get_full_name }}</div>
+                                    <div class="att-st-id">{{ item.student.student_id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="att-co-name">{{ item.course.name }}</div>
+                            <div class="att-co-code">{{ item.course.code }}</div>
+                        </td>
+                        <td><span class="att-pill att-pill-{{ item.status }}">{{ item.get_status_display }}</span></td>
+                        <td>
+                            <div class="att-dt-date">{{ item.date|date:"M d, Y" }}</div>
+                            <div class="att-dt-day">{{ item.date|date:"l" }}</div>
+                        </td>
+                        <td>
+                            <div class="att-pct">
+                                <div class="att-pct-bar">
+                                    <div class="att-pct-fill {% if item.course_attendance_percent >= 75 %}att-pf-hi{% elif item.course_attendance_percent >= 50 %}att-pf-mid{% else %}att-pf-lo{% endif %}"
+                                         style="width:{{ item.course_attendance_percent }}%"></div>
+                                </div>
+                                <div class="att-pct-num">{{ item.course_attendance_percent }}%</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="att-coin-pill">🪙 {{ item.student.coin_balance }}</span>
+                        </td>
+                        {% if request.user.is_staff or request.user.role == 'teacher' %}
+                        <td>
+                            <div class="att-actions" style="justify-content:flex-end;">
+                                <button class="att-act coin" title="Coin berish"
+                                        onclick="attCoin({{ item.student.id }}, '{{ item.student.user.get_full_name|escapejs }}', {{ item.student.coin_balance }})">🪙</button>
+                                <button class="att-act" title="Edit"
+                                        onclick="attEdit({{ item.id }},'{{ item.status }}','{{ item.note|escapejs }}')">✏️</button>
+                                <a href="{% url 'attendance:student_attendance_detail' item.student.id %}" class="att-act" title="Details">👁</a>
+                                <button class="att-act del" title="Delete" onclick="attDel({{ item.id }})">🗑</button>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="{% if request.user.is_staff or request.user.role == 'teacher' %}7{% else %}6{% endif %}">
+                            <div class="att-empty">
+                                <div class="att-empty-ico">📭</div>
+                                <div class="att-empty-title">No attendance records found</div>
+                                <div class="att-empty-sub">Filtrlarni o'zgartiring yoki yangi davomat belgilang.</div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {# PAGINATION #}
+        {% if attendances.has_other_pages %}
+        <div class="att-pag">
+            <div class="att-pag-info">
+                Sahifa <b>{{ attendances.number }}</b> / <b>{{ attendances.paginator.num_pages }}</b>
+                &nbsp;·&nbsp; jami <b>{{ attendances.paginator.count }}</b> ta
+            </div>
+            <div class="att-pag-btns">
+                {% if attendances.has_previous %}
+                <a href="?page={{ attendances.previous_page_number }}&course={{ selected_course|default:'' }}&date={{ selected_date|default:'' }}&status={{ selected_status|default:'' }}&search={{ search_query|default:'' }}"
+                   class="att-pag-btn">← Oldingi</a>
+                {% else %}<span class="att-pag-btn off">← Oldingi</span>{% endif %}
+
+                {% for num in attendances.paginator.page_range %}
+                    {% if attendances.number == num %}
+                        <span class="att-pag-btn active">{{ num }}</span>
+                    {% elif num > attendances.number|add:'-3' and num < attendances.number|add:'3' %}
+                        <a href="?page={{ num }}&course={{ selected_course|default:'' }}&date={{ selected_date|default:'' }}&status={{ selected_status|default:'' }}&search={{ search_query|default:'' }}"
+                           class="att-pag-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if attendances.has_next %}
+                <a href="?page={{ attendances.next_page_number }}&course={{ selected_course|default:'' }}&date={{ selected_date|default:'' }}&status={{ selected_status|default:'' }}&search={{ search_query|default:'' }}"
+                   class="att-pag-btn">Keyingi →</a>
+                {% else %}<span class="att-pag-btn off">Keyingi →</span>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ───────── MODALS ───────── #}
+{% if request.user.is_staff or request.user.role == 'teacher' %}
+
+<div class="att-modal" id="markModal">
+    <div class="att-modal-box">
+        <div class="att-modal-head">
+            <div class="att-modal-title">Mark attendance</div>
+            <button class="att-modal-close" onclick="attClose('markModal')">×</button>
+        </div>
+        <div class="att-modal-body">
+            <form method="POST" action="{% url 'attendance:mark_attendance' %}">
+                {% csrf_token %}
+                <div class="att-fg">
+                    <label>Course <span style="color:#ef4444">*</span></label>
+                    <select name="course" id="markCourse" class="att-ctrl" required onchange="filterStudentsByCourse()">
+                        <option value="">Select a course first...</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}">{{ course.name }} ({{ course.code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="att-fg">
+                    <label>Student <span style="color:#ef4444">*</span></label>
+                    <select name="student" id="markStudent" class="att-ctrl" required disabled>
+                        <option value="">Select a course first...</option>
+                    </select>
+                    <small id="markStudentHint" style="color:#94a3b8;font-size:11px;display:block;margin-top:4px;">
+                        Students depend on the selected course.
+                    </small>
+                </div>
+                <div class="att-fg">
+                    <label>Sana</label>
+                    <input type="date" name="date" class="att-ctrl" required id="markDate">
+                </div>
+                <div class="att-fg">
+                    <label>Status</label>
+                    <select name="status" class="att-ctrl" required>
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                        <option value="late">Late</option>
+                    </select>
+                </div>
+                <div class="att-fg">
+                    <label>Note (optional)</label>
+                    <input type="text" name="note" class="att-ctrl" placeholder="Add a note...">
+                </div>
+                <div class="att-modal-foot">
+                    <button type="button" class="att-btn att-btn-outline" onclick="attClose('markModal')">Cancel</button>
+                    <button type="submit" class="att-btn att-btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="att-modal" id="editModal">
+    <div class="att-modal-box">
+        <div class="att-modal-head">
+            <div class="att-modal-title">Edit attendance</div>
+            <button class="att-modal-close" onclick="attClose('editModal')">×</button>
+        </div>
+        <div class="att-modal-body">
+            <form method="POST" id="editForm">
+                {% csrf_token %}
+                <div class="att-fg">
+                    <label>Status</label>
+                    <select name="status" id="editStatus" class="att-ctrl" required>
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                        <option value="late">Late</option>
+                    </select>
+                </div>
+                <div class="att-fg">
+                    <label>Note</label>
+                    <input type="text" name="note" id="editNote" class="att-ctrl" placeholder="Add a note...">
+                </div>
+                <div class="att-modal-foot">
+                    <button type="button" class="att-btn att-btn-outline" onclick="attClose('editModal')">Cancel</button>
+                    <button type="submit" class="att-btn att-btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="att-modal" id="deleteModal">
+    <div class="att-modal-box sm">
+        <div class="att-modal-head" style="border-bottom-color:rgba(214,69,69,.15);">
+            <div class="att-modal-title" style="color:var(--att-danger);">Delete record</div>
+            <button class="att-modal-close" onclick="attClose('deleteModal')">×</button>
+        </div>
+        <div class="att-del-body">
+            <span class="att-del-ico">🗑</span>
+            <div class="att-del-title">Ishonchingiz komilmi?</div>
+            <div class="att-del-sub">Bu amalni ortga qaytarib bo'lmaydi.</div>
+        </div>
+        <div class="att-modal-foot" style="justify-content:center; padding: 0 24px 24px;">
+            <button type="button" class="att-btn att-btn-outline" onclick="attClose('deleteModal')">Cancel</button>
+            <form method="POST" id="deleteForm" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="att-btn att-btn-danger">O'chirish</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="att-modal" id="coinModal">
+    <div class="att-modal-box">
+        <div class="att-modal-head" style="border-bottom-color:rgba(215,181,109,.3);">
+            <div class="att-modal-title">🪙 Coin berish — <span id="coinStudentName">—</span></div>
+            <button class="att-modal-close" onclick="attClose('coinModal')">×</button>
+        </div>
+        <div class="att-modal-body">
+            <form method="POST" id="coinForm">
+                {% csrf_token %}
+                <div class="att-fg" id="coinStudentPickWrap">
+                    <label>Talaba <span style="color:#ef4444">*</span></label>
+                    <select id="coinStudent" class="att-ctrl" onchange="coinStudentChanged()">
+                        <option value="">— Talabani tanlang —</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}" data-coins="{{ student.coin_balance }}" data-name="{{ student.user.get_full_name|escapejs }}">
+                            {{ student.user.get_full_name }} — {{ student.student_id }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="att-coin-current">
+                    Joriy balans: <b id="coinCurrent">0</b> 🪙
+                </div>
+
+                <div class="att-fg">
+                    <label>Tezkor tanlov</label>
+                    <div class="att-coin-quick">
+                        <button type="button" class="att-coin-qbtn" onclick="coinQuick(5)">+5</button>
+                        <button type="button" class="att-coin-qbtn" onclick="coinQuick(10)">+10</button>
+                        <button type="button" class="att-coin-qbtn" onclick="coinQuick(25)">+25</button>
+                        <button type="button" class="att-coin-qbtn" onclick="coinQuick(50)">+50</button>
+                        <button type="button" class="att-coin-qbtn minus" onclick="coinQuick(-5)">−5</button>
+                    </div>
+                </div>
+
+                <div class="att-fg">
+                    <label>Coin miqdori (manfiy = ayirish) <span style="color:#ef4444">*</span></label>
+                    <input type="number" name="amount" id="coinAmount" class="att-ctrl" value="10" required>
+                </div>
+                <div class="att-fg">
+                    <label>Sabab (ixtiyoriy)</label>
+                    <input type="text" name="reason" id="coinReason" class="att-ctrl"
+                           placeholder="Masalan: Faollik uchun, uy vazifasi...">
+                </div>
+                <div class="att-modal-foot">
+                    <button type="button" class="att-btn att-btn-outline" onclick="attClose('coinModal')">Cancel</button>
+                    <button type="submit" class="att-btn att-btn-primary">🪙 Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var ATT_FD = {
+        course: "{{ selected_course|default:'' }}",
+        date:   "{{ selected_date|default:'' }}",
+        status: "{{ selected_status|default:'' }}"
+    };
+
+    // Barcha talabalar (kurs bo'yicha filtrlash uchun)
+    var ATT_STUDENTS = [
+        {% for s in students %}
+        { id: "{{ s.id }}", name: "{{ s.user.get_full_name|escapejs }}", sid: "{{ s.student_id|escapejs }}",
+          courses: [{% for c in s.courses.all %}"{{ c.id }}"{% if not forloop.last %},{% endif %}{% endfor %}] }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (ATT_FD.course) document.getElementById('courseFilter').value = ATT_FD.course;
+        if (ATT_FD.date)   document.getElementById('dateFilter').value   = ATT_FD.date;
+        if (ATT_FD.status) document.getElementById('statusFilter').value = ATT_FD.status;
+
+        var md = document.getElementById('markDate');
+        if (md) md.value = new Date().toISOString().split('T')[0];
+
+        var si = document.getElementById('searchInput');
+        if (si) si.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') document.getElementById('attFilterForm').submit();
+        });
+    });
+
+    function attOpen(id)  { document.getElementById(id).classList.add('open'); }
+    function attClose(id) { document.getElementById(id).classList.remove('open'); }
+
+    // Kurs tanlanganda, faqat o'sha kursdagi talabalarni ro'yxatni qaytadan quramiz
+    function filterStudentsByCourse() {
+        var courseId   = document.getElementById('markCourse').value;
+        var studentSel = document.getElementById('markStudent');
+        var hint       = document.getElementById('markStudentHint');
+
+        // ro'yxatni tozalab, qaytadan to'ldiramiz (eng ishonchli usul)
+        studentSel.innerHTML = '';
+        var ph = document.createElement('option');
+        ph.value = '';
+        studentSel.appendChild(ph);
+
+        if (!courseId) {
+            ph.text = 'Select a course first...';
+            studentSel.disabled = true;
+            hint.textContent = 'Students depend on the selected course.';
+            return;
+        }
+
+        var matched = ATT_STUDENTS.filter(function (s) {
+            return s.courses.indexOf(courseId) !== -1;
+        });
+
+        if (matched.length === 0) {
+            ph.text = 'Bu kursda talaba yo\'q';
+            studentSel.disabled = true;
+            hint.textContent = 'Bu kursga hali talaba yozilmagan.';
+            return;
+        }
+
+        ph.text = 'Select a student...';
+        matched.forEach(function (s) {
+            var o = document.createElement('option');
+            o.value = s.id;
+            o.text = s.name + ' — ' + s.sid;
+            studentSel.appendChild(o);
+        });
+        studentSel.disabled = false;
+        hint.textContent = matched.length + ' students found.';
+    }
+
+    function attEdit(id, status, note) {
+        document.getElementById('editForm').action = '/attendance/update/' + id + '/';
+        document.getElementById('editStatus').value = status;
+        document.getElementById('editNote').value   = note || '';
+        attOpen('editModal');
+    }
+    function attDel(id) {
+        document.getElementById('deleteForm').action = '/attendance/delete/' + id + '/';
+        attOpen('deleteModal');
+    }
+
+    // Jadval qatoridan: talaba oldindan tanlangan
+    function attCoin(studentId, studentName, currentBalance) {
+        var sel = document.getElementById('coinStudent');
+        if (sel) sel.value = studentId;
+        document.getElementById('coinForm').action = '/attendance/student/' + studentId + '/coins/';
+        document.getElementById('coinStudentName').textContent = studentName || '—';
+        document.getElementById('coinCurrent').textContent = currentBalance;
+        document.getElementById('coinAmount').value = 10;
+        document.getElementById('coinReason').value = '';
+        attOpen('coinModal');
+    }
+    // Toolbar'dan: istalgan talabani tanlab coin berish
+    function attCoinPicker() {
+        var sel = document.getElementById('coinStudent');
+        if (sel) sel.value = '';
+        document.getElementById('coinForm').action = '';
+        document.getElementById('coinStudentName').textContent = '—';
+        document.getElementById('coinCurrent').textContent = '0';
+        document.getElementById('coinAmount').value = 10;
+        document.getElementById('coinReason').value = '';
+        attOpen('coinModal');
+    }
+    // Modaldagi talaba dropdowni o'zgarganda
+    function coinStudentChanged() {
+        var sel = document.getElementById('coinStudent');
+        var opt = sel.options[sel.selectedIndex];
+        if (!sel.value) {
+            document.getElementById('coinForm').action = '';
+            document.getElementById('coinStudentName').textContent = '—';
+            document.getElementById('coinCurrent').textContent = '0';
+            return;
+        }
+        document.getElementById('coinForm').action = '/attendance/student/' + sel.value + '/coins/';
+        document.getElementById('coinStudentName').textContent = opt.getAttribute('data-name') || '—';
+        document.getElementById('coinCurrent').textContent = opt.getAttribute('data-coins') || '0';
+    }
+    function coinQuick(val) {
+        document.getElementById('coinAmount').value = val;
+    }
+    // Coin formani yuborishdan oldin talaba tanlanganini tekshirish
+    document.addEventListener('DOMContentLoaded', function () {
+        var cf = document.getElementById('coinForm');
+        if (cf) cf.addEventListener('submit', function (e) {
+            var sel = document.getElementById('coinStudent');
+            if (sel && !sel.value) {
+                e.preventDefault();
+                alert("Iltimos, avval talabani tanlang.");
+            }
+        });
+    });
+
+    document.addEventListener('click', function (e) {
+        document.querySelectorAll('.att-modal.open').forEach(function (m) {
+            if (e.target === m) m.classList.remove('open');
+        });
+    });
+</script>
+{% endblock %}

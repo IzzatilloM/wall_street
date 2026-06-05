@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - Wall Street{% endblock %}
+{% block header_section %}Reports{% endblock %}
+{% block breadcrumb %}Reports &amp; analytics{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    /* Bootstrap reboot barcha <a> ga underline qo'shadi (sidebar brand, ⚙ icon...).
+       base.html mavzusidagidek pastki chiziqni olib tashlaymiz. */
+    a, a:hover, a:focus, a:visited, a:active { text-decoration: none !important; }
+    :root{
+        --primary-color:#0ea5b0;--success-color:#10b981;--warning-color:#f59e0b;
+        --danger-color:#ef4444;--info-color:#3b82f6;--secondary-color:#64748b;
+        --dark-color:#0f172a;--border-color:rgba(15,23,42,.1);
+    }
+    .ws-page-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px;}
+    .ws-page-head h2{font-size:20px;font-weight:700;color:var(--dark-color);margin:0;}
+    .ws-page-head .subtitle{font-size:13px;color:var(--secondary-color);margin-top:2px;}
+    .stat-card{background:#fff;border:1px solid var(--border-color);border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);height:100%;transition:transform .2s,box-shadow .2s;}
+    .stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.08);}
+    .stat-card .icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;margin-bottom:12px;}
+    .stat-card h3{font-size:22px;font-weight:700;margin:0;color:var(--dark-color);}
+    .empty-state{text-align:center;padding:46px 20px;color:var(--secondary-color);}
+    .empty-state i{font-size:40px;opacity:.35;margin-bottom:12px;}
+    .card{border:1px solid var(--border-color);border-radius:14px;}
+    .table thead th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--secondary-color);}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ws-page-head">
+    <div>
+        <h2>Reports &amp; analytics</h2>
+        <div class="subtitle">Financial metrics for {{ year }}</div>
+    </div>
+    <form method="get">
+        <select name="year" class="form-select" onchange="this.form.submit()" style="width: 140px;">
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<!-- Finance summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-sm-6">
+        <div class="stat-card">
+            <div class="icon" style="background: var(--success-color);"><i class="fas fa-arrow-trend-up"></i></div>
+            <h3>{{ total_income|floatformat:0 }}</h3>
+            <p class="text-muted mb-0">Total income (UZS)</p>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6">
+        <div class="stat-card">
+            <div class="icon" style="background: var(--danger-color);"><i class="fas fa-arrow-trend-down"></i></div>
+            <h3>{{ total_expense|floatformat:0 }}</h3>
+            <p class="text-muted mb-0">Expenses / salaries (UZS)</p>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6">
+        <div class="stat-card">
+            <div class="icon" style="background: var(--primary-color);"><i class="fas fa-sack-dollar"></i></div>
+            <h3 class="{% if net_profit < 0 %}text-danger{% else %}text-success{% endif %}">{{ net_profit|floatformat:0 }}</h3>
+            <p class="text-muted mb-0">Net profit (UZS)</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="mb-3">Income &amp; expense trends</h5>
+                <canvas id="financeChart" height="110"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="mb-3">Overview</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between px-0"><span><i class="fas fa-user-graduate text-primary me-2"></i>Students</span><strong>{{ total_students }}</strong></li>
+                    <li class="list-group-item d-flex justify-content-between px-0"><span><i class="fas fa-book text-success me-2"></i>Courses</span><strong>{{ total_courses }}</strong></li>
+                    <li class="list-group-item d-flex justify-content-between px-0"><span><i class="fas fa-chalkboard-teacher text-info me-2"></i>Teachers</span><strong>{{ total_instructors }}</strong></li>
+                    <li class="list-group-item d-flex justify-content-between px-0"><span><i class="fas fa-clipboard-list text-warning me-2"></i>Active enrollments</span><strong>{{ active_enrollments }}</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="mb-3">Top courses by enrollments</h5>
+        {% if top_courses %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr><th>#</th><th>Course</th><th>Price</th><th class="text-end">Enrollments</th></tr>
+                </thead>
+                <tbody>
+                    {% for c in top_courses %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="fw-semibold">{{ c.title }}</td>
+                        <td>{{ c.price|floatformat:0 }} UZS</td>
+                        <td class="text-end"><span class="badge bg-primary">{{ c.n }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="fas fa-chart-bar d-block"></i>No data</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('financeChart');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ month_labels_json|safe }},
+            datasets: [
+                {
+                    label: 'Income',
+                    data: {{ income_json|safe }},
+                    backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                    borderRadius: 5,
+                },
+                {
+                    label: 'Expense',
+                    data: {{ expense_json|safe }},
+                    backgroundColor: 'rgba(239, 68, 59, 0.75)',
+                    borderRadius: 5,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() } } }
+        }
+    });
+</script>
+{% endblock %}

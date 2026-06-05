@@ -1,0 +1,1368 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Courses — Wall Street{% endblock %}
+{% block header_section %}Courses{% endblock %}
+{% block breadcrumb %}Courses{% endblock %}
+
+{% block content %}
+<div class="courses-page">
+
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- Header -->
+    <section class="courses-header">
+        <div class="courses-header__left">
+            <div class="page-badge">
+                <i class="fas fa-layer-group"></i>
+                <span>Course Management Panel</span>
+            </div>
+            <h1 class="page-title">
+                Professional <span>course</span> management system
+            </h1>
+            <p class="page-subtitle">
+                Create, edit and delete courses, view students within a course,
+                and transfer students from one course to another in a modern management panel.
+            </p>
+        </div>
+        <div class="courses-header__right">
+            <button class="primary-btn" onclick="openModal('createCourseModal')">
+                <i class="fas fa-plus-circle"></i>
+                <span>Create new course</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats-row">
+        <div class="stat-card">
+            <div class="stat-card__icon"><i class="fas fa-book-open"></i></div>
+            <div>
+                <h4>Total courses</h4>
+                <h2>{{ total_courses }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__icon"><i class="fas fa-user-graduate"></i></div>
+            <div>
+                <h4>Total students</h4>
+                <h2>{{ total_students|default:"0" }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div>
+                <h4>Teacherlar</h4>
+                <h2>{{ total_teachers|default:"0" }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__icon"><i class="fas fa-chart-line"></i></div>
+            <div>
+                <h4>Active courses</h4>
+                <h2>{{ active_courses_count|default:"0" }}</h2>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search and filter -->
+    <section class="toolbar-panel">
+        <form method="get" class="toolbar-form">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" placeholder="Search by course name..." value="{{ request.GET.q }}">
+            </div>
+            <div class="filter-box">
+                <i class="fas fa-layer-group"></i>
+                <select name="level">
+                    <option value="">Select level</option>
+                    {% for value, label in form.level.field.choices %}
+                    <option value="{{ value }}" {% if request.GET.level == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="secondary-btn">
+                <i class="fas fa-filter"></i>
+                <span>Filter</span>
+            </button>
+        </form>
+    </section>
+
+    <!-- Course grid -->
+    <section class="courses-grid">
+        {% for course in courses %}
+        <div class="course-card">
+            <div class="course-card__top">
+                <div class="course-avatar">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <div class="course-badges">
+                    <span class="badge badge-level">{{ course.get_level_display|default:"No level" }}</span>
+                    <span class="badge badge-duration">{{ course.duration_display }}</span>
+                </div>
+            </div>
+            <div class="course-card__body">
+                <h3>{{ course.title }}</h3>
+                <p class="course-desc">
+                    {% if course.description %}
+                    {{ course.description|truncatechars:120 }}
+                    {% else %}
+                    Ushbu kurs uchun tavsif kiritilmagan.
+                    {% endif %}
+                </p>
+                <div class="course-info-list">
+                    <div class="course-info-item">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span><strong>Teacher:</strong> {{ course.teacher.full_name|default:"Unknown" }}</span>
+                    </div>
+                    <div class="course-info-item">
+                        <i class="fas fa-user-graduate"></i>
+                        <span><strong>Students:</strong> {{ course.student_count }}</span>
+                    </div>
+                    <div class="course-info-item">
+                        <i class="fas fa-clock"></i>
+                        <span><strong>Duration:</strong> {{ course.duration_display }}</span>
+                    </div>
+                    <div class="course-info-item">
+                        <i class="fas fa-calendar-week"></i>
+                        <span><strong>Jadval:</strong>
+                            {% if course.schedule_display %}{{ course.schedule_display }}{% else %}—{% endif %}
+                        </span>
+                    </div>
+                    <div class="course-info-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span><strong>Category:</strong> {{ course.get_category_display }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="course-card__footer">
+                <button class="action-btn info-btn" onclick="openModal('detailModal{{ course.id }}')">
+                    <i class="fas fa-eye"></i>
+                    <span>Details</span>
+                </button>
+                <button class="action-btn edit-btn" onclick="openModal('editModal{{ course.id }}')">
+                    <i class="fas fa-pen"></i>
+                    <span>Edit</span>
+                </button>
+                <button class="action-btn students-btn" onclick="openModal('studentsModal{{ course.id }}')">
+                    <i class="fas fa-users"></i>
+                    <span>Students</span>
+                </button>
+                <button class="action-btn delete-btn" onclick="openModal('deleteModal{{ course.id }}')">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-courses">
+            <div class="empty-courses__icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <h2>No courses found</h2>
+            <p>There are no courses yet. Start by creating a new course.</p>
+            <button class="primary-btn" onclick="openModal('createCourseModal')">
+                <i class="fas fa-plus-circle"></i>
+                <span>Create new course</span>
+            </button>
+        </div>
+        {% endfor %}
+    </section>
+</div>
+
+<!-- ============================================================
+     MODALS — body ga to'g'ridan to'g'ri yozilgan (sidebar tashqarida)
+     ============================================================ -->
+
+<!-- CREATE COURSE MODAL -->
+<div class="custom-modal" id="createCourseModal">
+    <div class="modal-overlay" onclick="closeModal('createCourseModal')"></div>
+    <div class="modal-box modal-xl">
+        <div class="modal-header">
+            <h2><i class="fas fa-plus-circle"></i> Create new course</h2>
+            <button class="close-btn" onclick="closeModal('createCourseModal')">&times;</button>
+        </div>
+        <div class="modal-content">
+            <form method="post" action="{% url 'courses:course_create' %}" class="modal-form">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Course name</label>
+                        <input type="text" name="title" placeholder="Masalan: IELTS Intensive" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teacher</label>
+                        <select name="teacher">
+                            <option value="">Select teacher</option>
+                            {% for teacher in teachers %}
+                            <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category" required>
+                            {% for value, label in form.category.field.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Level</label>
+                        <select name="level" required>
+                            {% for value, label in form.level.field.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <input type="number" name="duration_value" min="1" value="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration unit</label>
+                        <select name="duration_unit" required>
+                            {% for value, label in form.duration_unit.field.choices %}
+                            <option value="{{ value }}" {% if value == 'month' %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (UZS)</label>
+                        <input type="number" name="price" min="0" step="0.01" value="0" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Dars kunlari (odatda haftada 3 kun)</label>
+                        <div class="weekday-pills">
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="mon"><span>Dush</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="tue"><span>Sesh</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="wed"><span>Chor</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="thu"><span>Pay</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="fri"><span>Jum</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="sat"><span>Shan</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="sun"><span>Yak</span></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Boshlanish vaqti</label>
+                        <input type="time" name="start_time" value="08:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Tugash vaqti</label>
+                        <input type="time" name="end_time" value="10:00">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Description</label>
+                        <textarea name="description" rows="5"
+                                  placeholder="Enter detailed course information..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-bottom-actions">
+                    <button type="button" class="secondary-btn" onclick="closeModal('createCourseModal')">
+                        <i class="fas fa-times"></i> <span>Cancel</span>
+                    </button>
+                    <button type="submit" class="primary-btn">
+                        <i class="fas fa-plus-circle"></i> <span>Yaratish</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- PER-COURSE MODALS -->
+{% for course in courses %}
+
+<!-- DETAIL MODAL -->
+<div class="custom-modal" id="detailModal{{ course.id }}">
+    <div class="modal-overlay" onclick="closeModal('detailModal{{ course.id }}')"></div>
+    <div class="modal-box modal-xl">
+        <div class="modal-header">
+            <h2><i class="fas fa-info-circle"></i> Full course information</h2>
+            <button class="close-btn" onclick="closeModal('detailModal{{ course.id }}')">&times;</button>
+        </div>
+        <div class="modal-content">
+            <div class="detail-grid">
+                <div class="detail-card">
+                    <span>Course name</span>
+                    <h3>{{ course.title }}</h3>
+                </div>
+                <div class="detail-card">
+                    <span>Teacher</span>
+                    <h3>{{ course.teacher.full_name|default:"Unknown" }}</h3>
+                </div>
+                <div class="detail-card">
+                    <span>Level</span>
+                    <h3>{{ course.get_level_display|default:"Beginner" }}</h3>
+                </div>
+                <div class="detail-card">
+                    <span>Duration</span>
+                    <h3>{{ course.duration_display }}</h3>
+                </div>
+                <div class="detail-card">
+                    <span>Number of students</span>
+                    <h3>{{ course.student_count }}</h3>
+                </div>
+                <div class="detail-card">
+                    <span>Category</span>
+                    <h3>{{ course.get_category_display }}</h3>
+                </div>
+                <div class="detail-card">
+                    <span>Dars kunlari</span>
+                    <h3>{{ course.weekdays_display|default:"—" }}</h3>
+                </div>
+                <div class="detail-card">
+                    <span>Dars vaqti</span>
+                    <h3>{{ course.time_display|default:"—" }}</h3>
+                </div>
+            </div>
+            <div class="detail-description">
+                <h4>Course description</h4>
+                <p>
+                    {% if course.description %}
+                    {{ course.description }}
+                    {% else %}
+                    Ushbu kurs uchun batafsil tavsif kiritilmagan.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="modal-bottom-actions">
+                <button class="secondary-btn" onclick="closeModal('detailModal{{ course.id }}')">
+                    <i class="fas fa-times"></i> <span>Close</span>
+                </button>
+                <button class="primary-btn"
+                        onclick="closeModal('detailModal{{ course.id }}'); openModal('editModal{{ course.id }}')">
+                    <i class="fas fa-pen"></i> <span>Edit</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="custom-modal" id="editModal{{ course.id }}">
+    <div class="modal-overlay" onclick="closeModal('editModal{{ course.id }}')"></div>
+    <div class="modal-box modal-xl">
+        <div class="modal-header">
+            <h2><i class="fas fa-pen"></i> Edit course</h2>
+            <button class="close-btn" onclick="closeModal('editModal{{ course.id }}')">&times;</button>
+        </div>
+        <div class="modal-content">
+            <form method="post" action="{% url 'courses:course_update' course.id %}" class="modal-form">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Course name</label>
+                        <input type="text" name="title" value="{{ course.title }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teacher</label>
+                        <select name="teacher">
+                            <option value="">Select teacher</option>
+                            {% for teacher in teachers %}
+                            <option value="{{ teacher.id }}" {% if course.teacher_id == teacher.id %}selected{% endif %}>
+                                {{ teacher.full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category" required>
+                            {% for value, label in form.category.field.choices %}
+                            <option value="{{ value }}" {% if course.category == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Level</label>
+                        <select name="level" required>
+                            {% for value, label in form.level.field.choices %}
+                            <option value="{{ value }}" {% if course.level == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <input type="number" name="duration_value" min="1" value="{{ course.duration_value }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration unit</label>
+                        <select name="duration_unit" required>
+                            {% for value, label in form.duration_unit.field.choices %}
+                            <option value="{{ value }}" {% if course.duration_unit == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (UZS)</label>
+                        <input type="number" name="price" min="0" step="0.01" value="{{ course.price }}" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Dars kunlari (odatda haftada 3 kun)</label>
+                        <div class="weekday-pills">
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="mon" {% if 'mon' in course.weekday_list %}checked{% endif %}><span>Dush</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="tue" {% if 'tue' in course.weekday_list %}checked{% endif %}><span>Sesh</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="wed" {% if 'wed' in course.weekday_list %}checked{% endif %}><span>Chor</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="thu" {% if 'thu' in course.weekday_list %}checked{% endif %}><span>Pay</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="fri" {% if 'fri' in course.weekday_list %}checked{% endif %}><span>Jum</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="sat" {% if 'sat' in course.weekday_list %}checked{% endif %}><span>Shan</span></label>
+                            <label class="wd-pill"><input type="checkbox" name="weekdays" value="sun" {% if 'sun' in course.weekday_list %}checked{% endif %}><span>Yak</span></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Boshlanish vaqti</label>
+                        <input type="time" name="start_time" value="{{ course.start_time|time:'H:i' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Tugash vaqti</label>
+                        <input type="time" name="end_time" value="{{ course.end_time|time:'H:i' }}">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Description</label>
+                        <textarea name="description" rows="5">{{ course.description }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-bottom-actions">
+                    <button type="button" class="secondary-btn" onclick="closeModal('editModal{{ course.id }}')">
+                        <i class="fas fa-times"></i> <span>Cancel</span>
+                    </button>
+                    <button type="submit" class="primary-btn">
+                        <i class="fas fa-save"></i> <span>Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="custom-modal" id="deleteModal{{ course.id }}">
+    <div class="modal-overlay" onclick="closeModal('deleteModal{{ course.id }}')"></div>
+    <div class="modal-box modal-md">
+        <div class="modal-header">
+            <h2><i class="fas fa-trash"></i> Delete course</h2>
+            <button class="close-btn" onclick="closeModal('deleteModal{{ course.id }}')">&times;</button>
+        </div>
+        <div class="modal-content">
+            <div class="delete-warning">
+                <div class="delete-warning__icon">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+                <h3>Are you sure you want to delete this course?</h3>
+                <p><strong>{{ course.title }}</strong> course is deleted, related data will also be affected
+                    mumkin.</p>
+            </div>
+            <form method="post" action="{% url 'courses:course_delete' course.id %}">
+                {% csrf_token %}
+                <div class="modal-bottom-actions">
+                    <button type="button" class="secondary-btn" onclick="closeModal('deleteModal{{ course.id }}')">
+                        <i class="fas fa-arrow-left"></i> <span>Ortga</span>
+                    </button>
+                    <button type="submit" class="danger-btn">
+                        <i class="fas fa-trash"></i> <span>O'chirish</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- STUDENTS MODAL -->
+<div class="custom-modal" id="studentsModal{{ course.id }}">
+    <div class="modal-overlay" onclick="closeModal('studentsModal{{ course.id }}')"></div>
+    <div class="modal-box modal-xxl">
+        <div class="modal-header">
+            <h2><i class="fas fa-users"></i> {{ course.title }} — students</h2>
+            <button class="close-btn" onclick="closeModal('studentsModal{{ course.id }}')">&times;</button>
+        </div>
+        <div class="modal-content">
+            <div class="students-topbar">
+                <div class="students-summary">
+                    <div class="summary-pill">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>Number of students: {{ course.student_count }}</span>
+                    </div>
+                    <div class="summary-pill">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>Teacher: {{ course.teacher.full_name|default:"Unknown" }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="students-table-wrapper">
+                <table class="students-table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for student in course.students.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="student-name-box">
+                                <div class="student-mini-avatar">{{ student.full_name|slice:":1" }}</div>
+                                <span>{{ student.full_name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ student.phone|default:"—" }}</td>
+                        <td>
+                            <span class="status-badge active-status">{{ student.status|default:"Active" }}</span>
+                        </td>
+                        <td>
+                            <button class="table-action-btn"
+                                    onclick="openModal('transferModal{{ course.id }}{{ student.id }}')">
+                                <i class="fas fa-right-left"></i> <span>Transfer</span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-students">
+                                <i class="fas fa-users-slash"></i>
+                                <p>No students in this course yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-bottom-actions">
+                <button type="button" class="secondary-btn" onclick="closeModal('studentsModal{{ course.id }}')">
+                    <i class="fas fa-times"></i> <span>Close</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TRANSFER MODALS (per student) -->
+{% for student in course.students.all %}
+<div class="custom-modal" id="transferModal{{ course.id }}{{ student.id }}">
+    <div class="modal-overlay" onclick="closeModal('transferModal{{ course.id }}{{ student.id }}')"></div>
+    <div class="modal-box modal-md">
+        <div class="modal-header">
+            <h2><i class="fas fa-right-left"></i> Transfer student to another course</h2>
+            <button class="close-btn" onclick="closeModal('transferModal{{ course.id }}{{ student.id }}')">&times;
+            </button>
+        </div>
+        <div class="modal-content">
+            <div class="transfer-info-box">
+                <p><strong>Student:</strong> {{ student.full_name }}</p>
+                <p><strong>Hozirgi kurs:</strong> {{ course.title }}</p>
+            </div>
+            <form method="post" action="{% url 'courses:move_student_to_other_course' student.id %}" class="modal-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Select new course</label>
+                    <select name="new_course" required>
+                        <option value="">Select course</option>
+                        {% for other_course in courses %}
+                        {% if other_course.id != course.id %}
+                        <option value="{{ other_course.id }}">
+                            {{ other_course.title }}{% if other_course.level %} — {{ other_course.level }}{% endif %}
+                        </option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-bottom-actions">
+                    <button type="button" class="secondary-btn"
+                            onclick="closeModal('transferModal{{ course.id }}{{ student.id }}')">
+                        <i class="fas fa-times"></i> <span>Cancel</span>
+                    </button>
+                    <button type="submit" class="primary-btn">
+                        <i class="fas fa-right-left"></i> <span>Transfer</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endfor %}
+<!-- /PER-COURSE MODALS -->
+
+<style>
+    .courses-page,
+    .custom-modal {
+        --bg-main: #07111f;
+        --bg-soft: rgba(255, 255, 255, 0.05);
+        --bg-card: rgba(9, 18, 34, 0.78);
+        --bg-card-2: rgba(17, 27, 48, 0.86);
+        --line: rgba(255, 255, 255, 0.08);
+        --text-main: #f8fafc;
+        --text-soft: #a8b3c7;
+        --primary: #14b8a6;
+        --primary-dark: #0f766e;
+        --info: #38bdf8;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --success: #22c55e;
+        --shadow: 0 18px 55px rgba(0, 0, 0, 0.35);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+        --transition: all 0.35s ease;
+    }
+
+    * { box-sizing: border-box; }
+
+    .courses-page {
+        position: relative;
+        min-height: 100vh;
+        padding: 30px;
+        background:
+            radial-gradient(circle at top left, rgba(20, 184, 166, 0.10), transparent 22%),
+            radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.12), transparent 22%),
+            linear-gradient(145deg, #030712 0%, #0b1220 45%, #0f172a 100%);
+    }
+
+    .bg-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.35;
+    }
+
+    .bg-orb-1 { width: 260px; height: 260px; top: -70px; left: -70px; background: #14b8a6; }
+    .bg-orb-2 { width: 240px; height: 240px; right: -60px; top: 20%; background: #38bdf8; }
+    .bg-orb-3 { width: 220px; height: 220px; left: 35%; bottom: -60px; background: #8b5cf6; }
+
+    .courses-header,
+    .stats-row,
+    .toolbar-panel,
+    .courses-grid { position: relative; z-index: 2; }
+
+    .courses-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 28px;
+        padding: 30px;
+        border-radius: var(--radius-xl);
+        background: linear-gradient(135deg, rgba(9, 18, 34, 0.95), rgba(17, 27, 48, 0.86));
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+    }
+
+    .page-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: rgba(20, 184, 166, 0.10);
+        border: 1px solid rgba(20, 184, 166, 0.22);
+        border-radius: 999px;
+        color: #99f6e4;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 18px;
+    }
+
+    .courses-page .page-title {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 4vw, 3.1rem);
+        color: var(--text-main);
+        line-height: 1.15;
+        font-weight: 800;
+    }
+
+    .courses-page .page-title span {
+        background: linear-gradient(90deg, #14b8a6, #38bdf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .page-subtitle {
+        max-width: 780px;
+        color: var(--text-soft);
+        font-size: 15px;
+        line-height: 1.9;
+        margin: 0;
+    }
+
+    .primary-btn, .secondary-btn, .danger-btn, .courses-page .action-btn, .table-action-btn {
+        border: none;
+        outline: none;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: var(--transition);
+        font-weight: 700;
+    }
+
+    .primary-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        padding: 14px 22px;
+        border-radius: 14px;
+        box-shadow: 0 12px 25px rgba(20, 184, 166, 0.24);
+    }
+
+    .primary-btn:hover { transform: translateY(-3px); box-shadow: 0 18px 36px rgba(20, 184, 166, 0.30); }
+
+    .secondary-btn {
+        background: rgba(255,255,255,0.07);
+        color: white;
+        padding: 13px 20px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+    }
+
+    .secondary-btn:hover { transform: translateY(-3px); background: rgba(255,255,255,0.10); }
+
+    .danger-btn {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+        color: white;
+        padding: 13px 20px;
+        border-radius: 14px;
+        box-shadow: 0 12px 24px rgba(239, 68, 68, 0.24);
+    }
+
+    .danger-btn:hover { transform: translateY(-3px); }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        padding: 22px;
+        border-radius: 22px;
+        background: var(--bg-card);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: var(--transition);
+        backdrop-filter: blur(18px);
+    }
+
+    .stat-card:hover { transform: translateY(-6px); }
+
+    .stat-card__icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        color: white;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.85), rgba(56, 189, 248, 0.85));
+        flex-shrink: 0;
+    }
+
+    .stat-card h4 { margin: 0 0 6px; color: var(--text-soft); font-size: 14px; font-weight: 600; }
+    .stat-card h2 { margin: 0; color: white; font-size: 28px; font-weight: 800; }
+
+    .toolbar-panel {
+        padding: 20px;
+        border-radius: 22px;
+        background: var(--bg-card);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        margin-bottom: 28px;
+        backdrop-filter: blur(18px);
+    }
+
+    .toolbar-form { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+
+    .courses-page .search-box, .filter-box { position: relative; flex: 1; min-width: 220px; }
+
+    .courses-page .search-box i, .filter-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .courses-page .search-box input,
+    .filter-box select,
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 14px 16px 14px 45px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+        color: white;
+        outline: none;
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .form-group input,
+    .form-group select { padding-left: 16px; }
+    .form-group textarea { padding-left: 16px; resize: vertical; }
+
+    .courses-page .search-box input:focus,
+    .filter-box select:focus,
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: rgba(20, 184, 166, 0.5);
+        box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+    }
+
+    select option { background: #0f172a; color: white; }
+
+    .courses-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+    .course-card {
+        position: relative;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(17, 24, 39, 0.96));
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+        transition: var(--transition);
+        overflow: hidden;
+    }
+
+    .course-card::before {
+        content: "";
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(20, 184, 166, 0.18), transparent 70%);
+        pointer-events: none;
+    }
+
+    .course-card:hover { transform: translateY(-8px); border-color: rgba(20, 184, 166, 0.20); }
+
+    .course-card__top {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .course-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #14b8a6, #38bdf8);
+        color: white;
+        font-size: 24px;
+        box-shadow: 0 12px 24px rgba(20, 184, 166, 0.24);
+        flex-shrink: 0;
+    }
+
+    .course-badges { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+
+    .badge {
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    .badge-level { background: rgba(56, 189, 248, 0.12); color: #bae6fd; border: 1px solid rgba(56, 189, 248, 0.20); }
+    .badge-duration { background: rgba(20, 184, 166, 0.12); color: #99f6e4; border: 1px solid rgba(20, 184, 166, 0.20); }
+
+    .course-card__body h3 { margin: 0 0 14px; color: white; font-size: 22px; font-weight: 800; line-height: 1.3; }
+
+    .course-desc { color: var(--text-soft); font-size: 14px; line-height: 1.85; margin-bottom: 20px; min-height: 78px; }
+
+    .course-info-list { display: grid; gap: 10px; }
+
+    .course-info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
+        color: #dbe5f5;
+        font-size: 14px;
+    }
+
+    .course-info-item i {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(20, 184, 166, 0.12);
+        color: #99f6e4;
+        flex-shrink: 0;
+        font-size: 14px;
+    }
+
+    .course-card__footer { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+
+    .courses-page .action-btn {
+        width: 100%;
+        padding: 11px 10px;
+        border-radius: 14px;
+        font-size: 13px;
+        color: white;
+        gap: 8px;
+        white-space: nowrap;
+    }
+    .courses-page .action-btn i { font-size: 14px; flex-shrink: 0; }
+    .courses-page .action-btn span { font-weight: 700; }
+    .info-btn { background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.20); }
+    .edit-btn { background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.20); }
+    .students-btn { background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.20); }
+    .delete-btn { background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.20); }
+    .courses-page .action-btn:hover, .table-action-btn:hover { transform: translateY(-3px); filter: brightness(1.15); }
+
+    .empty-courses {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 70px 20px;
+        border-radius: 28px;
+        background: var(--bg-card);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+    }
+
+    .empty-courses__icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 20px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(20,184,166,0.20), rgba(56,189,248,0.20));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 38px;
+    }
+
+    .empty-courses h2 { color: white; margin-bottom: 10px; font-size: 28px; }
+    .empty-courses p { color: var(--text-soft); margin-bottom: 20px; }
+
+    /* =====================================================
+       MODAL — TO'G'RILANGAN VERSIYA
+       position: fixed + z-index: 999999
+       body ga append qilinadi JS orqali
+       ===================================================== */
+    .custom-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .custom-modal.active {
+        display: flex;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 8, 23, 0.82);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 1;
+    }
+
+    .modal-box {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        margin: auto;
+        background: linear-gradient(180deg, rgba(9, 18, 34, 0.99), rgba(17, 27, 48, 0.99));
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 26px;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(20,184,166,0.08);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        animation: modalFadeIn .28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .modal-md { max-width: 560px; }
+    .modal-xl { max-width: 960px; }
+    .modal-xxl { max-width: 1200px; }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(30px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 22px 28px;
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        background: rgba(9, 18, 34, 0.97);
+        backdrop-filter: blur(16px);
+        z-index: 4;
+        border-radius: 26px 26px 0 0;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        color: white;
+        font-size: 20px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .modal-header h2 i { color: var(--primary); font-size: 18px; }
+
+    .close-btn {
+        width: 42px;
+        height: 42px;
+        border: none;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.07);
+        color: white;
+        font-size: 22px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .close-btn:hover { transform: rotate(90deg); background: rgba(239, 68, 68, 0.20); color: #fca5a5; }
+
+    .modal-content { padding: 28px; }
+
+    .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+
+    .detail-card {
+        padding: 18px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .detail-card span { display: block; color: var(--text-soft); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .detail-card h3 { margin: 0; color: white; font-size: 18px; line-height: 1.4; }
+
+    .detail-description {
+        padding: 22px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        margin-bottom: 24px;
+    }
+
+    .detail-description h4 { margin: 0 0 12px; color: white; font-size: 15px; }
+    .detail-description p { margin: 0; color: var(--text-soft); line-height: 1.9; font-size: 14px; }
+
+    .modal-form { display: block; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group label { color: #dbe5f5; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+    .full-width { grid-column: 1 / -1; }
+
+    /* Hafta kunlari tanlovi */
+    .weekday-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .wd-pill {
+        position: relative;
+        cursor: pointer;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+    }
+    .wd-pill input { position: absolute; opacity: 0; pointer-events: none; }
+    .wd-pill span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 64px;
+        padding: 11px 14px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10);
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 700;
+        transition: var(--transition);
+        user-select: none;
+    }
+    .wd-pill:hover span { border-color: rgba(20,184,166,0.4); color: #fff; }
+    .wd-pill input:checked + span {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(20,184,166,0.28);
+    }
+    .schedule-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        color: #99f6e4;
+        font-weight: 700;
+    }
+
+    .modal-bottom-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+    }
+
+    .delete-warning { text-align: center; padding: 16px 0 20px; }
+
+    .delete-warning__icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 24px;
+        margin: 0 auto 18px;
+        background: rgba(239, 68, 68, 0.12);
+        color: #fca5a5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+    }
+
+    .delete-warning h3 { color: white; margin: 0 0 10px; font-size: 22px; }
+    .delete-warning p { color: var(--text-soft); line-height: 1.8; margin: 0; font-size: 14px; }
+
+    .students-topbar { margin-bottom: 20px; }
+    .students-summary { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .summary-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #dbe5f5;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .students-table-wrapper {
+        overflow-x: auto;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.07);
+        background: rgba(255,255,255,0.02);
+        margin-bottom: 8px;
+    }
+
+    .students-table { width: 100%; border-collapse: collapse; min-width: 680px; }
+
+    .students-table thead th {
+        padding: 14px 16px;
+        text-align: left;
+        color: #94a3b8;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .students-table tbody td {
+        padding: 14px 16px;
+        color: #e2e8f0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+    .students-table tbody tr:last-child td { border-bottom: none; }
+    .students-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
+
+    .student-name-box { display: flex; align-items: center; gap: 12px; }
+
+    .student-mini-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #14b8a6, #38bdf8);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 15px;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .active-status {
+        background: rgba(34, 197, 94, 0.10);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.18);
+    }
+
+    .table-action-btn {
+        background: rgba(139, 92, 246, 0.12);
+        color: #e9d5ff;
+        border: 1px solid rgba(139, 92, 246, 0.22);
+        padding: 9px 14px;
+        border-radius: 11px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        transition: var(--transition);
+    }
+
+    .empty-students { text-align: center; padding: 30px 0; color: var(--text-soft); }
+    .empty-students i { font-size: 28px; margin-bottom: 10px; display: block; color: #475569; }
+
+    .transfer-info-box {
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(20, 184, 166, 0.06);
+        border: 1px solid rgba(20, 184, 166, 0.14);
+        margin-bottom: 20px;
+    }
+
+    .transfer-info-box p { margin: 6px 0; color: #dbe5f5; line-height: 1.7; font-size: 14px; }
+    .transfer-info-box p:first-child { margin-top: 0; }
+    .transfer-info-box p:last-child { margin-bottom: 0; }
+
+    /* Scrollbar */
+    .modal-box::-webkit-scrollbar { width: 5px; }
+    .modal-box::-webkit-scrollbar-track { background: transparent; }
+    .modal-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+
+    @media (max-width: 1300px) {
+        .courses-grid { grid-template-columns: repeat(2, 1fr); }
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        .detail-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 980px) {
+        .courses-header { flex-direction: column; align-items: flex-start; }
+        .modal-bottom-actions { flex-direction: column; }
+        .form-grid, .detail-grid { grid-template-columns: 1fr; }
+        .courses-grid, .stats-row { grid-template-columns: 1fr; }
+        .course-card__footer { grid-template-columns: repeat(2, 1fr); }
+        .custom-modal { padding: 12px; }
+        .modal-box { max-height: calc(100vh - 24px); border-radius: 20px; }
+        .modal-header { border-radius: 20px 20px 0 0; }
+    }
+
+    @media (max-width: 768px) {
+        .courses-page { padding: 16px; }
+        .modal-content { padding: 18px; }
+        .modal-header { padding: 18px 20px; }
+        .courses-page .page-title { font-size: 2rem; }
+        .primary-btn, .secondary-btn, .danger-btn { width: 100%; justify-content: center; }
+    }
+</style>
+
+<script>
+    /**
+     * Modal boshqaruvi — FIXED VERSION
+     *
+     * Muammo: .courses-page da overflow:hidden va stacking context bor,
+     * bu position:fixed ni parent ichiga "qamalib" qolishiga olib keladi.
+     *
+     * Yechim: modal ochilganda uni document.body ga ko'chirish.
+     * Shunda hech qanday parent element modal ni ushlab qola olmaydi.
+     */
+
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        // Modalni body ga ko'chirish (agar hali ko'chirilmagan bo'lsa)
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        modal.classList.remove('active');
+
+        // Agar boshqa ochiq modal qolmagan bo'lsa, scrollni qaytarish
+        const stillOpen = document.querySelectorAll('.custom-modal.active');
+        if (stillOpen.length === 0) {
+            document.body.style.overflow = '';
+        }
+    }
+
+    // ESC tugmasi bilan yopish
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.custom-modal.active').forEach(function (m) {
+                m.classList.remove('active');
+            });
+            document.body.style.overflow = '';
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,713 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Students — Wall Street{% endblock %}
+{% block header_section %}Students{% endblock %}
+{% block breadcrumb %}Students{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #0E5C60;
+        --primary-dark: #0A4548;
+        --primary-light: #127277;
+        --accent: #D7B56D;
+        --success: #1F9D67;
+        --danger: #D64545;
+        --warning: #D49B1D;
+        --text-primary: #17292B;
+        --text-secondary: #6B8385;
+        --shadow-md: 0 8px 20px rgba(12,33,35,0.10);
+        --shadow-lg: 0 14px 32px rgba(12,33,35,0.12);
+    }
+
+    .page-shell { display: flex; flex-direction: column; gap: 24px; }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    .scard {
+        padding: 22px 24px;
+        border-radius: 20px;
+        background: linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.90));
+        border: 1px solid rgba(14,92,96,.10);
+        box-shadow: var(--shadow-md);
+        display: flex; align-items: center; gap: 16px;
+        transition: transform .25s, box-shadow .25s;
+    }
+    .scard:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .scard-icon {
+        width: 52px; height: 52px; border-radius: 16px;
+        display: grid; place-items: center; font-size: 22px;
+        background: linear-gradient(135deg,rgba(14,92,96,.12),rgba(14,92,96,.06));
+        border: 1px solid rgba(14,92,96,.10);
+        flex-shrink: 0;
+    }
+    .scard-val { font-size: 28px; font-weight: 800; color: var(--text-primary); line-height: 1; }
+    .scard-lbl { font-size: 12px; font-weight: 700; color: var(--text-secondary);
+                 text-transform: uppercase; letter-spacing: .4px; margin-top: 5px; }
+
+    .toolbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 14px; flex-wrap: wrap;
+    }
+    .search-wrap {
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(255,255,255,.94); border: 1px solid rgba(14,92,96,.14);
+        border-radius: 14px; padding: 0 16px; height: 48px;
+        box-shadow: var(--shadow-md); flex: 1; max-width: 380px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .search-wrap:focus-within {
+        border-color: rgba(14,92,96,.36);
+        box-shadow: 0 0 0 4px rgba(14,92,96,.08), var(--shadow-md);
+    }
+    .search-wrap input { flex: 1; font-size: 14px; font-weight: 600;
+                         color: var(--text-primary); background: none; border: none; outline: none; }
+    .search-wrap input::placeholder { color: var(--text-secondary); }
+
+    .filter-tabs { display: flex; gap: 8px; }
+    .ftab {
+        padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 800;
+        cursor: pointer; border: 1px solid transparent;
+        transition: all .22s; text-decoration: none;
+        color: var(--text-secondary);
+        background: rgba(255,255,255,.90);
+        border-color: rgba(14,92,96,.10);
+    }
+    .ftab:hover { background: rgba(14,92,96,.08); color: var(--primary); }
+    .ftab.active {
+        background: var(--primary); color: #fff;
+        border-color: var(--primary);
+        box-shadow: 0 8px 20px rgba(14,92,96,.28);
+    }
+
+    /* Enrollment tugmasi */
+    .enroll-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 22px; border-radius: 14px; font-size: 14px; font-weight: 800;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: #fff; border: none; cursor: pointer;
+        box-shadow: 0 10px 24px rgba(14,92,96,.28);
+        transition: transform .22s, box-shadow .22s;
+        text-decoration: none;
+    }
+    .enroll-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(14,92,96,.36); color: #fff; }
+
+    .notice-banner {
+        padding: 14px 18px; border-radius: 14px;
+        background: rgba(14,92,96,.06); border: 1px solid rgba(14,92,96,.14);
+        font-size: 13px; font-weight: 700; color: var(--primary);
+        display: flex; align-items: center; gap: 10px;
+    }
+
+    .table-card {
+        background: linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.92));
+        border: 1px solid rgba(14,92,96,.10);
+        border-radius: 24px; padding: 0; overflow: hidden;
+        box-shadow: var(--shadow-md);
+    }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table thead th {
+        padding: 16px 18px; font-size: 11px; font-weight: 800;
+        letter-spacing: 1px; text-transform: uppercase;
+        color: var(--text-secondary);
+        background: rgba(14,92,96,.04);
+        border-bottom: 1px solid rgba(14,92,96,.10);
+        text-align: left; white-space: nowrap;
+    }
+    .data-table tbody tr {
+        border-bottom: 1px solid rgba(14,92,96,.06);
+        transition: background .2s;
+    }
+    .data-table tbody tr:last-child { border-bottom: none; }
+    .data-table tbody tr:hover { background: rgba(14,92,96,.04); }
+    .data-table tbody td {
+        padding: 14px 18px; font-size: 14px;
+        color: var(--text-primary); vertical-align: middle;
+    }
+
+    .avatar-chip { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+        width: 42px; height: 42px; border-radius: 14px;
+        overflow: hidden; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        display: grid; place-items: center;
+        color: #fff; font-weight: 800; font-size: 15px;
+        box-shadow: 0 6px 16px rgba(14,92,96,.22);
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .name-cell { font-weight: 800; color: var(--text-primary); }
+    .meta-cell { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+
+    .pill {
+        display: inline-flex; align-items: center;
+        padding: 6px 12px; border-radius: 10px;
+        font-size: 11px; font-weight: 800;
+        letter-spacing: .3px; text-transform: uppercase; border: 1px solid transparent;
+    }
+    .pill-active  { background: rgba(31,157,103,.12); color: var(--success); border-color: rgba(31,157,103,.20); }
+    .pill-inactive{ background: rgba(214,69,69,.12);  color: var(--danger);  border-color: rgba(214,69,69,.20); }
+    .pill-gender  { background: rgba(14,92,96,.10);   color: var(--primary); border-color: rgba(14,92,96,.16); }
+
+    .action-btns { display: flex; gap: 8px; }
+    .act {
+        width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer;
+        display: grid; place-items: center; font-size: 16px;
+        transition: transform .2s, box-shadow .2s; text-decoration: none;
+    }
+    .act-view   { background: rgba(45,110,204,.10); color: #2D6ECC; }
+    .act-view:hover { transform: scale(1.12); box-shadow: 0 6px 14px rgba(45,110,204,.20); }
+    .act-edit   { background: rgba(14,92,96,.10); color: var(--primary); }
+    .act-edit:hover  { transform: scale(1.12); box-shadow: 0 6px 14px rgba(14,92,96,.20); }
+    .act-del    { background: rgba(214,69,69,.10); color: var(--danger); }
+    .act-del:hover   { transform: scale(1.12); box-shadow: 0 6px 14px rgba(214,69,69,.20); }
+    .act-toggle { background: rgba(212,155,29,.10); color: var(--warning); }
+    .act-toggle:hover{ transform: scale(1.12); box-shadow: 0 6px 14px rgba(212,155,29,.20); }
+
+    .enroll-count-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 10px; border-radius: 9px; font-size: 11px; font-weight: 800;
+        background: rgba(14,92,96,.10); color: var(--primary);
+        border: 1px solid rgba(14,92,96,.16); text-decoration: none;
+        transition: background .18s;
+    }
+    .enroll-count-badge:hover { background: rgba(14,92,96,.18); }
+
+    .empty-box { padding: 60px; text-align: center; color: var(--text-secondary); }
+    .empty-box .emoji { font-size: 48px; display: block; margin-bottom: 14px; }
+    .empty-box p { font-size: 15px; font-weight: 600; }
+
+    /* ── EDIT MODAL ── */
+    .modal-bg {
+        position: fixed; inset: 0;
+        background: rgba(10,22,24,.55);
+        backdrop-filter: blur(12px);
+        z-index: 200; display: none;
+        place-items: center; padding: 20px;
+    }
+    .modal-bg.open { display: grid; }
+    .modal {
+        background: #fff; border-radius: 28px;
+        padding: 36px; width: 100%; max-width: 600px;
+        max-height: 90vh; overflow-y: auto;
+        box-shadow: 0 40px 80px rgba(10,22,24,.32);
+        animation: popIn .35s cubic-bezier(.34,1.56,.64,1);
+        position: relative;
+    }
+    @keyframes popIn {
+        from { opacity:0; transform:scale(.93) translateY(16px); }
+        to   { opacity:1; transform:scale(1)   translateY(0);    }
+    }
+    .modal-head {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 28px;
+    }
+    .modal-title { font-size: 20px; font-weight: 800; color: var(--text-primary); }
+    .close-btn {
+        width: 38px; height: 38px; border-radius: 12px; border: none; cursor: pointer;
+        background: rgba(14,92,96,.08); color: var(--primary); font-size: 20px;
+        display: grid; place-items: center; transition: background .2s;
+    }
+    .close-btn:hover { background: rgba(14,92,96,.16); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-full  { grid-column: 1 / -1; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; font-weight: 800; color: var(--text-secondary);
+                   text-transform: uppercase; letter-spacing: .4px; }
+    .field input, .field select, .field textarea {
+        padding: 12px 14px; border-radius: 12px; font-size: 14px; font-weight: 600;
+        color: var(--text-primary);
+        border: 1px solid rgba(14,92,96,.16);
+        background: rgba(14,92,96,.03);
+        outline: none; transition: border-color .2s, box-shadow .2s; font-family: inherit;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(14,92,96,.10);
+    }
+    .field textarea { resize: vertical; min-height: 80px; }
+
+    /* Avatar uploader */
+    .avatar-uploader {
+        display: flex; align-items: center; gap: 18px;
+        padding: 18px; margin-bottom: 22px;
+        border-radius: 18px;
+        background: rgba(14,92,96,.04);
+        border: 1px solid rgba(14,92,96,.10);
+    }
+    .avatar-preview {
+        width: 76px; height: 76px; border-radius: 20px; flex-shrink: 0;
+        overflow: hidden; display: grid; place-items: center;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: #fff; font-weight: 800; font-size: 26px;
+        box-shadow: 0 8px 20px rgba(14,92,96,.26);
+    }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-upload-info { display: flex; flex-direction: column; gap: 4px; }
+    .avatar-upload-title { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+    .avatar-upload-hint  { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+    .avatar-upload-btn {
+        display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+        padding: 9px 16px; border-radius: 11px; cursor: pointer;
+        font-size: 13px; font-weight: 800; color: var(--primary);
+        background: rgba(14,92,96,.10); border: 1px solid rgba(14,92,96,.18);
+        transition: background .2s;
+    }
+    .avatar-upload-btn:hover { background: rgba(14,92,96,.18); }
+
+    .toggle-row { display: flex; align-items: center; justify-content: space-between;
+                  padding: 14px 16px; border-radius: 14px;
+                  background: rgba(14,92,96,.04); border: 1px solid rgba(14,92,96,.10); }
+    .toggle-lbl { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .toggle-switch { position: relative; width: 48px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+        position: absolute; inset: 0; cursor: pointer; border-radius: 999px;
+        background: rgba(14,92,96,.20); transition: background .3s;
+    }
+    .toggle-slider::before {
+        content: ""; position: absolute; width: 20px; height: 20px;
+        left: 3px; top: 3px; border-radius: 50%; background: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: transform .3s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+    .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+    .btn-cancel {
+        padding: 12px 22px; border-radius: 12px; font-size: 14px; font-weight: 800;
+        background: rgba(14,92,96,.08); color: var(--primary); border: none; cursor: pointer;
+        transition: background .2s; font-family: inherit;
+    }
+    .btn-cancel:hover { background: rgba(14,92,96,.14); }
+    .btn-submit {
+        padding: 12px 28px; border-radius: 12px; font-size: 14px; font-weight: 800;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: #fff; border: none; cursor: pointer; font-family: inherit;
+        box-shadow: 0 8px 20px rgba(14,92,96,.28); transition: transform .2s, box-shadow .2s;
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(14,92,96,.36); }
+
+    .del-modal { max-width: 440px; text-align: center; }
+    .del-icon { font-size: 52px; margin-bottom: 16px; }
+    .del-title { font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; }
+    .del-text  { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 28px; }
+    .btn-danger {
+        padding: 12px 28px; border-radius: 12px; font-size: 14px; font-weight: 800;
+        background: linear-gradient(135deg, var(--danger), #e05555);
+        color: #fff; border: none; cursor: pointer; font-family: inherit;
+        box-shadow: 0 8px 20px rgba(214,69,69,.28); transition: transform .2s;
+    }
+    .btn-danger:hover { transform: translateY(-2px); }
+
+    html[data-theme="dark"] .scard,
+    html[data-theme="dark"] .table-card {
+        background: linear-gradient(180deg,rgba(19,42,46,.94),rgba(14,28,30,.88));
+        border-color: rgba(255,255,255,.08);
+    }
+    html[data-theme="dark"] .modal { background: #132A2E; }
+    html[data-theme="dark"] .field input,
+    html[data-theme="dark"] .field select,
+    html[data-theme="dark"] .field textarea {
+        background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); color: #fff;
+    }
+    html[data-theme="dark"] .avatar-uploader {
+        background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.10);
+    }
+    html[data-theme="dark"] .avatar-upload-title { color: #fff; }
+    html[data-theme="dark"] .name-cell { color: #fff; }
+    html[data-theme="dark"] .data-table tbody tr:hover { background: rgba(14,92,96,.10); }
+
+    @media (max-width: 768px) {
+        .stats-row { grid-template-columns: 1fr 1fr; }
+        .toolbar { flex-direction: column; align-items: stretch; }
+        .filter-tabs { flex-wrap: wrap; }
+        .search-wrap { max-width: 100%; }
+        .form-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="scard">
+            <div class="scard-icon">🎓</div>
+            <div>
+                <div class="scard-val">{{ total_count }}</div>
+                <div class="scard-lbl">Total students</div>
+            </div>
+        </div>
+        <div class="scard">
+            <div class="scard-icon">✅</div>
+            <div>
+                <div class="scard-val" style="color:var(--success)">{{ active_count }}</div>
+                <div class="scard-lbl">Active</div>
+            </div>
+        </div>
+        <div class="scard">
+            <div class="scard-icon">⛔</div>
+            <div>
+                <div class="scard-val" style="color:var(--danger)">{{ inactive_count }}</div>
+                <div class="scard-lbl">Inactive</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INFO BANNER -->
+    <div class="notice-banner">
+        ℹ️ To add a new student
+        <a href="{% url 'enrollments:enrollment_list' %}" class="enroll-btn"
+           style="padding:8px 16px;font-size:13px;">
+            📋 Go to the Enrollments page
+        </a>
+        — where student and course enrollment occurs simultaneously.
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <form method="get" style="display:flex;gap:10px;align-items:center;flex:1;flex-wrap:wrap;">
+            <input type="hidden" name="status" value="{{ status_filter }}">
+            <div class="search-wrap">
+                <span>🔍</span>
+                <input type="text" name="q" value="{{ search_query }}"
+                       placeholder="Name, phone or email...">
+            </div>
+            <button type="submit" class="enroll-btn" style="padding:11px 18px;">Search</button>
+        </form>
+
+        <div class="filter-tabs">
+            <a href="?status=all{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="ftab {% if status_filter == 'all' %}active{% endif %}">
+                All ({{ total_count }})
+            </a>
+            <a href="?status=active{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="ftab {% if status_filter == 'active' %}active{% endif %}">
+                Active ({{ active_count }})
+            </a>
+            <a href="?status=inactive{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="ftab {% if status_filter == 'inactive' %}active{% endif %}">
+                Inactive ({{ inactive_count }})
+            </a>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Student</th>
+                <th>Phone</th>
+                <th>Ota-ona tel</th>
+                <th>Gender</th>
+                <th>Enrollments</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for student in students %}
+            <tr>
+                <td style="color:var(--text-secondary);font-weight:700;">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                <td>
+                    <div class="avatar-chip">
+                        <div class="avatar">
+                            {% if student.image %}
+                            <img src="{{ student.image.url }}" alt="">
+                            {% else %}
+                            {{ student.first_name|first|upper }}{{ student.last_name|first|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="name-cell">{{ student.full_name }}</div>
+                            <div class="meta-cell">{{ student.email|default:"—" }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><strong>{{ student.phone }}</strong></td>
+                <td>{{ student.parent_phone|default:"—" }}</td>
+                <td>
+                    {% if student.gender %}
+                    <span class="pill pill-gender">
+                        {% if student.gender == 'male' %}👦 Male
+                        {% elif student.gender == 'female' %}👧 Female
+                        {% else %}{{ student.gender }}{% endif %}
+                    </span>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'enrollments:enrollment_list' %}?q={{ student.phone }}"
+                       class="enroll-count-badge">
+                        📋 {{ student.enrolled_courses_count }} ta
+                    </a>
+                </td>
+                <td>
+                    {% if student.is_active %}
+                    <span class="pill pill-active">● Active</span>
+                    {% else %}
+                    <span class="pill pill-inactive">● Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="action-btns">
+                        <a href="{% url 'enrollments:enrollment_list' %}?q={{ student.phone }}"
+                           class="act act-view" title="Enrollmentlarini ko'rish">📋</a>
+
+                        <button class="act act-edit"
+                                onclick="openEditModal(
+                                    {{ student.pk }},
+                                    '{{ student.first_name|escapejs }}',
+                                    '{{ student.last_name|escapejs }}',
+                                    '{{ student.phone|default:''|escapejs }}',
+                                    '{{ student.parent_phone|default:''|escapejs }}',
+                                    '{{ student.email|default:''|escapejs }}',
+                                    '{{ student.gender|default:''|escapejs }}',
+                                    '{{ student.birth_date|default:''}}',
+                                    '{{ student.address|default:''|escapejs }}',
+                                    {{ student.is_active|lower }},
+                                    '{% if student.image %}{{ student.image.url|escapejs }}{% endif %}')"
+                                title="Edit">✏️
+                        </button>
+
+                        <form method="post"
+                              action="{% url 'student:student_toggle_status' student.pk %}"
+                              style="display:inline">
+                            {% csrf_token %}
+                            <button class="act act-toggle" type="submit"
+                                    title="{% if student.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                {% if student.is_active %}🔒{% else %}🔓{% endif %}
+                            </button>
+                        </form>
+
+                        <button class="act act-del"
+                                onclick="openDelModal({{ student.pk }}, '{{ student.full_name|escapejs }}')"
+                                title="O'chirish">🗑️
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">
+                    <div class="empty-box">
+                        <span class="emoji">🎓</span>
+                        <p>
+                            {% if search_query %}
+                            No students found for "{{ search_query }}"
+                            {% else %}
+                            No students added yet.
+                            <a href="{% url 'enrollments:enrollment_list' %}"
+                               style="color:var(--primary);font-weight:800;">
+                                Add via Enrollment →
+                            </a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination-bar" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 4px;">
+        <span style="color:var(--text-secondary);font-size:13px;">
+            {{ page_obj.start_index }}–{{ page_obj.end_index }} / {{ page_obj.paginator.count }} ta talaba
+        </span>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+               class="pag-btn" style="padding:7px 12px;border-radius:8px;background:var(--primary);color:#fff;text-decoration:none;font-weight:700;">← Oldingi</a>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span class="pag-btn active" style="padding:7px 12px;border-radius:8px;background:#0E5C60;color:#fff;font-weight:800;">{{ num }}</span>
+                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                <a href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                   class="pag-btn" style="padding:7px 12px;border-radius:8px;background:rgba(14,92,96,.12);color:var(--text-primary);text-decoration:none;font-weight:700;">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+               class="pag-btn" style="padding:7px 12px;border-radius:8px;background:var(--primary);color:#fff;text-decoration:none;font-weight:700;">Keyingi →</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-bg" id="editModal">
+    <div class="modal">
+        <div class="modal-head">
+            <div class="modal-title">✏️ Edit student</div>
+            <button class="close-btn" onclick="closeModal('editModal')">×</button>
+        </div>
+        <form method="post" id="editForm" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Rasm yuklash (avatar preview) -->
+            <div class="avatar-uploader">
+                <div class="avatar-preview" id="e_avatar_preview">
+                    <span id="e_avatar_initials"></span>
+                    <img id="e_avatar_img" alt="" style="display:none;">
+                </div>
+                <div class="avatar-upload-info">
+                    <span class="avatar-upload-title">Profil rasmi</span>
+                    <span class="avatar-upload-hint">JPG yoki PNG, kvadrat shaklda eng yaxshi ko'rinadi.</span>
+                    <label class="avatar-upload-btn">
+                        📷 Rasm tanlash
+                        <input type="file" name="image" id="e_image" accept="image/*" hidden>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>First name *</label>
+                    <input type="text" name="first_name" id="e_first_name" required>
+                </div>
+                <div class="field">
+                    <label>Last name *</label>
+                    <input type="text" name="last_name" id="e_last_name" required>
+                </div>
+                <div class="field">
+                    <label>Phone *</label>
+                    <input type="text" name="phone" id="e_phone" required>
+                </div>
+                <div class="field">
+                    <label>Ota-ona tel</label>
+                    <input type="text" name="parent_phone" id="e_parent_phone">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" id="e_email">
+                </div>
+                <div class="field">
+                    <label>Gender</label>
+                    <select name="gender" id="e_gender">
+                        <option value="">— Tanlang —</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Date of birth</label>
+                    <input type="date" name="birth_date" id="e_birth_date">
+                </div>
+                <div class="field form-full">
+                    <label>Address</label>
+                    <textarea name="address" id="e_address"></textarea>
+                </div>
+                <div class="form-full">
+                    <div class="toggle-row">
+                        <span class="toggle-lbl">Active status</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="is_active" id="e_is_active">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel"
+                        onclick="closeModal('editModal')">Cancel
+                </button>
+                <button type="submit" class="btn-submit">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-bg" id="delModal">
+    <div class="modal del-modal">
+        <div class="del-icon">🗑️</div>
+        <div class="del-title">Are you sure you want to delete?</div>
+        <div class="del-text" id="delText">This student will be permanently removed from the system.</div>
+        <form method="post" id="delForm">
+            {% csrf_token %}
+            <div class="form-actions" style="justify-content:center;">
+                <button type="button" class="btn-cancel"
+                        onclick="closeModal('delModal')">Cancel
+                </button>
+                <button type="submit" class="btn-danger">Yes, delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function setAvatarPreview(imgUrl, fn, ln) {
+        const img      = document.getElementById('e_avatar_img');
+        const initials = document.getElementById('e_avatar_initials');
+        if (imgUrl) {
+            img.src = imgUrl;
+            img.style.display = 'block';
+            initials.style.display = 'none';
+        } else {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+            initials.style.display = 'block';
+            initials.textContent =
+                ((fn || '').charAt(0) + (ln || '').charAt(0)).toUpperCase() || '🎓';
+        }
+    }
+
+    function openEditModal(pk, fn, ln, phone, pphone, email, gender, bdate, addr, active, imgUrl) {
+        const form = document.getElementById('editForm');
+        form.action = `/students/${pk}/update/`;
+        document.getElementById('e_first_name').value   = fn;
+        document.getElementById('e_last_name').value    = ln;
+        document.getElementById('e_phone').value        = phone;
+        document.getElementById('e_parent_phone').value = pphone;
+        document.getElementById('e_email').value        = email;
+        document.getElementById('e_gender').value       = gender;
+        document.getElementById('e_birth_date').value   = bdate;
+        document.getElementById('e_address').value      = addr;
+        document.getElementById('e_is_active').checked  = active;
+        document.getElementById('e_image').value        = '';   // oldingi tanlovni tozalash
+        setAvatarPreview(imgUrl, fn, ln);
+        document.getElementById('editModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Yangi rasm tanlanganda jonli ko'rsatish
+    document.getElementById('e_image').addEventListener('change', function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (file) setAvatarPreview(URL.createObjectURL(file));
+    });
+
+    function openDelModal(pk, name) {
+        document.getElementById('delForm').action = `/students/${pk}/delete/`;
+        var _tpl = (window.WSI18N ? WSI18N.t('"{name}" will be permanently removed. This action cannot be undone.')
+                                  : '"{name}" will be permanently removed. This action cannot be undone.');
+        document.getElementById('delText').textContent = _tpl.replace('{name}', name);
+        document.getElementById('delModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') ['editModal','delModal'].forEach(closeModal);
+    });
+    document.querySelectorAll('.modal-bg').forEach(bg => {
+        bg.addEventListener('click', e => { if (e.target === bg) closeModal(bg.id); });
+    });
+</script>
+{% endblock %}

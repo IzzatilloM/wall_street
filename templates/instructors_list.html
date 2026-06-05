@@ -1,0 +1,1485 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Instructors — Wall Street{% endblock %}
+{% block header_section %}Instructors{% endblock %}
+{% block breadcrumb %}Instructors{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
+
+<style>
+    /* ═══════════════════════════════════════════════
+       ROOT & THEME
+    ═══════════════════════════════════════════════ */
+    :root {
+      --primary:        #0E5C60;
+      --primary-light:  #157f85;
+      --primary-deep:   #0a4144;
+      --primary-soft:   rgba(14,92,96,0.28);
+      --primary-glow:   rgba(14,92,96,0.20);
+      --accent:         #21c9d0;
+      --accent-soft:    rgba(33,201,208,0.12);
+      --gold:           #d4a843;
+      --gold-soft:      rgba(212,168,67,0.12);
+      --gold-deep:      #a07a1e;
+      --danger:         #d63031;
+      --danger-soft:    rgba(214,48,49,0.10);
+      --success:        #00b894;
+      --success-soft:   rgba(0,184,148,0.10);
+      --warn:           #e17055;
+
+      --bg:             #071a1b;
+      --surface:        #0d2829;
+      --surface-2:      #0a2122;
+      --border:         rgba(33,201,208,0.12);
+      --border-strong:  rgba(33,201,208,0.22);
+      --text:           #e0f5f6;
+      --text-soft:      #7ecdd0;
+      --text-faint:     #3d8f94;
+
+      --radius-sm:  10px;
+      --radius-md:  16px;
+      --radius-lg:  22px;
+      --radius-xl:  30px;
+
+      --shadow-xs: 0 2px 8px rgba(14,92,96,0.07);
+      --shadow-sm: 0 4px 20px rgba(14,92,96,0.10);
+      --shadow-md: 0 8px 32px rgba(14,92,96,0.15);
+      --shadow-lg: 0 16px 48px rgba(14,92,96,0.18);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      color-scheme: dark;
+    }
+
+    /* ─── GLOBAL LINK FIX: sidebar va boshqa joylardagi underline o'chiriladi ─── */
+    a,
+    a:hover,
+    a:focus,
+    a:visited,
+    a:active,
+    .nav-link,
+    .nav-link:hover,
+    .nav-link:focus,
+    [class*="nav"] a,
+    [class*="sidebar"] a,
+    [class*="menu"] a {
+      text-decoration: none !important;
+    }
+
+    .page-wrap {
+      padding: 2rem 2.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .page-title-block h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0 0 4px;
+      letter-spacing: -0.03em;
+    }
+    .page-title-block .breadcrumb-trail {
+      font-size: 13px;
+      color: var(--text-faint);
+      font-weight: 500;
+    }
+    .page-title-block .breadcrumb-trail span { color: var(--primary); }
+
+    /* STAT CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1.6rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+      transition: transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s;
+    }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      opacity: 0.05;
+    }
+    .stat-card.sc-primary::after { background: var(--primary); }
+    .stat-card.sc-accent::after  { background: var(--accent); }
+    .stat-card.sc-gold::after    { background: var(--gold); }
+    .stat-card.sc-success::after { background: var(--success); }
+    .stat-card .sc-stripe {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 5px; border-radius: 4px 0 0 4px;
+    }
+    .sc-primary .sc-stripe { background: linear-gradient(180deg, var(--primary-light), var(--primary-deep)); }
+    .sc-accent  .sc-stripe { background: linear-gradient(180deg, var(--accent), #0b99a0); }
+    .sc-gold    .sc-stripe { background: linear-gradient(180deg, var(--gold), var(--gold-deep)); }
+    .sc-success .sc-stripe { background: linear-gradient(180deg, var(--success), #009973); }
+    .sc-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 1rem;
+    }
+    .sc-primary .sc-icon { background: var(--primary-soft); color: var(--accent); }
+    .sc-accent  .sc-icon { background: var(--accent-soft);  color: var(--accent); }
+    .sc-gold    .sc-icon { background: var(--gold-soft);    color: var(--gold); }
+    .sc-success .sc-icon { background: var(--success-soft); color: var(--success); }
+    .sc-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.4rem; font-weight: 800;
+      line-height: 1; color: var(--text); margin-bottom: 0.25rem;
+    }
+    .sc-label {
+      font-size: 12px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint);
+    }
+
+    /* SECTION HEADER */
+    .section-hdr {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .section-hdr-left { display: flex; align-items: center; gap: 0.75rem; }
+    .section-hdr-left h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.25rem; font-weight: 800; color: var(--text); margin: 0;
+    }
+    .section-pill {
+      display: inline-flex; align-items: center;
+      padding: 4px 14px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    }
+    .pill-admin   { background: var(--gold-soft); color: var(--gold-deep); border: 1px solid rgba(212,168,67,.25); }
+    .pill-teacher { background: rgba(14,92,96,0.30); color: var(--accent); border: 1px solid var(--border-strong); }
+
+    /* LIMIT BANNER */
+    .limit-banner {
+      display: flex; align-items: center;
+      gap: 0.75rem; padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-size: 13.5px; font-weight: 500;
+      line-height: 1.55; margin-bottom: 1rem;
+    }
+    .lb-ok   { background: rgba(14,92,96,0.28); border: 1px solid var(--border-strong); color: var(--accent); }
+    .lb-full { background: var(--danger-soft);  border: 1px solid rgba(214,48,49,.20);  color: var(--danger); }
+    .lb-icon { font-size: 20px; flex-shrink: 0; }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex; align-items: center;
+      gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;
+    }
+    .filter-btn {
+      padding: 7px 18px; border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      background: rgba(14,92,96,0.22);
+      color: var(--text-soft);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+    }
+    .filter-count { margin-left: auto; font-size: 13px; color: var(--text-faint); font-weight: 600; }
+
+    /* TABLE CARD */
+    .tcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2.2rem;
+    }
+    .tcard-head {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(14,92,96,0.30);
+    }
+    .tcard-head h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700; color: var(--text); margin: 0;
+    }
+    .tcard-head span { font-size: 12.5px; color: var(--text-faint); font-weight: 600; }
+
+    .inst-table { width: 100%; border-collapse: collapse; }
+    .inst-table thead th {
+      padding: 0.75rem 1.2rem;
+      font-size: 10.5px; font-weight: 800;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-faint);
+      background: rgba(14,92,96,0.35);
+      border-bottom: 1px solid var(--border);
+      text-align: left; white-space: nowrap;
+    }
+    .inst-table tbody td {
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 13.5px; color: var(--text); vertical-align: middle;
+    }
+    .inst-table tbody tr { transition: background 0.15s; }
+    .inst-table tbody tr:hover { background: var(--primary-soft); }
+    .inst-table tbody tr:last-child td { border-bottom: none; }
+
+    .row-num {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(14,92,96,0.30); border: 1px solid var(--border);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11.5px; font-weight: 700; color: var(--text-faint);
+    }
+
+    .ubox { display: flex; align-items: center; gap: 0.85rem; }
+    .uav {
+      width: 44px; height: 44px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800;
+      flex-shrink: 0; position: relative;
+    }
+    .uav::after {
+      content: ''; position: absolute; inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 -2px 6px rgba(0,0,0,0.15);
+    }
+    .uav-teacher { background: linear-gradient(135deg, var(--primary-light), var(--primary-deep)); color: #e0f5f6; }
+    .uav-admin   { background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color: #1a0e00; }
+    .ubox-info h4 { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 2px; }
+    .ubox-info p  { font-size: 12px; color: var(--text-faint); margin: 0; font-weight: 500; }
+
+    .spec-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 999px;
+      background: rgba(14,92,96,0.28); border: 1px solid var(--border);
+      font-size: 12px; font-weight: 600; color: var(--text-soft);
+      max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .exp-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 13.5px; font-weight: 700; color: var(--primary);
+    }
+    .salary-val { font-weight: 800; font-size: 14px; color: var(--gold-deep); font-family: 'Syne', sans-serif; }
+
+    .badge-active {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 13px; border-radius: 999px;
+      font-size: 12px; font-weight: 700;
+      background: var(--success-soft); color: #00e0b0;
+      border: 1px solid rgba(0,184,148,0.25);
+    }
+    .badge-inactive {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 13px; border-radius: 999px;
+      font-size: 12px; font-weight: 700;
+      background: var(--danger-soft); color: var(--danger);
+      border: 1px solid rgba(214,48,49,0.20);
+    }
+    .badge-active::before   { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #00b894; display: inline-block; animation: pulse 2s infinite; }
+    .badge-inactive::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); display: inline-block; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .acts { display: flex; gap: 5px; }
+    .act-btn {
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: rgba(14,92,96,0.22);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 15px; transition: all 0.2s;
+      text-decoration: none !important;
+    }
+    .act-btn:hover { transform: translateY(-2px); }
+    .act-view   { color: var(--primary); }
+    .act-view:hover   { background: var(--primary-soft); border-color: var(--border-strong); box-shadow: var(--shadow-xs); }
+    .act-edit   { color: var(--gold-deep); }
+    .act-edit:hover   { background: var(--gold-soft); border-color: rgba(212,168,67,.3); box-shadow: var(--shadow-xs); }
+    .act-delete { color: var(--danger); }
+    .act-delete:hover { background: var(--danger-soft); border-color: rgba(214,48,49,.25); box-shadow: var(--shadow-xs); }
+
+    /* BUTTONS */
+    .btn-ws {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 0.65rem 1.3rem; border-radius: var(--radius-md);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px; font-weight: 700;
+      border: none; cursor: pointer; transition: all 0.25s;
+      text-decoration: none !important; letter-spacing: 0.01em; white-space: nowrap;
+    }
+    .btn-primary-ws {
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-deep) 100%);
+      color: #fff !important; box-shadow: 0 6px 20px var(--primary-glow);
+    }
+    .btn-primary-ws:hover { transform: translateY(-2px); box-shadow: 0 10px 28px var(--primary-glow); filter: brightness(1.07); }
+    .btn-gold-ws {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+      color: #fff !important; box-shadow: 0 6px 20px rgba(212,168,67,0.25);
+    }
+    .btn-gold-ws:hover { transform: translateY(-2px); filter: brightness(1.07); }
+    .btn-danger-ws {
+      background: linear-gradient(135deg, #e84040, #b52020);
+      color: #fff !important; box-shadow: 0 6px 20px rgba(214,48,49,0.25);
+    }
+    .btn-danger-ws:hover { transform: translateY(-2px); filter: brightness(1.07); }
+    .btn-ghost-ws {
+      background: rgba(14,92,96,0.22);
+      border: 1px solid var(--border-strong); color: var(--text-soft) !important;
+    }
+    .btn-ghost-ws:hover { background: var(--surface-2); color: var(--text) !important; }
+    .btn-disabled-ws {
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text-faint) !important; cursor: not-allowed; opacity: 0.7;
+    }
+
+    .ws-tip-wrap { position: relative; display: inline-flex; }
+    .ws-tip-wrap .ws-tip {
+      display: none; position: absolute;
+      bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      background: rgba(13,31,32,0.94); color: #fca5a5;
+      font-size: 12px; font-weight: 700; padding: 6px 12px;
+      border-radius: 8px; white-space: nowrap;
+      border: 1px solid rgba(214,48,49,0.25);
+      pointer-events: none; z-index: 10;
+    }
+    .ws-tip-wrap:hover .ws-tip { display: block; }
+
+    /* PAGINATION */
+    .pag-row {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.4rem;
+      border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--text-faint); font-weight: 600;
+    }
+    .pag-btns { display: flex; gap: 5px; }
+    .pag-btn {
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: rgba(14,92,96,0.22); color: var(--text-soft);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; transition: 0.2s;
+      text-decoration: none !important;
+    }
+    .pag-btn.current, .pag-btn:hover {
+      background: var(--primary); border-color: var(--primary); color: #fff !important;
+    }
+
+    /* EMPTY STATE */
+    .empty-state { padding: 3.5rem 1.5rem; text-align: center; color: var(--text-soft); }
+    .empty-icon {
+      width: 72px; height: 72px; border-radius: var(--radius-lg);
+      background: rgba(14,92,96,0.30); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin: 0 auto 1.2rem;
+    }
+    .empty-state h3 {
+      font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800;
+      color: var(--text); margin-bottom: 8px;
+    }
+    .empty-state p { font-size: 14px; color: var(--text-faint); }
+
+    /* ═══════════════════════════════════════════════
+       MODAL — TO'LIQ TUZATILGAN
+       Muammo: modal layout ichida qolmoqda va orqa fon xiralashmaydi
+       Yechim: position:fixed, z-index:99999, body ustida to'liq overlay
+    ═══════════════════════════════════════════════ */
+    /*
+     * ═══════════════════════════════════════════════════════
+     * MODAL OVERLAY — BASE.HTML BILAN MUAMMO VA YECHIM
+     *
+     * Muammo: base.html dagi bu elementlar yangi stacking
+     * context yaratadi va position:fixed ni "tutib qoladi":
+     *   - .content-wrap  { overflow-y: auto }
+     *   - .page-surface  { overflow: hidden }
+     *   - .topbar        { z-index: 30; backdrop-filter }
+     *
+     * Yechim: Modal elementlarni DOMContentLoaded da
+     * document.body ga ko'chiramiz (extra_js blokida).
+     * Shu bilan ular hech qanday stacking context ga
+     * bog'liq bo'lmaydi.
+     * ═══════════════════════════════════════════════════════
+     */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999999;
+      background: rgba(4, 14, 15, 0.80);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-y: auto;
+      /* transform yoki filter ISHLATILMAYDI — stacking context yaratmasligi uchun */
+    }
+
+    /* .open classsi qo'shilganda ko'rinadi */
+    .modal-overlay.open {
+      display: flex;
+      animation: mfade 0.22s ease forwards;
+    }
+
+    @keyframes mfade {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .ws-modal {
+      width: 100%;
+      max-width: 700px;
+      /* max-height: viewport ning 90% */
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #0c2526;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(33,201,208,0.08);
+      animation: mslide 0.28s cubic-bezier(.22,1,.36,1) forwards;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      /* MUHIM: modal o'zi ham flex container bo'lishi kerak emas, faqat blok */
+      position: relative;
+      /* Click overlap oldini olish */
+      pointer-events: all;
+    }
+
+    .ws-modal.modal-sm { max-width: 460px; }
+    .ws-modal.modal-lg { max-width: 820px; }
+
+    @keyframes mslide {
+      from { opacity: 0; transform: translateY(28px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0)  scale(1); }
+    }
+
+    /* Modal header — sticky, yuqorida qoladi */
+    .modal-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 1.75rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #0c2526 0%, #0a2020 100%);
+      /* STICKY: scroll qilganda yuqorida qolsin */
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    }
+
+    .modal-hdr-left { padding-left: 1rem; }
+    .modal-hdr-left h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem; font-weight: 800;
+      color: var(--text); margin: 0 0 3px;
+    }
+    .modal-hdr-left p { font-size: 13px; color: var(--text-faint); margin: 0; }
+
+    .modal-hdr-accent {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 5px;
+      border-radius: var(--radius-xl) 0 0 0;
+    }
+    .modal-accent-primary { background: linear-gradient(180deg, var(--primary-light), var(--primary-deep)); }
+    .modal-accent-gold    { background: linear-gradient(180deg, var(--gold), var(--gold-deep)); }
+    .modal-accent-danger  { background: linear-gradient(180deg, #e84040, #8b1a1a); }
+
+    .modal-close-btn {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: rgba(14,92,96,0.30);
+      color: var(--text-soft);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 20px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .modal-close-btn:hover {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: rgba(214,48,49,.20);
+      transform: scale(1.05);
+    }
+
+    .modal-bd { padding: 1.5rem 1.75rem; }
+
+    .modal-ft {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 1.1rem 1.75rem 1.5rem;
+      border-top: 1px solid var(--border);
+      background: rgba(14,92,96,0.18);
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    }
+
+    /* FORM ELEMENTS */
+    .form-section-lbl {
+      font-size: 11px; font-weight: 900; color: var(--text-faint);
+      text-transform: uppercase; letter-spacing: 0.12em;
+      margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;
+    }
+    .form-section-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .form-divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+    .fg { display: flex; flex-direction: column; gap: 6px; }
+    .fg label {
+      font-size: 12px; font-weight: 700; color: var(--text-soft);
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .finput {
+      width: 100%;
+      border: 1.5px solid var(--border-strong);
+      background: rgba(14,92,96,0.22);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 0.75rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .finput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(33,201,208,0.12);
+      background: rgba(14,92,96,0.35);
+    }
+    .finput::placeholder { color: var(--text-faint); }
+    textarea.finput { min-height: 100px; resize: vertical; }
+    select.finput option { background: var(--surface); }
+
+    .check-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0.8rem 1rem; border-radius: var(--radius-sm);
+      background: rgba(14,92,96,0.30); border: 1px solid var(--border-strong);
+      cursor: pointer; transition: border-color 0.2s;
+    }
+    .check-row:hover { border-color: var(--primary); }
+    .check-row input { accent-color: var(--primary); width: 16px; height: 16px; }
+    .check-row span { font-size: 13.5px; font-weight: 600; color: var(--text); }
+
+    /* DETAIL MODAL */
+    .detail-hero-card {
+      display: flex; align-items: center; gap: 1.2rem; padding: 1.25rem;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, rgba(14,92,96,0.35) 0%, rgba(14,92,96,0.18) 100%);
+      border: 1px solid var(--border); margin-bottom: 1.25rem;
+    }
+    .detail-av {
+      width: 72px; height: 72px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+      flex-shrink: 0; box-shadow: var(--shadow-sm);
+    }
+    .dav-t { background: linear-gradient(135deg, var(--primary-light), var(--primary-deep)); color: #e0f5f6; }
+    .dav-a { background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color: #1a0e00; }
+    .detail-hero-info h2 {
+      font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 800;
+      color: var(--text); margin-bottom: 4px;
+    }
+    .detail-hero-info p { font-size: 13px; color: var(--text-faint); margin-bottom: 0.6rem; font-weight: 500; }
+
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+    .info-item {
+      padding: 0.85rem 1rem; border-radius: var(--radius-sm);
+      background: rgba(14,92,96,0.22); border: 1px solid var(--border);
+    }
+    .info-item .info-lbl {
+      display: block; font-size: 10.5px; font-weight: 800;
+      color: var(--text-faint); text-transform: uppercase;
+      letter-spacing: 0.09em; margin-bottom: 5px;
+    }
+    .info-item .info-val { font-size: 13.5px; font-weight: 700; color: var(--text); }
+
+    .bio-card {
+      padding: 1rem; border-radius: var(--radius-sm);
+      background: rgba(14,92,96,0.22); border: 1px solid var(--border);
+      color: var(--text-soft); line-height: 1.75; font-size: 13.5px; margin-top: 12px;
+    }
+    .bio-card-lbl {
+      display: block; font-size: 10.5px; font-weight: 800;
+      color: var(--text-faint); text-transform: uppercase;
+      letter-spacing: 0.09em; margin-bottom: 8px;
+    }
+
+    /* DELETE MODAL */
+    .delete-center { text-align: center; padding: 1rem 0 1.5rem; }
+    .del-icon {
+      width: 76px; height: 76px; border-radius: var(--radius-lg);
+      background: var(--danger-soft); border: 1px solid rgba(214,48,49,0.22);
+      color: var(--danger); font-size: 30px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.2rem;
+    }
+    .delete-center h2 {
+      font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 800;
+      color: var(--text); margin-bottom: 0.6rem;
+    }
+    .delete-center p { font-size: 14px; color: var(--text-soft); line-height: 1.7; }
+
+    /* ALERTS */
+    .ws-alert {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      padding: 0.9rem 1.1rem; border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 500;
+      animation: fadeUp 0.4s ease; margin-bottom: 10px;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .alert-success { background: var(--success-soft); border: 1px solid rgba(0,184,148,.25); color: var(--success); }
+    .alert-error   { background: var(--danger-soft);  border: 1px solid rgba(214,48,49,.22); color: var(--danger); }
+    .alert-warning { background: rgba(225,112,85,.10); border: 1px solid rgba(225,112,85,.22); color: #e8855a; }
+    .alert-info    { background: var(--primary-soft);  border: 1px solid var(--border-strong); color: var(--text); }
+    .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 992px) {
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 640px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .page-wrap { padding: 1.2rem; }
+      .section-hdr { flex-direction: column; align-items: flex-start; }
+      .info-grid { grid-template-columns: 1fr; }
+      .modal-bd { padding: 1.2rem 1.1rem; }
+      .modal-ft { padding: 0.9rem 1.1rem 1.2rem; }
+      .modal-hdr { padding: 1.1rem 1.1rem 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+    <!-- ALERTS -->
+    {% if messages %}
+    <div style="margin-bottom:1.25rem;">
+        {% for message in messages %}
+        <div class="ws-alert {% if 'error' in message.tags %}alert-error{% elif 'success' in message.tags %}alert-success{% elif 'warning' in message.tags %}alert-warning{% else %}alert-info{% endif %}"
+             id="alert-{{ forloop.counter }}">
+            <span class="alert-icon">{% if 'error' in message.tags %}❌{% elif 'success' in message.tags %}✅{% elif 'warning' in message.tags %}⚠️{% else %}ℹ️{% endif %}</span>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div class="page-title-block">
+            <h1>
+                <i class="bi bi-mortarboard-fill me-2"
+                   style="color:var(--primary);font-size:1.7rem;vertical-align:-3px;"></i>Instructors
+            </h1>
+            <div class="breadcrumb-trail">Dashboard › <span>Instructors</span></div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <button class="btn-ws btn-gold-ws" onclick="openModal('modal-create','teacher')">
+                <i class="bi bi-person-plus-fill"></i> Add teacher
+            </button>
+            {% if can_add_admin %}
+            <button class="btn-ws btn-primary-ws" onclick="openModal('modal-create','admin')">
+                <i class="bi bi-shield-fill-plus"></i> Add admin
+            </button>
+            {% else %}
+            <div class="ws-tip-wrap">
+                <button class="btn-ws btn-disabled-ws" disabled>
+                    <i class="bi bi-shield-x"></i> Add admin
+                </button>
+                <span class="ws-tip">⛔ Admin limiti to'ldi ({{ max_admins }}/{{ max_admins }})</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card sc-primary">
+            <div class="sc-stripe"></div>
+            <div class="sc-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="sc-num">{{ total_count }}</div>
+            <div class="sc-label">Total instructors</div>
+        </div>
+        <div class="stat-card sc-accent">
+            <div class="sc-stripe"></div>
+            <div class="sc-icon"><i class="bi bi-person-workspace"></i></div>
+            <div class="sc-num">{{ teacher_count }}</div>
+            <div class="sc-label">Teachers</div>
+        </div>
+        <div class="stat-card sc-gold">
+            <div class="sc-stripe"></div>
+            <div class="sc-icon"><i class="bi bi-shield-fill-check"></i></div>
+            <div class="sc-num">{{ admin_count }}<span style="font-size:1.1rem;color:var(--text-faint)">/{{ max_admins }}</span>
+            </div>
+            <div class="sc-label">Adminlar (limit)</div>
+        </div>
+        <div class="stat-card sc-success">
+            <div class="sc-stripe"></div>
+            <div class="sc-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="sc-num">{{ active_count }}</div>
+            <div class="sc-label">Active instructors</div>
+        </div>
+    </div>
+
+    <!-- ADMINLAR BO'LIMI -->
+    <div class="section-hdr">
+        <div class="section-hdr-left">
+            <h2><i class="bi bi-shield-fill" style="color:var(--gold-deep);"></i> Adminlar</h2>
+            <span class="section-pill pill-admin">{{ admin_count }} / {{ max_admins }}</span>
+        </div>
+        {% if can_add_admin %}
+        <button class="btn-ws btn-primary-ws" style="padding:.55rem 1.1rem; font-size:13px;"
+                onclick="openModal('modal-create','admin')">
+            <i class="bi bi-plus-lg"></i> Add admin
+        </button>
+        {% else %}
+        <span style="font-size:12.5px; color:var(--danger); font-weight:700; display:flex;align-items:center;gap:5px;">
+            <i class="bi bi-exclamation-triangle-fill"></i> Limit to'ldi ({{ max_admins }}/{{ max_admins }})
+        </span>
+        {% endif %}
+    </div>
+
+    {% if not can_add_admin %}
+    <div class="limit-banner lb-full">
+        <span class="lb-icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
+        <span>The system allows a maximum of <strong>{{ max_admins }} admins</strong>. To create a new admin, delete an existing one first.</span>
+    </div>
+    {% else %}
+    <div class="limit-banner lb-ok">
+        <span class="lb-icon"><i class="bi bi-info-circle-fill"></i></span>
+        <span>You can add <strong>{{ max_admins|add:"-"|add:admin_count }} more admins</strong> ({{ admin_count }}/{{ max_admins }}).</span>
+    </div>
+    {% endif %}
+
+    <div class="tcard">
+        <div class="tcard-head">
+            <h3><i class="bi bi-shield-fill me-2" style="color:var(--gold-deep);"></i>Admin ro'yxati</h3>
+            <span>Maksimum {{ max_admins }} ta</span>
+        </div>
+        {% if admin_list %}
+        <div style="overflow-x:auto;">
+            <table class="inst-table" id="adminTable">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Admin</th>
+                    <th>Specialization</th>
+                    <th>Experience</th>
+                    <th>Salary</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for instructor in admin_list %}
+                <tr
+                        data-id="{{ instructor.id }}"
+                        data-full-name="{{ instructor.full_name }}"
+                        data-username="{{ instructor.user.username }}"
+                        data-email="{{ instructor.user.email }}"
+                        data-phone="{{ instructor.phone }}"
+                        data-specialty="{{ instructor.specialty }}"
+                        data-experience="{{ instructor.experience_years }}"
+                        data-salary="{{ instructor.salary }}"
+                        data-address="{{ instructor.address }}"
+                        data-bio="{{ instructor.bio }}"
+                        data-active="{% if instructor.is_active %}true{% else %}false{% endif %}"
+                        data-role="admin"
+                        data-created="{{ instructor.created_at }}"
+                >
+                    <td><span class="row-num">{{ forloop.counter }}</span></td>
+                    <td>
+                        <div class="ubox">
+                            <div class="uav uav-admin">{{ instructor.full_name|slice:":1"|upper }}</div>
+                            <div class="ubox-info">
+                                <h4>{{ instructor.full_name }}</h4>
+                                <p>@{{ instructor.user.username }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if instructor.specialty %}
+                        <span class="spec-tag"><i class="bi bi-tag-fill"
+                                                  style="font-size:11px;color:var(--primary);"></i>{{ instructor.specialty }}</span>
+                        {% else %}<span style="color:var(--text-faint);">—</span>{% endif %}
+                    </td>
+                    <td>
+                        <span class="exp-badge"><i class="bi bi-bar-chart-fill" style="font-size:13px;"></i>{{ instructor.experience_years }} yil</span>
+                    </td>
+                    <td><span class="salary-val">${{ instructor.salary|floatformat:0 }}</span></td>
+                    <td>
+                        {% if instructor.is_active %}
+                        <span class="badge-active">Active</span>
+                        {% else %}
+                        <span class="badge-inactive"><i class="bi bi-dash-circle-fill" style="font-size:10px;"></i>Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="acts">
+                            <button class="act-btn act-view" title="View"
+                                    onclick="openDetailFromRow(this.closest('tr'))">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                            <button class="act-btn act-edit" title="Edit"
+                                    onclick="openEditFromRow(this.closest('tr'))">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="act-btn act-delete" title="O'chirish"
+                                    onclick="openDelete('{{ instructor.id }}', '{{ instructor.full_name|escapejs }}')">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon" style="background:var(--gold-soft);border-color:rgba(212,168,67,.25);">
+                <i class="bi bi-shield-fill" style="color:var(--gold-deep);"></i>
+            </div>
+            <h3>No admins</h3>
+            <p>Add an admin using the button above.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TEACHERS BO'LIMI -->
+    <div class="section-hdr" style="margin-top:0.5rem;">
+        <div class="section-hdr-left">
+            <h2><i class="bi bi-person-workspace" style="color:var(--primary);"></i> Teachers</h2>
+            <span class="section-pill pill-teacher">{{ teacher_count }} ta</span>
+        </div>
+        <button class="btn-ws btn-gold-ws" style="padding:.55rem 1.1rem; font-size:13px;"
+                onclick="openModal('modal-create','teacher')">
+            <i class="bi bi-plus-lg"></i> Add teacher
+        </button>
+    </div>
+
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterTeachers('all',this)">All</button>
+        <button class="filter-btn" onclick="filterTeachers('active',this)">
+            <i class="bi bi-check-circle-fill me-1" style="color:var(--success);font-size:11px;"></i>Active
+        </button>
+        <button class="filter-btn" onclick="filterTeachers('inactive',this)">
+            <i class="bi bi-x-circle-fill me-1" style="color:var(--danger);font-size:11px;"></i>Inactive
+        </button>
+        <span class="filter-count">{{ teacher_page.paginator.count }} ta teacher</span>
+    </div>
+
+    <div class="tcard">
+        <div class="tcard-head">
+            <h3><i class="bi bi-person-workspace me-2" style="color:var(--primary);"></i>Teacher ro'yxati</h3>
+            <span>Sahifa {{ teacher_page.number }} / {{ teacher_page.paginator.num_pages }}</span>
+        </div>
+        {% if teacher_page.object_list %}
+        <div style="overflow-x:auto;">
+            <table class="inst-table" id="teacherTable">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Teacher</th>
+                    <th>Specialization</th>
+                    <th>Experience</th>
+                    <th>Salary</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for instructor in teacher_page.object_list %}
+                <tr
+                        data-status="{% if instructor.is_active %}active{% else %}inactive{% endif %}"
+                        data-id="{{ instructor.id }}"
+                        data-full-name="{{ instructor.full_name }}"
+                        data-username="{{ instructor.user.username }}"
+                        data-email="{{ instructor.user.email }}"
+                        data-phone="{{ instructor.phone }}"
+                        data-specialty="{{ instructor.specialty }}"
+                        data-experience="{{ instructor.experience_years }}"
+                        data-salary="{{ instructor.salary }}"
+                        data-address="{{ instructor.address }}"
+                        data-bio="{{ instructor.bio }}"
+                        data-active="{% if instructor.is_active %}true{% else %}false{% endif %}"
+                        data-role="teacher"
+                        data-created="{{ instructor.created_at }}"
+                >
+                    <td><span class="row-num">{{ teacher_page.start_index|add:forloop.counter0 }}</span></td>
+                    <td>
+                        <div class="ubox">
+                            <div class="uav uav-teacher">{{ instructor.full_name|slice:":1"|upper }}</div>
+                            <div class="ubox-info">
+                                <h4>{{ instructor.full_name }}</h4>
+                                <p>@{{ instructor.user.username }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if instructor.specialty %}
+                        <span class="spec-tag"><i class="bi bi-tag-fill"
+                                                  style="font-size:11px;color:var(--primary);"></i>{{ instructor.specialty }}</span>
+                        {% else %}<span style="color:var(--text-faint);">—</span>{% endif %}
+                    </td>
+                    <td>
+                        <span class="exp-badge"><i class="bi bi-bar-chart-fill" style="font-size:13px;"></i>{{ instructor.experience_years }} yil</span>
+                    </td>
+                    <td><span class="salary-val">${{ instructor.salary|floatformat:0 }}</span></td>
+                    <td>
+                        {% if instructor.is_active %}
+                        <span class="badge-active">Active</span>
+                        {% else %}
+                        <span class="badge-inactive"><i class="bi bi-dash-circle-fill" style="font-size:10px;"></i>Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="acts">
+                            <button class="act-btn act-view" title="View"
+                                    onclick="openDetailFromRow(this.closest('tr'))">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                            <button class="act-btn act-edit" title="Edit"
+                                    onclick="openEditFromRow(this.closest('tr'))">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="act-btn act-delete" title="O'chirish"
+                                    onclick="openDelete('{{ instructor.id }}', '{{ instructor.full_name|escapejs }}')">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pag-row">
+            <span>{{ teacher_page.start_index }}–{{ teacher_page.end_index }} / {{ teacher_page.paginator.count }} ta</span>
+            <div class="pag-btns">
+                {% if teacher_page.has_previous %}
+                <a href="?page={{ teacher_page.previous_page_number }}" class="pag-btn">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                {% endif %}
+                {% for num in teacher_page.paginator.page_range %}
+                {% if teacher_page.number == num %}
+                <span class="pag-btn current">{{ num }}</span>
+                {% elif num|add:"-2" <= teacher_page.number and teacher_page.number <= num|add:"2" %}
+                <a href="?page={{ num }}" class="pag-btn">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+                {% if teacher_page.has_next %}
+                <a href="?page={{ teacher_page.next_page_number }}" class="pag-btn">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-person-workspace" style="color:var(--primary);"></i></div>
+            <h3>No teachers</h3>
+            <p>Add a teacher using the button above.</p>
+        </div>
+        {% endif %}
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════
+         MODAL 1 — CREATE
+         position:fixed + z-index:99999 bilan to'g'rilandi
+    ═══════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modal-create">
+        <div class="ws-modal">
+            <div class="modal-hdr">
+                <div class="modal-hdr-accent modal-accent-primary" id="create-hdr-accent"></div>
+                <div class="modal-hdr-left">
+                    <h2 id="create-title">Add new teacher</h2>
+                    <p id="create-subtitle">Account va profil bir vaqtda yaratiladi</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeModal('modal-create')">×</button>
+            </div>
+            <form method="POST" action="{% url 'instructors:instructor_create' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <input type="hidden" name="role" id="create-role" value="teacher">
+                <div class="modal-bd">
+                    <div class="form-section-lbl"><i class="bi bi-person-fill me-1"></i>Account ma'lumotlari</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Username *</label>
+                                <input class="finput" type="text" name="username" placeholder="john_doe" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Phone</label>
+                                <input class="finput" type="text" name="phone" placeholder="+998 90 000 00 00">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Email</label>
+                                <input class="finput" type="email" name="email" placeholder="john@wallstreet.uz">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Parol *</label>
+                                <input class="finput" type="password" name="password" placeholder="••••••••" required>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="form-divider mt-4">
+                    <div class="form-section-lbl mt-3"><i class="bi bi-card-list me-1"></i>Profil ma'lumotlari</div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="fg">
+                                <label>To'liq ism *</label>
+                                <input class="finput" type="text" name="full_name" placeholder="John Doe" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Specialization</label>
+                                <input class="finput" type="text" name="specialty" placeholder="Python, Django ...">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Experience (years)</label>
+                                <input class="finput" type="number" name="experience_years" placeholder="3" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Salary ($)</label>
+                                <input class="finput" type="number" name="salary" placeholder="500" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Address</label>
+                                <input class="finput" type="text" name="address" placeholder="Toshkent, Chilonzor">
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="fg">
+                                <label>Bio</label>
+                                <textarea class="finput" name="bio" placeholder="Qisqacha ma'lumot..."></textarea>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="check-row">
+                                <input type="checkbox" name="is_active" checked>
+                                <span><i class="bi bi-check-circle-fill me-1" style="color:var(--success);"></i>Set as active</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-ft">
+                    <button type="submit" class="btn-ws btn-primary-ws">
+                        <i class="bi bi-check-lg"></i> Save
+                    </button>
+                    <button type="button" class="btn-ws btn-ghost-ws" onclick="closeModal('modal-create')">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2 — DETAIL -->
+    <div class="modal-overlay" id="modal-detail">
+        <div class="ws-modal modal-lg">
+            <div class="modal-hdr">
+                <div class="modal-hdr-accent modal-accent-primary"></div>
+                <div class="modal-hdr-left">
+                    <h2>Instructor profili</h2>
+                    <p>To'liq ma'lumotlar</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeModal('modal-detail')">×</button>
+            </div>
+            <div class="modal-bd">
+                <div class="detail-hero-card">
+                    <div class="detail-av dav-t" id="d-avatar">J</div>
+                    <div class="detail-hero-info">
+                        <h2 id="d-name">—</h2>
+                        <p id="d-meta">—</p>
+                        <div id="d-badges"></div>
+                    </div>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-lbl"><i class="bi bi-phone-fill me-1"></i>Phone</span>
+                        <span class="info-val" id="d-phone">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl"><i class="bi bi-envelope-fill me-1"></i>Email</span>
+                        <span class="info-val" id="d-email">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl"><i class="bi bi-tag-fill me-1"></i>Specialization</span>
+                        <span class="info-val" id="d-specialty">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl"><i class="bi bi-bar-chart-fill me-1"></i>Experience</span>
+                        <span class="info-val" id="d-exp">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl"><i class="bi bi-currency-dollar me-1"></i>Salary</span>
+                        <span class="info-val salary-val" id="d-salary">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl"><i class="bi bi-geo-alt-fill me-1"></i>Address</span>
+                        <span class="info-val" id="d-address">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl"><i class="bi bi-calendar-fill me-1"></i>Qo'shilgan</span>
+                        <span class="info-val" id="d-created">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl"><i class="bi bi-at me-1"></i>Username</span>
+                        <span class="info-val" id="d-username">—</span>
+                    </div>
+                </div>
+                <div class="bio-card">
+                    <span class="bio-card-lbl"><i class="bi bi-file-text-fill me-1"></i>Bio</span>
+                    <span id="d-bio">—</span>
+                </div>
+            </div>
+            <div class="modal-ft">
+                <button class="btn-ws btn-gold-ws" id="d-edit-btn">
+                    <i class="bi bi-pencil-fill"></i> Edit
+                </button>
+                <button class="btn-ws btn-ghost-ws" onclick="closeModal('modal-detail')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3 — EDIT -->
+    <div class="modal-overlay" id="modal-edit">
+        <div class="ws-modal">
+            <div class="modal-hdr">
+                <div class="modal-hdr-accent modal-accent-gold"></div>
+                <div class="modal-hdr-left">
+                    <h2>Instructorni tahrirlash</h2>
+                    <p id="edit-subtitle">Profil ma'lumotlarini yangilash</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeModal('modal-edit')">×</button>
+            </div>
+            <form method="POST" id="edit-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="instructor_id" id="edit-id">
+                <div class="modal-bd">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="fg">
+                                <label>To'liq ism *</label>
+                                <input class="finput" type="text" name="full_name" id="edit-full_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Specialization</label>
+                                <input class="finput" type="text" name="specialty" id="edit-specialty">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Experience (years)</label>
+                                <input class="finput" type="number" name="experience_years" id="edit-experience_years"
+                                       min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Salary ($)</label>
+                                <input class="finput" type="number" name="salary" id="edit-salary" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fg">
+                                <label>Address</label>
+                                <input class="finput" type="text" name="address" id="edit-address">
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="fg">
+                                <label>Bio</label>
+                                <textarea class="finput" name="bio" id="edit-bio"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="check-row">
+                                <input type="checkbox" name="is_active" id="edit-is_active">
+                                <span><i class="bi bi-check-circle-fill me-1" style="color:var(--success);"></i>Set as active</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-ft">
+                    <button type="submit" class="btn-ws btn-gold-ws">
+                        <i class="bi bi-floppy-fill"></i> Save
+                    </button>
+                    <button type="button" class="btn-ws btn-ghost-ws" onclick="closeModal('modal-edit')">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4 — DELETE -->
+    <div class="modal-overlay" id="modal-delete">
+        <div class="ws-modal modal-sm">
+            <div class="modal-hdr">
+                <div class="modal-hdr-accent modal-accent-danger"></div>
+                <div class="modal-hdr-left">
+                    <h2 style="color:var(--danger);">Delete instructor</h2>
+                    <p>Bu amal ortga qaytarilmaydi</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeModal('modal-delete')">×</button>
+            </div>
+            <div class="modal-bd">
+                <div class="delete-center">
+                    <div class="del-icon"><i class="bi bi-trash3-fill"></i></div>
+                    <h2 id="del-name">—</h2>
+                    <p>Ushbu instructorning account va barcha profil ma'lumotlari tizimdan olib tashlanadi. Davom
+                        etishni xohlaysizmi?</p>
+                </div>
+            </div>
+            <form method="POST" id="delete-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="instructor_id" id="del-id">
+                <div class="modal-ft justify-content-center">
+                    <button type="submit" class="btn-ws btn-danger-ws">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Yes, delete
+                    </button>
+                    <button type="button" class="btn-ws btn-ghost-ws" onclick="closeModal('modal-delete')">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div><!-- /page-wrap -->
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    'use strict';
+
+    /* ══════════════════════════════════════════════════════
+       ASOSIY TUZATISH: Modal larni <body> ga ko'chirish
+       ──────────────────────────────────────────────────────
+       base.html da .content-wrap (overflow-y:auto),
+       .page-surface (overflow:hidden) va .topbar
+       (backdrop-filter) yangi CSS stacking context yaratadi.
+       Natijada position:fixed elementlar ham ular ichida
+       "qolib ketadi" va z-index ishlamas bo'ladi.
+
+       Yechim: barcha .modal-overlay ni document.body ning
+       to'g'ridan-to'g'ri farzandiga ko'chirish.
+       Body da hech qanday stacking context yo'q.
+    ══════════════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.modal-overlay').forEach(function (modal) {
+        document.body.appendChild(modal);
+      });
+      // Ko'chirgandan keyin overlay click listener larni qayta bog'lash
+      document.querySelectorAll('.modal-overlay').forEach(function (bg) {
+        bg.addEventListener('click', function (e) {
+          if (e.target === bg) closeModal(bg.id);
+        });
+      });
+    });
+
+    /* ── Modal helpers ── */
+    function openModal(id, role) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('open');
+      // Body scroll o'chirish
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+
+      if (id === 'modal-create' && role) {
+        const isAdmin = role === 'admin';
+        document.getElementById('create-role').value = role;
+        document.getElementById('create-title').textContent    = isAdmin ? "Add new admin"   : "Add new teacher";
+        document.getElementById('create-subtitle').textContent = isAdmin ? "Admin account va profil yaratish" : "Teacher account va profil yaratish";
+        const accent = document.getElementById('create-hdr-accent');
+        if (accent) accent.className = 'modal-hdr-accent ' + (isAdmin ? 'modal-accent-gold' : 'modal-accent-primary');
+      }
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+      // Boshqa ochiq modal yo'q bo'lsa scrollni qaytarish
+      const anyOpen = document.querySelector('.modal-overlay.open');
+      if (!anyOpen) {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+      }
+    }
+
+    // ESC tugmasi bilan yopish
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+      }
+    });
+
+    /* ── Read data from <tr> dataset ── */
+    function rowToData(row) {
+      return {
+        id:               row.dataset.id,
+        full_name:        row.dataset.fullName   || '',
+        username:         row.dataset.username   || '',
+        email:            row.dataset.email      || '',
+        phone:            row.dataset.phone      || '',
+        specialty:        row.dataset.specialty  || '',
+        experience_years: row.dataset.experience || '0',
+        salary:           row.dataset.salary     || '0',
+        address:          row.dataset.address    || '',
+        bio:              row.dataset.bio        || '',
+        is_active:        row.dataset.active === 'true',
+        role:             row.dataset.role       || 'teacher',
+        created_at:       row.dataset.created    || '—',
+      };
+    }
+
+    /* ── Detail modal ── */
+    function openDetailFromRow(row) { openDetail(rowToData(row)); }
+
+    function openDetail(data) {
+      const av = document.getElementById('d-avatar');
+      av.textContent = (data.full_name || '?')[0].toUpperCase();
+      av.className   = 'detail-av ' + (data.role === 'admin' ? 'dav-a' : 'dav-t');
+
+      document.getElementById('d-name').textContent      = data.full_name    || '—';
+      document.getElementById('d-meta').textContent      = '@' + (data.username || '—') + ' · ' + (data.email || "No email");
+      document.getElementById('d-phone').textContent     = data.phone        || 'Kiritilmagan';
+      document.getElementById('d-email').textContent     = data.email        || 'Kiritilmagan';
+      document.getElementById('d-specialty').textContent = data.specialty    || 'Kiritilmagan';
+      document.getElementById('d-exp').textContent       = (data.experience_years || 0) + ' yil';
+      document.getElementById('d-salary').textContent    = '$' + (data.salary || 0);
+      document.getElementById('d-address').textContent   = data.address      || 'Kiritilmagan';
+      document.getElementById('d-created').textContent   = data.created_at   || '—';
+      document.getElementById('d-username').textContent  = data.username     || '—';
+      document.getElementById('d-bio').textContent       = data.bio          || "Qo'shimcha ma'lumot kiritilmagan.";
+
+      const badgeEl = document.getElementById('d-badges');
+      const isAdmin = data.role === 'admin';
+      badgeEl.innerHTML =
+        `<span class="section-pill ${isAdmin ? 'pill-admin' : 'pill-teacher'} me-2">
+           <i class="bi ${isAdmin ? 'bi-shield-fill' : 'bi-person-workspace'} me-1"></i>
+           ${isAdmin ? 'Admin' : 'Teacher'}
+         </span>
+         <span class="${data.is_active ? 'badge-active' : 'badge-inactive'}">
+           ${data.is_active ? 'Active' : 'Inactive'}
+         </span>`;
+
+      document.getElementById('d-edit-btn').onclick = () => {
+        closeModal('modal-detail'); openEdit(data);
+      };
+      openModal('modal-detail');
+    }
+
+    /* ── Edit modal ── */
+    function openEditFromRow(row) { openEdit(rowToData(row)); }
+
+    function openEdit(data) {
+      document.getElementById('edit-id').value               = data.id;
+      document.getElementById('edit-full_name').value        = data.full_name        || '';
+      document.getElementById('edit-specialty').value        = data.specialty        || '';
+      document.getElementById('edit-experience_years').value = data.experience_years || '';
+      document.getElementById('edit-salary').value           = data.salary           || '';
+      document.getElementById('edit-address').value          = data.address          || '';
+      document.getElementById('edit-bio').value              = data.bio              || '';
+      document.getElementById('edit-is_active').checked      = !!data.is_active;
+      document.getElementById('edit-subtitle').textContent   = (data.full_name || '') + ' profilini yangilash';
+      document.getElementById('edit-form').action            = '/instructors/' + data.id + '/update/';
+      openModal('modal-edit');
+    }
+
+    /* ── Delete modal ── */
+    function openDelete(id, name) {
+      document.getElementById('del-id').value         = id;
+      document.getElementById('del-name').textContent = name;
+      document.getElementById('delete-form').action   = '/instructors/' + id + '/delete/';
+      openModal('modal-delete');
+    }
+
+    /* ── Teacher filter ── */
+    function filterTeachers(type, btn) {
+      document.querySelectorAll('#teacherTable tbody tr').forEach(row => {
+        row.style.display = (type === 'all' || row.dataset.status === type) ? '' : 'none';
+      });
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    /* ── Auto-dismiss alerts (4.5 sekunddan keyin) ── */
+    document.querySelectorAll('.ws-alert').forEach(el => {
+      setTimeout(() => {
+        el.style.transition = 'opacity .5s, transform .5s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-8px)';
+        setTimeout(() => el.remove(), 500);
+      }, 4500);
+    });
+</script>
+{% endblock %}

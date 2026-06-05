@@ -1,0 +1,53 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ws-web",
+      "runtimeExecutable": "D:/Loyihalarim/Wall Street/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "http.server", "8123", "--bind", "127.0.0.1", "-d", "C:/Users/Izzatillo/Desktop/Wall Street Mobile/build/web"],
+      "port": 8123
+    },
+    {
+      "name": "mobile-web",
+      "runtimeExecutable": "D:/Loyihalarim/Wall Street/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "http.server", "8090", "--bind", "127.0.0.1", "-d", "D:/WallStreetMobile/build/web"],
+      "port": 8090
+    },
+    {
+      "name": "wallstreet",
+      "runtimeExecutable": "D:/Loyihalarim/Wall Street/.venv/Scripts/python.exe",
+      "runtimeArgs": ["manage.py", "runserver", "127.0.0.1:8000"],
+      "port": 8000
+    },
+    {
+      "name": "att-static",
+      "runtimeExecutable": "D:/Loyihalarim/Wall Street/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "http.server", "8201", "--bind", "127.0.0.1", "-d", "D:/Loyihalarim/Wall Street"],
+      "port": 8201
+    },
+    {
+      "name": "carwash",
+      "runtimeExecutable": "D:/davomat/Carwash loyihaisi/.venv313/Scripts/python.exe",
+      "runtimeArgs": ["D:/davomat/Carwash loyihaisi/manage.py", "runserver", "127.0.0.1:8055", "--noreload"],
+      "port": 8055
+    },
+    {
+      "name": "bilimplay",
+      "runtimeExecutable": "D:/EduGames/.venv/Scripts/python.exe",
+      "runtimeArgs": ["D:/EduGames/backend/manage.py", "runserver", "127.0.0.1:8009", "--noreload"],
+      "port": 8009
+    },
+    {
+      "name": "fanlider",
+      "runtimeExecutable": "D:/Loyihalarim/Fan_lider_CRM/.venv/Scripts/python.exe",
+      "runtimeArgs": ["D:/Loyihalarim/Fan_lider_CRM/manage.py", "runserver", "127.0.0.1:8066", "--noreload"],
+      "port": 8066
+    },
+    {
+      "name": "fanlider-static",
+      "runtimeExecutable": "D:/Loyihalarim/Fan_lider_CRM/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "http.server", "8077", "--bind", "127.0.0.1", "-d", "D:/Loyihalarim/Fan_lider_CRM/static"],
+      "port": 8077
+    }
+  ]
+}

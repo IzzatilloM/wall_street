@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Receipt {{ payment.receipt_number }} — Wall Street CMS{% endblock %}
+{% block header_section %}Payment details{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'payments:payment_list' %}">Payments</a>
+  <span>•</span> {{ payment.receipt_number }}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+:root { --p:#0E5C60; --pd:#093D40; --pl:#e6f4f5; --gold:#C9A84C; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+}
+@media(max-width:900px){ .detail-grid{grid-template-columns:1fr;} }
+
+/* ── Main info card ── */
+.info-card {
+  padding: 28px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(14,92,96,0.10);
+  box-shadow: 0 4px 20px rgba(14,92,96,0.07);
+  margin-bottom: 20px;
+}
+.info-card-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--p);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(14,92,96,0.10);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(14,92,96,0.06);
+  gap: 20px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-key { font-size: 12px; font-weight: 700; color: #6b9ea1; text-transform: uppercase; letter-spacing: .08em; flex-shrink: 0; }
+.info-val { font-size: 14px; font-weight: 800; color: #0a2426; text-align: right; }
+
+/* ── Amount hero ── */
+.amount-hero {
+  padding: 28px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--p), var(--pd));
+  color: #fff;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.amount-hero::before {
+  content: "";
+  position: absolute;
+  width: 200px; height: 200px;
+  top: -60px; right: -60px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+}
+.ah-receipt { font-size: 11px; font-weight: 800; opacity: .7; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 8px; }
+.ah-amount  { font-size: 32px; font-weight: 900; margin-bottom: 4px; }
+.ah-net     { font-size: 15px; color: var(--gold); font-weight: 700; }
+.ah-disc    { font-size: 12px; opacity: .7; margin-top: 4px; }
+
+/* ── Status big ── */
+.status-big {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  margin-top: 14px;
+}
+.sb-paid     { background: rgba(16,185,129,0.18); color: #059669; }
+.sb-pending  { background: rgba(245,158,11,0.18); color: #d97706; }
+.sb-partial  { background: rgba(139,92,246,0.18); color: #7c3aed; }
+.sb-overdue  { background: rgba(239,68,68,0.18);  color: #dc2626; }
+.sb-cancelled{ background: rgba(107,114,128,0.18);color: #4b5563; }
+
+/* ── Action sidebar ── */
+.action-sidebar { display: flex; flex-direction: column; gap: 14px; }
+
+.action-btn-full {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all .28s ease;
+  text-decoration: none;
+  border: none;
+  width: 100%;
+}
+.abf-receipt {
+  background: linear-gradient(135deg, var(--gold), #a8832a);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(201,168,76,0.32);
+}
+.abf-receipt:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(201,168,76,0.44); }
+
+.abf-edit {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(59,130,246,0.28);
+}
+.abf-edit:hover { transform: translateY(-4px); }
+
+.abf-delete {
+  background: rgba(239,68,68,0.10);
+  color: #dc2626;
+  border: 2px solid rgba(239,68,68,0.20);
+}
+.abf-delete:hover { background: #dc2626; color: #fff; }
+
+.abf-back {
+  background: rgba(14,92,96,0.08);
+  color: var(--p);
+  border: 2px solid rgba(14,92,96,0.18);
+}
+.abf-back:hover { background: var(--pl); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-grid">
+
+  <!-- Left column -->
+  <div>
+    <!-- Amount hero -->
+    <div class="amount-hero">
+      <div class="ah-receipt">Receipt № {{ payment.receipt_number }}</div>
+      <div class="ah-amount">{{ payment.amount|floatformat:0 }} UZS</div>
+      {% if payment.discount > 0 %}
+      <div class="ah-disc">Discount: -{{ payment.discount|floatformat:0 }} UZS</div>
+      <div class="ah-net">Net: {{ payment.net_amount|floatformat:0 }} UZS</div>
+      {% endif %}
+      <div>
+        <span class="status-big sb-{{ payment.status }}">
+          {% if payment.status == 'paid' %}✅{% elif payment.status == 'pending' %}⏳{% elif payment.status == 'overdue' %}🔴{% elif payment.status == 'partial' %}🔵{% else %}⚫{% endif %}
+          {{ payment.get_status_display }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Talaba -->
+    <div class="info-card">
+      <div class="info-card-title">🎓 Student information</div>
+      <div class="info-row">
+        <span class="info-key">Name</span>
+        <span class="info-val">{{ payment.student.first_name }} {{ payment.student.last_name }}</span>
+      </div>
+      {% if payment.student.phone %}
+      <div class="info-row">
+        <span class="info-key">Phone</span>
+        <span class="info-val">{{ payment.student.phone }}</span>
+      </div>
+      {% endif %}
+      {% if payment.student.email %}
+      <div class="info-row">
+        <span class="info-key">Email</span>
+        <span class="info-val">{{ payment.student.email }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Kurs -->
+    <div class="info-card">
+      <div class="info-card-title">📚 Course &amp; teacher</div>
+      <div class="info-row">
+        <span class="info-key">Course</span>
+        <span class="info-val">{{ payment.course.name }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Teacher</span>
+        <span class="info-val">
+          {% if payment.instructor %}
+            {{ payment.instructor.first_name }} {{ payment.instructor.last_name }}
+          {% else %}—{% endif %}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Month / Year</span>
+        <span class="info-val">{{ payment.get_payment_month_display }} {{ payment.payment_year }}</span>
+      </div>
+    </div>
+
+    <!-- To'lov -->
+    <div class="info-card">
+      <div class="info-card-title">💳 Payment details</div>
+      <div class="info-row">
+        <span class="info-key">Method</span>
+        <span class="info-val">{{ payment.get_payment_method_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Date</span>
+        <span class="info-val">{{ payment.paid_at|date:"d.m.Y H:i" }}</span>
+      </div>
+      {% if payment.note %}
+      <div class="info-row">
+        <span class="info-key">Note</span>
+        <span class="info-val" style="max-width:320px;text-align:right">{{ payment.note }}</span>
+      </div>
+      {% endif %}
+      {% if payment.created_by %}
+      <div class="info-row">
+        <span class="info-key">Created by</span>
+        <span class="info-val">
+          {% if payment.created_by.get_full_name %}{{ payment.created_by.get_full_name }}{% else %}{{ payment.created_by.username }}{% endif %}
+        </span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right sidebar -->
+  <div class="action-sidebar">
+    <a href="{% url 'payments:payment_receipt_pdf' payment.pk %}" class="action-btn-full abf-receipt">
+      🧾 Download PDF receipt
+    </a>
+    <a href="{% url 'payments:payment_edit' payment.pk %}" class="action-btn-full abf-edit">
+      ✏️ Edit
+    </a>
+    <a href="{% url 'payments:payment_confirm_delete' payment.pk %}" class="action-btn-full abf-delete">
+      🗑 Delete
+    </a>
+    <a href="{% url 'payments:payment_list' %}" class="action-btn-full abf-back">
+      ← Back to list
+    </a>
+  </div>
+
+</div>
+{% endblock %}

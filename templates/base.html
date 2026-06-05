@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Wall Street Education Centre{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'images/logo_transparent.png' %}">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          referrerpolicy="no-referrer">
+
+    <style>
+        @import url('https://cdn.jsdelivr.net/npm/iconoir@8.1.0/icons/style.css');
+
+        :root {
+            --primary-50: #f0fbfc;
+            --primary-100: #d6f3f6;
+            --primary-200: #aae8ee;
+            --primary-300: #72dce5;
+            --primary-400: #3ac4d0;
+            --primary-500: #0ea5b0;
+            --primary-600: #0d8a98;
+            --primary-700: #0c7083;
+            --primary-800: #0a5569;
+            --primary-900: #083d4f;
+            --primary-950: #062a38;
+
+            --secondary-50: #fffbf0;
+            --secondary-100: #fff3dd;
+            --secondary-200: #ffe5b4;
+            --secondary-300: #ffd180;
+            --secondary-400: #ffbc4d;
+            --secondary-500: #ffa500;
+            --secondary-600: #e67e00;
+            --secondary-700: #cc6600;
+            --secondary-800: #994d00;
+            --secondary-900: #663300;
+
+            --status-success: #10b981;
+            --status-warning: #f59e0b;
+            --status-danger: #ef4444;
+            --status-info: #3b82f6;
+
+            --bg: #f8fafc;
+            --bg-secondary: #f1f5f7;
+            --bg-tertiary: #e8eef0;
+
+            --surface: rgba(255, 255, 255, 0.88);
+            --surface-strong: rgba(255, 255, 255, 0.96);
+            --surface-solid: #ffffff;
+
+            --text: #0f172a;
+            --text-soft: #475569;
+            --text-faint: #94a3b8;
+            --text-inverse: #f8fafc;
+
+            --border: rgba(15, 23, 42, 0.08);
+            --border-strong: rgba(15, 23, 42, 0.14);
+
+            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+            --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.08);
+            --shadow-md: 0 14px 34px rgba(15, 23, 42, 0.12);
+            --shadow-lg: 0 24px 56px rgba(15, 23, 42, 0.16);
+            --shadow-xl: 0 32px 70px rgba(15, 23, 42, 0.22);
+
+            --radius-xs: 8px;
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --radius-2xl: 36px;
+            --radius-full: 999px;
+
+            /* ── Standartlashtirilgan o'lchamlar (kichraytirildi) ── */
+            --sidebar-width: 260px;
+            --topbar-height: 72px;
+            --content-padding: 24px;
+
+            --transition-fast: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 320ms cubic-bezier(0.22, 1, 0.36, 1);
+            --transition-slow: 700ms cubic-bezier(0.22, 1, 0.36, 1);
+
+            --primary-rgb: 14, 165, 176;
+            --secondary-rgb: 255, 165, 0;
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0f172a;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1e293b;
+            --surface: rgba(30, 41, 59, 0.82);
+            --surface-strong: rgba(30, 41, 59, 0.94);
+            --surface-solid: #1e293b;
+            --text: #f1f5f9;
+            --text-soft: #cbd5e1;
+            --text-faint: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.14);
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.18);
+            --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.22);
+            --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.32);
+            --shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.42);
+            --shadow-xl: 0 32px 70px rgba(0, 0, 0, 0.56);
+        }
+
+        /* ─── GLOBAL RESET ─── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 8% 12%, rgba(var(--primary-rgb), 0.10), transparent 28%),
+                radial-gradient(circle at 92% 18%, rgba(var(--secondary-rgb), 0.10), transparent 26%),
+                radial-gradient(circle at 78% 82%, rgba(var(--primary-rgb), 0.06), transparent 24%),
+                linear-gradient(135deg, var(--bg) 0%, var(--bg-secondary) 48%, var(--bg) 100%);
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 900px 440px at 15% 20%, rgba(14, 165, 176, 0.08), transparent 42%),
+                radial-gradient(ellipse 650px 320px at 85% 70%, rgba(255, 165, 0, 0.07), transparent 46%);
+            z-index: 0;
+        }
+
+        a, a:hover, a:focus, a:visited, a:active { text-decoration: none; }
+
+        button, input, textarea, select {
+            font: inherit;
+            border: none;
+            outline: none;
+            background: none;
+        }
+
+        img { display: block; max-width: 100%; }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary-500), var(--secondary-500));
+            border-radius: var(--radius-full);
+        }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeLeft {
+            from { opacity: 0; transform: translateX(-24px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes floatY {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-8px); }
+        }
+        @keyframes shimmerMove {
+            0%   { transform: translateX(-160%) skewX(-22deg); }
+            100% { transform: translateX(330%) skewX(-22deg); }
+        }
+        @keyframes softPulse {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.04); }
+        }
+
+        /* ─── SIDEBAR OVERLAY ─── */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition);
+            z-index: 200;
+        }
+        .sidebar-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ─── APP SHELL ─── */
+        .app-shell {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+        }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg,
+                var(--primary-950) 0%,
+                var(--primary-900) 24%,
+                var(--primary-800) 78%,
+                var(--primary-700) 100%);
+            color: var(--text-inverse);
+            border-right: 1px solid rgba(255, 255, 255, 0.10);
+            box-shadow: 10px 0 38px rgba(0, 0, 0, 0.28);
+            animation: fadeLeft 0.7s ease;
+        }
+
+        .sidebar::before,
+        .sidebar::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+        .sidebar::before {
+            width: 320px; height: 320px;
+            top: -110px; left: -110px;
+            background: rgba(255, 255, 255, 0.10);
+            animation: floatY 6s ease-in-out infinite;
+        }
+        .sidebar::after {
+            width: 260px; height: 260px;
+            right: -90px; bottom: -90px;
+            background: rgba(255, 165, 0, 0.14);
+            animation: floatY 8s ease-in-out infinite reverse;
+        }
+
+        .sidebar-top,
+        .sidebar-nav,
+        .sidebar-bottom {
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar-top {
+            padding: 18px 18px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: var(--radius-lg);
+            transition: transform var(--transition), background var(--transition);
+        }
+        .brand:hover {
+            transform: translateX(6px);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .brand-logo {
+            width: 46px; height: 46px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,165,0,0.10));
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.12), 0 8px 18px rgba(0,0,0,0.22);
+            flex-shrink: 0;
+        }
+        .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+        .brand-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 18px; font-weight: 800;
+            line-height: 1.1; letter-spacing: -0.02em;
+            color: #fff;
+        }
+        .brand-subtitle {
+            margin-top: 4px;
+            font-size: 10px; font-weight: 800;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.68);
+        }
+
+        .sidebar-panel {
+            margin-top: 16px;
+            padding: 13px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, rgba(255,255,255,0.11), rgba(255,165,0,0.08));
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.08), 0 10px 18px rgba(0,0,0,0.14);
+        }
+        .sidebar-panel small {
+            display: block; margin-bottom: 8px;
+            font-size: 9px; font-weight: 900;
+            letter-spacing: 0.16em; text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.60);
+        }
+        .sidebar-panel strong {
+            display: block;
+            font-size: 12px; line-height: 1.5; color: #fff;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 12px 20px;
+        }
+
+        .nav-group-title {
+            padding: 12px 12px 8px;
+            font-size: 10px; font-weight: 900;
+            letter-spacing: 0.16em; text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.46);
+        }
+
+        .nav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .nav-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 13px;
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, 0.76);
+            border: 1px solid transparent;
+            transition: transform var(--transition), background var(--transition),
+                        box-shadow var(--transition), border-color var(--transition);
+            overflow: hidden;
+            text-decoration: none !important;
+        }
+        .nav-item::before {
+            content: "";
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0.10), rgba(255,165,0,0.08));
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+        .nav-item::after {
+            content: "";
+            position: absolute;
+            left: 0; top: 8px; bottom: 8px;
+            width: 4px;
+            border-radius: 0 12px 12px 0;
+            background: linear-gradient(180deg, var(--secondary-500), var(--secondary-400));
+            transform: scaleY(0);
+            transition: transform var(--transition);
+        }
+        .nav-item:hover {
+            transform: translateX(7px);
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 14px 22px rgba(0, 0, 0, 0.14);
+            color: #fff;
+        }
+        .nav-item:hover::before { opacity: 1; }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,165,0,0.08));
+            border-color: rgba(255, 255, 255, 0.16);
+            color: #fff;
+            box-shadow: 0 12px 22px rgba(0, 0, 0, 0.18);
+        }
+        .nav-item.active::before { opacity: 1; }
+        .nav-item.active::after  { transform: scaleY(1); }
+
+        .nav-icon {
+            width: 38px; height: 38px;
+            flex-shrink: 0;
+            display: grid; place-items: center;
+            font-size: 17px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+            position: relative; z-index: 2;
+        }
+        .nav-item:hover .nav-icon {
+            transform: scale(1.10) rotate(5deg);
+            background: rgba(255, 255, 255, 0.16);
+            box-shadow: 0 8px 16px rgba(255, 165, 0, 0.18);
+        }
+        .nav-item.active .nav-icon {
+            background: linear-gradient(135deg, var(--secondary-500), var(--secondary-600));
+            box-shadow: 0 0 0 4px rgba(255,165,0,0.10), 0 12px 20px rgba(255,165,0,0.26);
+        }
+
+        .nav-text { position: relative; z-index: 2; min-width: 0; }
+        .nav-text strong { display: block; font-size: 13px; font-weight: 800; }
+        .nav-text span {
+            display: block; margin-top: 2px;
+            font-size: 10.5px; font-weight: 600;
+            color: rgba(255, 255, 255, 0.56);
+        }
+
+        .sidebar-bottom {
+            padding: 14px 12px 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .logout-btn {
+            position: relative; overflow: hidden;
+            width: 100%;
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 13px; font-weight: 800;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,165,0,0.08));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+            transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+            text-decoration: none !important;
+        }
+        .logout-btn::before {
+            content: "";
+            position: absolute;
+            top: -70%; left: -35%;
+            width: 35%; height: 240%;
+            transform: translateX(-180%) skewX(-22deg);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.26), transparent);
+        }
+        .logout-btn:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(135deg, rgba(239,68,68,0.26), rgba(239,68,68,0.12));
+            box-shadow: 0 14px 24px rgba(239, 68, 68, 0.20);
+        }
+        .logout-btn:hover::before { animation: shimmerMove 1s ease; }
+
+        /* ─── MAIN AREA ─── */
+        .main {
+            min-width: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ─── TOPBAR ─── */
+        .topbar {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 14px 26px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.84),
+                rgba(255,255,255,0.66));
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+        }
+        html[data-theme="dark"] .topbar {
+            background: linear-gradient(180deg,
+                rgba(30,41,59,0.92),
+                rgba(30,41,59,0.74));
+        }
+        .topbar.scrolled {
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.10);
+        }
+
+        .topbar-left,
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+        .topbar-left { flex: 1; }
+
+        .mobile-toggle {
+            display: none;
+            width: 44px; height: 44px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: #fff;
+            box-shadow: 0 12px 22px rgba(14, 165, 176, 0.24);
+            cursor: pointer;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+        .mobile-toggle:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 28px rgba(14, 165, 176, 0.34);
+        }
+
+        .page-heading { min-width: 0; animation: fadeLeft .7s ease; }
+        .page-title {
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 22px; font-weight: 900;
+            line-height: 1.1; letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--text) 0%, var(--primary-500) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-breadcrumb {
+            margin-top: 6px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+            font-size: 12px; font-weight: 600; color: var(--text-soft);
+        }
+        .page-breadcrumb a {
+            color: var(--primary-500); font-weight: 800;
+            padding: 3px 7px; border-radius: var(--radius-sm);
+            transition: background var(--transition), color var(--transition);
+            text-decoration: none !important;
+        }
+        .page-breadcrumb a:hover { background: rgba(14,165,176,0.10); }
+
+        .search-box,
+        .action-btn,
+        .profile-box {
+            position: relative;
+            overflow: hidden;
+        }
+        .search-box::after,
+        .action-btn::after,
+        .profile-box::after {
+            content: "";
+            position: absolute;
+            top: -70%; left: -35%;
+            width: 35%; height: 240%;
+            transform: translateX(-180%) skewX(-22deg);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+            pointer-events: none;
+        }
+        .search-box:hover::after,
+        .action-btn:hover::after,
+        .profile-box:hover::after { animation: shimmerMove 1s ease; }
+
+        .search-box {
+            width: min(300px, 32vw); height: 44px;
+            display: flex; align-items: center; gap: 12px;
+            padding: 0 16px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(14px);
+            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+        }
+        .search-box:focus-within {
+            transform: translateY(-2px);
+            border-color: rgba(14,165,176,0.36);
+            box-shadow: 0 0 0 6px rgba(14,165,176,0.08), var(--shadow-md);
+        }
+        .search-icon { color: var(--text-faint); font-size: 15px; }
+        .search-box input { width: 100%; color: var(--text); font-size: 13px; font-weight: 600; }
+        .search-box input::placeholder { color: var(--text-faint); }
+
+        .action-btn {
+            width: 42px; height: 42px;
+            display: grid; place-items: center;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(12px);
+            cursor: pointer; font-size: 16px;
+            transition: transform var(--transition), box-shadow var(--transition),
+                        border-color var(--transition), background var(--transition);
+        }
+        .action-btn:hover {
+            transform: translateY(-3px);
+            border-color: rgba(14,165,176,0.28);
+            box-shadow: 0 14px 28px rgba(14,165,176,0.14);
+            background: linear-gradient(135deg, var(--surface), rgba(14,165,176,0.04));
+        }
+
+        .notification-dot {
+            position: absolute; top: 7px; right: 7px;
+            width: 10px; height: 10px;
+            border-radius: var(--radius-full);
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            border: 2px solid var(--surface-solid);
+            animation: softPulse 2s ease-in-out infinite;
+        }
+
+        /* ─── NOTIFICATIONS (Telegram leads) ─── */
+        .notif-wrap { position: relative; }
+        .notif-badge {
+            position: absolute; top: -4px; right: -4px;
+            min-width: 18px; height: 18px; padding: 0 5px;
+            display: grid; place-items: center;
+            font-size: 10px; font-weight: 900; color: #fff;
+            border-radius: var(--radius-full);
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            border: 2px solid var(--surface-solid);
+            box-shadow: 0 4px 10px rgba(255,71,87,0.4);
+        }
+        .notif-panel {
+            position: absolute; top: calc(100% + 12px); right: 0;
+            width: min(380px, 88vw);
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            opacity: 0; transform: translateY(-10px) scale(0.98);
+            pointer-events: none;
+            transition: opacity var(--transition), transform var(--transition);
+            z-index: 120;
+        }
+        .notif-panel.open { opacity: 1; transform: none; pointer-events: auto; }
+        .notif-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, var(--primary-800), var(--primary-700));
+            color: #fff;
+        }
+        .notif-head strong { font-size: 14px; font-weight: 800; }
+        .notif-head .nh-count {
+            font-size: 11px; font-weight: 800; padding: 3px 9px;
+            border-radius: var(--radius-full); background: rgba(255,255,255,0.18);
+        }
+        .notif-list { max-height: 60vh; overflow-y: auto; }
+        .notif-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 13px 16px; cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition);
+        }
+        .notif-item:hover { background: rgba(var(--primary-rgb), 0.07); }
+        .notif-ava {
+            width: 40px; height: 40px; flex-shrink: 0;
+            border-radius: var(--radius-sm); display: grid; place-items: center;
+            font-weight: 900; font-size: 14px; color: #fff;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+        }
+        .notif-it-name { font-size: 13px; font-weight: 800; color: var(--text); }
+        .notif-it-meta { font-size: 11.5px; color: var(--text-soft); margin-top: 2px; }
+        .notif-it-time { margin-left: auto; font-size: 10.5px; color: var(--text-faint); white-space: nowrap; }
+        .notif-empty { padding: 34px 18px; text-align: center; color: var(--text-soft); font-size: 13px; }
+        .notif-empty .ne-ico { font-size: 34px; opacity: .5; display: block; margin-bottom: 8px; }
+
+        /* ─── LEAD DETAIL MODAL ─── */
+        .lead-overlay {
+            position: fixed; inset: 0; z-index: 2000; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(8,61,79,0.55); backdrop-filter: blur(6px);
+        }
+        .lead-overlay.open { display: flex; }
+        .lead-modal {
+            width: 100%; max-width: 460px; background: var(--surface-solid);
+            border-radius: var(--radius-xl); overflow: hidden;
+            box-shadow: var(--shadow-xl); animation: fadeUp .3s ease;
+        }
+        .lead-head {
+            padding: 22px 24px; color: #fff; position: relative;
+            background: linear-gradient(135deg, var(--primary-800), var(--primary-600));
+        }
+        .lead-head .lh-close {
+            position: absolute; top: 16px; right: 16px;
+            width: 32px; height: 32px; border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.16); color: #fff; cursor: pointer; font-size: 18px;
+        }
+        .lead-head .lh-ava {
+            width: 60px; height: 60px; border-radius: var(--radius-md);
+            background: rgba(255,255,255,0.18); display: grid; place-items: center;
+            font-size: 22px; font-weight: 900; margin-bottom: 12px;
+        }
+        .lead-head .lh-name { font-size: 19px; font-weight: 900; }
+        .lead-head .lh-sub { font-size: 12px; opacity: .85; margin-top: 4px; }
+        .lead-body { padding: 22px 24px; }
+        .lead-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 0; border-bottom: 1px solid var(--border);
+        }
+        .lead-row:last-child { border-bottom: none; }
+        .lead-row .lr-ico { width: 22px; text-align: center; font-size: 15px; }
+        .lead-row .lr-lbl { font-size: 11px; font-weight: 800; color: var(--text-faint);
+            text-transform: uppercase; letter-spacing: .06em; width: 90px; }
+        .lead-row .lr-val { font-size: 14px; font-weight: 700; color: var(--text); }
+        .lead-foot { padding: 16px 24px; border-top: 1px solid var(--border);
+            display: flex; gap: 10px; justify-content: flex-end; }
+        .lead-btn {
+            padding: 12px 20px; border-radius: var(--radius-md);
+            font-size: 13px; font-weight: 800; cursor: pointer; border: none;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+        .lead-btn-primary { background: linear-gradient(135deg, var(--secondary-500), var(--secondary-600)); color: #fff;
+            box-shadow: 0 10px 22px rgba(var(--secondary-rgb),0.32); }
+        .lead-btn-primary:hover { transform: translateY(-2px); }
+        .lead-btn-ghost { background: rgba(var(--primary-rgb),0.08); color: var(--primary-700); }
+        .lead-btn-ghost:hover { background: rgba(var(--primary-rgb),0.15); }
+
+        .profile-box {
+            display: flex; align-items: center; gap: 10px;
+            padding: 5px 11px 5px 5px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(14px);
+            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+            cursor: pointer;
+        }
+        .profile-box:hover {
+            transform: translateY(-3px);
+            border-color: rgba(14,165,176,0.28);
+            box-shadow: 0 14px 28px rgba(14,165,176,0.12);
+        }
+
+        .avatar {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            overflow: hidden; display: grid; place-items: center;
+            color: #fff; font-size: 14px; font-weight: 900;
+            background: #e8eef0;
+            box-shadow: 0 10px 22px rgba(14,165,176,0.22);
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .profile-name {
+            font-size: 13px; font-weight: 800; color: var(--text);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .profile-role { margin-top: 3px; font-size: 11px; font-weight: 700; color: var(--text-soft); }
+
+        /* ─── CONTENT WRAP ─── */
+        .content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--content-padding);
+        }
+
+        /* ─── PAGE SURFACE ─── */
+        .page-surface {
+            position: relative;
+            min-height: calc(100% - 10px);
+            padding: 28px;
+            border-radius: var(--radius-xl);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.95)),
+                linear-gradient(135deg, rgba(14,165,176,0.04), rgba(255,165,0,0.04));
+            border: 1px solid rgba(15, 23, 42, 0.07);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.72) inset,
+                0 18px 40px rgba(15,23,42,0.10),
+                0 28px 70px rgba(14,165,176,0.10);
+            overflow: clip;
+            animation: fadeUp 0.7s ease;
+        }
+        html[data-theme="dark"] .page-surface {
+            background: linear-gradient(180deg,
+                rgba(30,41,59,0.92),
+                rgba(15,23,42,0.96));
+        }
+
+        .messages-wrap,
+        .footer,
+        .page-surface > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ─── ALERTS ─── */
+        .messages-wrap {
+            display: flex; flex-direction: column; gap: 14px;
+            margin-bottom: 24px;
+        }
+        .alert {
+            display: flex; align-items: flex-start; gap: 16px;
+            padding: 16px 18px;
+            border-radius: var(--radius-md);
+            border: 1px solid;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-sm);
+            animation: fadeUp .4s ease;
+        }
+        .alert-icon {
+            width: 40px; height: 40px;
+            display: grid; place-items: center;
+            border-radius: var(--radius-sm);
+            font-size: 17px; flex-shrink: 0;
+        }
+        .alert-content { font-size: 14px; font-weight: 700; line-height: 1.6; }
+
+        .alert-success { color: var(--status-success); background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.18); }
+        .alert-success .alert-icon { background: rgba(16,185,129,0.14); }
+        .alert-error,
+        .alert-danger   { color: var(--status-danger);  background: rgba(239,68,68,0.10);  border-color: rgba(239,68,68,0.18); }
+        .alert-error   .alert-icon,
+        .alert-danger  .alert-icon { background: rgba(239,68,68,0.14); }
+        .alert-warning { color: var(--status-warning); background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.18); }
+        .alert-warning .alert-icon { background: rgba(245,158,11,0.14); }
+        .alert-info    { color: var(--status-info);    background: rgba(59,130,246,0.10);  border-color: rgba(59,130,246,0.18); }
+        .alert-info    .alert-icon { background: rgba(59,130,246,0.14); }
+
+        /* ─── FOOTER ─── */
+        .footer {
+            margin-top: 32px; padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 20px; flex-wrap: wrap;
+        }
+        .footer strong { font-size: 13px; font-weight: 800; }
+        .footer span { font-size: 12px; color: var(--text-soft); }
+        .footer-links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .footer-links a {
+            padding: 8px 12px; border-radius: var(--radius-sm);
+            font-size: 12px; font-weight: 800; color: var(--text-soft);
+            transition: transform var(--transition), color var(--transition), background var(--transition);
+            text-decoration: none !important;
+        }
+        .footer-links a:hover {
+            transform: translateY(-2px);
+            color: var(--primary-500);
+            background: rgba(14,165,176,0.08);
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 992px) {
+            .app-shell { grid-template-columns: 1fr; }
+
+            :root {
+                --content-padding: 16px;
+                --topbar-height: 66px;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0; left: 0;
+                width: min(82vw, 280px);
+                height: 100vh;
+                transform: translateX(-110%);
+                transition: transform var(--transition-slow);
+                z-index: 150;
+            }
+            .sidebar.open { transform: translateX(0); }
+
+            .mobile-toggle { display: grid; place-items: center; }
+
+            .topbar { padding: 12px 16px; }
+            .content-wrap { padding: 14px; }
+            .page-surface { padding: 20px; border-radius: var(--radius-lg); }
+            .search-box { display: none; }
+        }
+
+        @media (max-width: 640px) {
+            :root {
+                --content-padding: 12px;
+                --topbar-height: 62px;
+            }
+            .topbar {
+                height: auto; min-height: 62px;
+                padding: 10px; gap: 10px; flex-wrap: wrap;
+            }
+            .topbar-left { width: 100%; order: -1; }
+            .topbar-right { gap: 8px; }
+            .profile-meta { display: none; }
+            .page-title { font-size: 19px; }
+            .page-breadcrumb { font-size: 11px; }
+            .action-btn, .mobile-toggle, .avatar { width: 40px; height: 40px; }
+            .page-surface { padding: 16px; border-radius: var(--radius-md); }
+            .footer { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <a href="{% if request.user.role == 'teacher' %}{% url 'attendance:attendance_list' %}{% else %}{% url 'dashboard' %}{% endif %}" class="brand">
+                <div class="brand-logo">
+                    <img src="{% static 'images/wallstreet-logo.png' %}" alt="Wall Street logo">
+                </div>
+                <div class="brand-meta">
+                    <div class="brand-title">Wall Street</div>
+                    <div class="brand-subtitle">Education Centre</div>
+                </div>
+            </a>
+
+            <div class="sidebar-panel">
+                <small>Current Access</small>
+                <strong>
+                    {% if request.user.role == 'teacher' %}
+                    Teacher panel — attendance & settings
+                    {% else %}
+                    Admin panel — full management access
+                    {% endif %}
+                </strong>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            {% if request.user.role == 'teacher' %}
+            {# ─── Teacher sees attendance + own settings ─── #}
+            <div class="nav-group-title">Learning</div>
+            <div class="nav-list">
+                <a href="{% url 'attendance:attendance_list' %}"
+                   class="nav-item {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">✅</div>
+                    <div class="nav-text">
+                        <strong>Attendance</strong>
+                        <span>Class attendance</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="nav-group-title">Account</div>
+            <div class="nav-list">
+                <a href="{% url 'settings' %}"
+                   class="nav-item {% if 'settings' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">⚙️</div>
+                    <div class="nav-text">
+                        <strong>Settings</strong>
+                        <span>Profile &amp; password</span>
+                    </div>
+                </a>
+            </div>
+            {% else %}
+            <div class="nav-group-title">Main</div>
+            <div class="nav-list">
+                <a href="{% url 'dashboard' %}"
+                   class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <div class="nav-icon">📊</div>
+                    <div class="nav-text">
+                        <strong>Dashboard</strong>
+                        <span>Analytics & Overview</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="nav-group-title">Learning</div>
+            <div class="nav-list">
+                <a href="{% url 'student:student_list' %}"
+                   class="nav-item {% if 'student' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">🎓</div>
+                    <div class="nav-text">
+                        <strong>Students</strong>
+                        <span>Student management</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'courses:course_list' %}"
+                   class="nav-item {% if 'course' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">📚</div>
+                    <div class="nav-text">
+                        <strong>Courses</strong>
+                        <span>Course management</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'enrollments:enrollment_list' %}"
+                   class="nav-item {% if 'enroll' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">📝</div>
+                    <div class="nav-text">
+                        <strong>Enrollments</strong>
+                        <span>Course registrations</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'instructors:instructor_list' %}"
+                   class="nav-item {% if 'instructor' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">👨‍🏫</div>
+                    <div class="nav-text">
+                        <strong>Instructors</strong>
+                        <span>Teachers</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'attendance:attendance_list' %}"
+                   class="nav-item {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">✅</div>
+                    <div class="nav-text">
+                        <strong>Attendance</strong>
+                        <span>Class attendance</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="nav-group-title">Finance</div>
+            <div class="nav-list">
+                <a href="{% url 'payments:payment_list' %}"
+                   class="nav-item {% if 'payment' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">💳</div>
+                    <div class="nav-text">
+                        <strong>Payments</strong>
+                        <span>Student payments</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'salary_list' %}"
+                   class="nav-item {% if 'salary' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">💼</div>
+                    <div class="nav-text">
+                        <strong>Salary</strong>
+                        <span>Staff salaries</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'reports' %}"
+                   class="nav-item {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">📈</div>
+                    <div class="nav-text">
+                        <strong>Reports</strong>
+                        <span>Reports &amp; analytics</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="nav-group-title">Other</div>
+            <div class="nav-list">
+                <a href="{% url 'calendar:calendar' %}"
+                   class="nav-item {% if 'calendar' in request.resolver_match.url_name or 'event' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">📅</div>
+                    <div class="nav-text">
+                        <strong>Calendar</strong>
+                        <span>Calendar</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'settings' %}"
+                   class="nav-item {% if 'settings' in request.resolver_match.url_name %}active{% endif %}">
+                    <div class="nav-icon">⚙️</div>
+                    <div class="nav-text">
+                        <strong>Settings</strong>
+                        <span>Settings</span>
+                    </div>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="sidebar-bottom">
+            <a href="{% url 'logout' %}" class="logout-btn">
+                <span>↩</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar" id="topbar">
+            <div class="topbar-left">
+                <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+
+                <div class="page-heading">
+                    <div class="page-title">{% block header_section %}Dashboard{% endblock %}</div>
+                    <div class="page-breadcrumb">
+                        <a href="{% if request.user.role == 'teacher' %}{% url 'attendance:attendance_list' %}{% else %}{% url 'dashboard' %}{% endif %}">Home</a>
+                        <span>•</span>
+                        <span>{% block breadcrumb %}Dashboard{% endblock %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                {% if request.user.role != 'teacher' %}
+                <div class="search-box" role="search">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search..." aria-label="Search">
+                </div>
+                {% endif %}
+
+                <div class="ws-lang" data-i18n-skip data-ws-lang>
+                    <button type="button" class="ws-lang-btn" aria-label="Language" title="Til / Язык / Language">
+                        <span class="ws-lang-flag">🌐</span><span class="ws-lang-code" data-lang-current>UZ</span><span class="ws-lang-caret">▾</span>
+                    </button>
+                    <div class="ws-lang-menu">
+                        <button type="button" class="ws-lang-opt" data-lang="uz">🇺🇿 O'zbek</button>
+                        <button type="button" class="ws-lang-opt" data-lang="ru">🇷🇺 Русский</button>
+                        <button type="button" class="ws-lang-opt" data-lang="en">🇬🇧 English</button>
+                    </div>
+                </div>
+
+                <button class="action-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+
+                {% if request.user.role != 'teacher' %}
+                <div class="notif-wrap">
+                    <button class="action-btn" id="notifBtn" title="Notifications" aria-label="Notifications"
+                            onclick="toggleNotif(event)">
+                        🔔
+                        {% if tg_leads_count %}<span class="notif-badge">{{ tg_leads_count }}</span>{% endif %}
+                    </button>
+                    <div class="notif-panel" id="notifPanel">
+                        <div class="notif-head">
+                            <strong>📨 Telegram arizalar</strong>
+                            <span class="nh-count">{{ tg_leads_count|default:0 }} ta yangi</span>
+                        </div>
+                        <div class="notif-list">
+                            {% for lead in tg_leads %}
+                            <div class="notif-item"
+                                 onclick="openLeadModal(this)"
+                                 data-id="{{ lead.id }}"
+                                 data-first="{{ lead.first_name|escape }}"
+                                 data-last="{{ lead.last_name|escape }}"
+                                 data-phone="{{ lead.phone|escape }}"
+                                 data-email="{{ lead.email|default:''|escape }}"
+                                 data-username="{{ lead.telegram_username|default:''|escape }}"
+                                 data-time="{{ lead.created_at|date:'d.m.Y H:i' }}">
+                                <div class="notif-ava">{{ lead.first_name|first|upper }}{{ lead.last_name|first|upper }}</div>
+                                <div style="min-width:0;">
+                                    <div class="notif-it-name">{{ lead.first_name }} {{ lead.last_name }}</div>
+                                    <div class="notif-it-meta">📱 {{ lead.phone }}</div>
+                                </div>
+                                <div class="notif-it-time">{{ lead.created_at|date:'d.m H:i' }}</div>
+                            </div>
+                            {% empty %}
+                            <div class="notif-empty">
+                                <span class="ne-ico">📭</span>
+                                Yangi ariza yo'q
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <a class="action-btn" href="{% url 'settings' %}" title="Settings" aria-label="Settings">⚙️</a>
+                {% endif %}
+
+                <a href="{% url 'settings' %}" class="profile-box" style="color: inherit;">
+                    <div class="avatar">
+                        {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" alt="Profile Avatar">
+                        {% elif request.user.role == 'teacher' %}
+                        <img src="{% static 'images/avatar-teacher.svg' %}" alt="Teacher Avatar">
+                        {% else %}
+                        <img src="{% static 'images/avatar-default.svg' %}" alt="Profile Avatar">
+                        {% endif %}
+                    </div>
+                    <div class="profile-meta">
+                        <div class="profile-name">
+                            {% if request.user.get_full_name %}
+                            {{ request.user.get_full_name }}
+                            {% else %}
+                            {{ request.user.username }}
+                            {% endif %}
+                        </div>
+                        <div class="profile-role">
+                            {{ request.user.role|default:"Administrator"|capfirst }}
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </header>
+
+        <div class="content-wrap">
+            <div class="page-surface">
+                {% if messages %}
+                <div class="messages-wrap">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }}">
+                        <div class="alert-icon">
+                            {% if message.tags == 'success' %}✅
+                            {% elif message.tags == 'error' %}❌
+                            {% elif message.tags == 'warning' %}⚠️
+                            {% else %}ℹ️
+                            {% endif %}
+                        </div>
+                        <div class="alert-content">{{ message }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+
+                <footer class="footer">
+                    <div>
+                        <strong>
+                            {% if request.user.get_full_name %}
+                            {{ request.user.get_full_name }}
+                            {% else %}
+                            {{ request.user.username }}
+                            {% endif %}
+                        </strong>
+                        <span> • © 2026 Wall Street CMS • Professional Education Platform</span>
+                    </div>
+                    <div class="footer-links">
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms & Conditions</a>
+                        <a href="#">Support</a>
+                        <a href="#">Contact</a>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ── Telegram lead detail modal ── -->
+{% if request.user.role != 'teacher' %}
+<div class="lead-overlay" id="leadOverlay">
+    <div class="lead-modal">
+        <div class="lead-head">
+            <button class="lh-close" onclick="closeLeadModal()">×</button>
+            <div class="lh-ava" id="leadAva">—</div>
+            <div class="lh-name" id="leadName">—</div>
+            <div class="lh-sub">📨 Telegram bot orqali ariza</div>
+        </div>
+        <div class="lead-body">
+            <div class="lead-row">
+                <span class="lr-ico">👤</span>
+                <span class="lr-lbl">Ism F.</span>
+                <span class="lr-val" id="leadFull">—</span>
+            </div>
+            <div class="lead-row">
+                <span class="lr-ico">📱</span>
+                <span class="lr-lbl">Telefon</span>
+                <span class="lr-val" id="leadPhone">—</span>
+            </div>
+            <div class="lead-row">
+                <span class="lr-ico">✉️</span>
+                <span class="lr-lbl">Email</span>
+                <span class="lr-val" id="leadEmail">—</span>
+            </div>
+            <div class="lead-row">
+                <span class="lr-ico">💬</span>
+                <span class="lr-lbl">Telegram</span>
+                <span class="lr-val" id="leadUser">—</span>
+            </div>
+            <div class="lead-row">
+                <span class="lr-ico">🕒</span>
+                <span class="lr-lbl">Vaqt</span>
+                <span class="lr-val" id="leadTime">—</span>
+            </div>
+        </div>
+        <div class="lead-foot">
+            <button class="lead-btn lead-btn-ghost" onclick="closeLeadModal()">Yopish</button>
+            <a class="lead-btn lead-btn-primary" id="leadEnrollBtn" href="#">📋 Ro'yxatga olish</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    'use strict';
+
+    const sidebar       = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const themeToggle   = document.getElementById('themeToggle');
+    const topbar        = document.getElementById('topbar');
+    const root          = document.documentElement;
+    const contentWrap   = document.querySelector('.content-wrap');
+
+    /* ── Sidebar toggle ── */
+    function toggleSidebar() {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('show');
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('show');
+    }
+
+    document.addEventListener('click', function (e) {
+        if (window.innerWidth <= 992) {
+            const clickedInsideSidebar = sidebar.contains(e.target);
+            const clickedToggle = e.target.closest('.mobile-toggle');
+            if (!clickedInsideSidebar && !clickedToggle && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
+        }
+    });
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 992) closeSidebar();
+    });
+
+    /* ── Topbar scroll shadow ── */
+    if (contentWrap) {
+        contentWrap.addEventListener('scroll', function () {
+            topbar.classList.toggle('scrolled', contentWrap.scrollTop > 12);
+        });
+    }
+
+    /* ── Theme ── */
+    (function () {
+        const savedTheme = localStorage.getItem('wallstreet-theme');
+        if (savedTheme) {
+            root.setAttribute('data-theme', savedTheme);
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        }
+    })();
+
+    themeToggle.addEventListener('click', function () {
+        const isDark   = root.getAttribute('data-theme') === 'dark';
+        const newTheme = isDark ? 'light' : 'dark';
+        root.setAttribute('data-theme', newTheme);
+        localStorage.setItem('wallstreet-theme', newTheme);
+        themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    });
+
+    /* ── Telegram leads (notifications) ── */
+    {% if request.user.role != 'teacher' %}
+    const ENROLL_URL = "{% url 'enrollments:enrollment_list' %}";
+
+    function toggleNotif(e) {
+        e.stopPropagation();
+        const panel = document.getElementById('notifPanel');
+        if (panel) panel.classList.toggle('open');
+    }
+
+    document.addEventListener('click', function (e) {
+        const panel = document.getElementById('notifPanel');
+        const wrap  = e.target.closest('.notif-wrap');
+        if (panel && !wrap) panel.classList.remove('open');
+    });
+
+    function openLeadModal(el) {
+        const d = el.dataset;
+        const first = d.first || '', last = d.last || '';
+        document.getElementById('leadAva').textContent =
+            (first.charAt(0) + last.charAt(0)).toUpperCase() || '👤';
+        document.getElementById('leadName').textContent = (first + ' ' + last).trim() || '—';
+        document.getElementById('leadFull').textContent = (first + ' ' + last).trim() || '—';
+        document.getElementById('leadPhone').textContent = d.phone || '—';
+        document.getElementById('leadEmail').textContent = d.email || '—';
+        document.getElementById('leadUser').textContent  = d.username ? ('@' + d.username) : '—';
+        document.getElementById('leadTime').textContent  = d.time || '—';
+
+        // "Ro'yxatga olish" → enrollments sahifasi, modal avtomatik ochiladi
+        const params = new URLSearchParams({
+            lead_id:    d.id || '',
+            lead_first: first,
+            lead_last:  last,
+            lead_phone: d.phone || '',
+            lead_email: d.email || ''
+        });
+        document.getElementById('leadEnrollBtn').href = ENROLL_URL + '?' + params.toString();
+
+        document.getElementById('notifPanel').classList.remove('open');
+        document.getElementById('leadOverlay').classList.add('open');
+    }
+    function closeLeadModal() {
+        document.getElementById('leadOverlay').classList.remove('open');
+    }
+    (function () {
+        const ov = document.getElementById('leadOverlay');
+        if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeLeadModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLeadModal(); });
+    })();
+    {% endif %}
+</script>
+
+<!-- ── 3 tilli interfeys (O'zbek / Русский / English) ── -->
+<script src="{% static 'js/i18n.js' %}"></script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

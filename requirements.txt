@@ -1,0 +1,25 @@
+Django==6.0.3
+asgiref==3.11.1
+sqlparse==0.5.5
+tzdata==2025.3
+python-dotenv
+python-decouple
+hijri-converter
+requests
+charset-normalizer==3.4.6
+pillow==12.1.1
+reportlab==4.4.10
+openpyxl==3.1.5
+qrcode==8.2
+
+# Telegram bot
+aiogram
+
+# Mobil ilova API (DRF)
+djangorestframework==3.17.1
+djangorestframework-simplejwt==5.5.1
+django-cors-headers==4.9.0
+
+# Deploy (Railway / PythonAnywhere)
+gunicorn
+whitenoise

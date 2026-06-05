@@ -1,0 +1,1547 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Enrollment — Wall Street{% endblock %}
+{% block header_section %}Enrollment{% endblock %}
+{% block breadcrumb %}Enrollments{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ════════════════════════════════════════════════════
+       ENROLLMENT — DESIGN TOKENS
+    ════════════════════════════════════════════════════ */
+    :root {
+        --en-teal:        #0B5E63;
+        --en-teal-lt:     #0E7C84;
+        --en-teal-pale:   rgba(11,94,99,.08);
+        --en-gold:        #C8952A;
+        --en-gold-pale:   rgba(200,149,42,.10);
+        --en-green:       #1A9B6C;
+        --en-green-pale:  rgba(26,155,108,.10);
+        --en-red:         #C94040;
+        --en-red-pale:    rgba(201,64,64,.10);
+        --en-blue:        #2D6ECC;
+        --en-blue-pale:   rgba(45,110,204,.10);
+        --en-purple:      #7B4FCC;
+        --en-purple-pale: rgba(123,79,204,.10);
+        --en-orange:      #C9621A;
+        --en-orange-pale: rgba(201,98,26,.10);
+        --en-gray-pale:   rgba(100,116,139,.10);
+        --shadow-card:    0 6px 22px rgba(11,94,99,.10);
+        --shadow-hover:   0 14px 36px rgba(11,94,99,.16);
+        --radius-card:    20px;
+        --radius-pill:    10px;
+    }
+
+    .en-shell { display:flex; flex-direction:column; gap:26px; }
+
+    /* ── STATS GRID ──────────────────────────────────── */
+    .en-stats {
+        display:grid;
+        grid-template-columns:repeat(6,1fr);
+        gap:14px;
+    }
+    .en-stat {
+        padding:20px 18px;
+        border-radius:var(--radius-card);
+        background:linear-gradient(170deg,rgba(255,255,255,.97),rgba(255,255,255,.90));
+        border:1px solid rgba(11,94,99,.09);
+        box-shadow:var(--shadow-card);
+        display:flex; align-items:center; gap:14px;
+        transition:transform .24s,box-shadow .24s;
+        position:relative; overflow:hidden;
+    }
+    .en-stat::before {
+        content:""; position:absolute; inset:0;
+        background:linear-gradient(135deg,rgba(11,94,99,.04),transparent 60%);
+        pointer-events:none;
+    }
+    .en-stat:hover { transform:translateY(-4px); box-shadow:var(--shadow-hover); }
+    .en-stat-icon {
+        width:48px; height:48px; border-radius:14px;
+        display:grid; place-items:center; font-size:20px;
+        flex-shrink:0; position:relative; z-index:1;
+    }
+    .en-stat-body { position:relative; z-index:1; min-width:0; }
+    .en-stat-val  { font-size:24px; font-weight:900; line-height:1; color:var(--text); }
+    .en-stat-lbl  { font-size:11px; font-weight:700; color:var(--text-soft);
+                    text-transform:uppercase; letter-spacing:.4px; margin-top:4px; }
+
+    /* ── TOOLBAR ─────────────────────────────────────── */
+    .en-toolbar {
+        display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    }
+    .en-search {
+        display:flex; align-items:center; gap:10px;
+        background:rgba(255,255,255,.94); border:1px solid rgba(11,94,99,.14);
+        border-radius:14px; padding:0 16px; height:46px;
+        box-shadow:var(--shadow-card); flex:1; max-width:340px;
+        transition:border-color .2s,box-shadow .2s;
+    }
+    .en-search:focus-within {
+        border-color:rgba(11,94,99,.38);
+        box-shadow:0 0 0 4px rgba(11,94,99,.08),var(--shadow-card);
+    }
+    .en-search input {
+        flex:1; font-size:14px; font-weight:600;
+        color:var(--text); background:none; border:none; outline:none;
+    }
+    .en-search input::placeholder { color:var(--text-faint); }
+
+    .en-filter-tabs { display:flex; gap:8px; flex-wrap:wrap; }
+    .en-ftab {
+        padding:9px 16px; border-radius:12px; font-size:12px; font-weight:800;
+        cursor:pointer; border:1px solid rgba(11,94,99,.12);
+        transition:all .2s; text-decoration:none;
+        color:var(--text-soft);
+        background:rgba(255,255,255,.90);
+    }
+    .en-ftab:hover  { background:var(--en-teal-pale); color:var(--en-teal); }
+    .en-ftab.active {
+        background:var(--en-teal); color:#fff;
+        border-color:var(--en-teal);
+        box-shadow:0 8px 20px rgba(11,94,99,.26);
+    }
+
+    .en-add-btn {
+        display:inline-flex; align-items:center; gap:8px;
+        padding:11px 22px; border-radius:14px; font-size:14px; font-weight:800;
+        background:linear-gradient(135deg,var(--en-teal),var(--en-teal-lt));
+        color:#fff; border:none; cursor:pointer;
+        box-shadow:0 10px 24px rgba(11,94,99,.28);
+        transition:transform .2s,box-shadow .2s; white-space:nowrap;
+        text-decoration:none;
+    }
+    .en-add-btn:hover { transform:translateY(-3px); box-shadow:0 16px 32px rgba(11,94,99,.36); color:#fff; }
+
+    /* ── TABLE CARD ──────────────────────────────────── */
+    .en-table-wrap {
+        background:linear-gradient(170deg,rgba(255,255,255,.97),rgba(255,255,255,.92));
+        border:1px solid rgba(11,94,99,.09);
+        border-radius:24px; overflow:hidden;
+        box-shadow:var(--shadow-card);
+    }
+    .en-table { width:100%; border-collapse:collapse; }
+    .en-table thead th {
+        padding:15px 16px; font-size:10px; font-weight:800;
+        letter-spacing:1px; text-transform:uppercase;
+        color:var(--text-soft);
+        background:rgba(11,94,99,.04);
+        border-bottom:1px solid rgba(11,94,99,.09);
+        text-align:left; white-space:nowrap;
+    }
+    .en-table tbody tr {
+        border-bottom:1px solid rgba(11,94,99,.06);
+        transition:background .18s;
+    }
+    .en-table tbody tr:last-child { border-bottom:none; }
+    .en-table tbody tr:hover { background:rgba(11,94,99,.03); }
+    .en-table tbody td {
+        padding:13px 16px; font-size:13px;
+        color:var(--text); vertical-align:middle;
+    }
+
+    /* ── STUDENT CHIP ────────────────────────────────── */
+    .en-student-chip { display:flex; align-items:center; gap:11px; }
+    .en-avatar {
+        width:40px; height:40px; border-radius:13px;
+        overflow:hidden; flex-shrink:0;
+        background:linear-gradient(135deg,var(--en-teal),var(--en-teal-lt));
+        display:grid; place-items:center;
+        color:#fff; font-weight:900; font-size:14px;
+        box-shadow:0 6px 14px rgba(11,94,99,.22);
+    }
+    .en-avatar img { width:100%; height:100%; object-fit:cover; }
+    .en-name { font-weight:800; font-size:14px; }
+    .en-meta { font-size:11px; color:var(--text-soft); margin-top:2px; }
+
+    /* ── PILLS ───────────────────────────────────────── */
+    .en-pill {
+        display:inline-flex; align-items:center; gap:5px;
+        padding:5px 11px; border-radius:var(--radius-pill);
+        font-size:11px; font-weight:800;
+        letter-spacing:.3px; border:1px solid transparent;
+        white-space:nowrap;
+    }
+    .pill-pending   { background:var(--en-gold-pale);   color:var(--en-gold);   border-color:rgba(200,149,42,.20); }
+    .pill-active    { background:var(--en-green-pale);  color:var(--en-green);  border-color:rgba(26,155,108,.20); }
+    .pill-completed { background:var(--en-blue-pale);   color:var(--en-blue);   border-color:rgba(45,110,204,.20); }
+    .pill-cancelled { background:var(--en-red-pale);    color:var(--en-red);    border-color:rgba(201,64,64,.20); }
+    .pill-frozen    { background:var(--en-purple-pale); color:var(--en-purple); border-color:rgba(123,79,204,.20); }
+    .pill-unpaid    { background:var(--en-red-pale);    color:var(--en-red);    border-color:rgba(201,64,64,.20); }
+    .pill-partial   { background:var(--en-orange-pale); color:var(--en-orange); border-color:rgba(201,98,26,.20); }
+    .pill-paid      { background:var(--en-green-pale);  color:var(--en-green);  border-color:rgba(26,155,108,.20); }
+    .pill-overdue   { background:var(--en-red-pale);    color:var(--en-red);    border-color:rgba(201,64,64,.20); }
+    .pill-refunded  { background:var(--en-gray-pale);   color:var(--text-soft); }
+
+    /* ── PAYMENT BAR ─────────────────────────────────── */
+    .pay-bar-wrap { min-width:90px; }
+    .pay-bar-track {
+        height:6px; border-radius:99px;
+        background:rgba(11,94,99,.10); overflow:hidden; margin-top:4px;
+    }
+    .pay-bar-fill {
+        height:100%; border-radius:99px;
+        background:linear-gradient(90deg,var(--en-teal),var(--en-teal-lt));
+        transition:width .4s ease;
+    }
+    .pay-pct { font-size:11px; font-weight:800; color:var(--en-teal); }
+
+    /* ── ACTION BUTTONS ──────────────────────────────── */
+    .en-acts { display:flex; gap:7px; }
+    .en-act {
+        width:34px; height:34px; border-radius:10px; border:none; cursor:pointer;
+        display:grid; place-items:center; font-size:15px;
+        transition:transform .18s,box-shadow .18s;
+        text-decoration:none;
+    }
+    .en-act-view   { background:var(--en-blue-pale);   color:var(--en-blue); }
+    .en-act-edit   { background:var(--en-teal-pale);   color:var(--en-teal); }
+    .en-act-toggle { background:var(--en-gold-pale);   color:var(--en-gold); }
+    .en-act-del    { background:var(--en-red-pale);    color:var(--en-red);  }
+    .en-act:hover  { transform:scale(1.14); box-shadow:0 6px 14px rgba(0,0,0,.12); }
+
+    /* ── EMPTY ───────────────────────────────────────── */
+    .en-empty { padding:64px; text-align:center; color:var(--text-soft); }
+    .en-empty .emo { font-size:52px; display:block; margin-bottom:14px; }
+    .en-empty p { font-size:15px; font-weight:600; }
+
+    /* ══════════════════════════════════════════════════
+       MODAL SYSTEM
+    ══════════════════════════════════════════════════ */
+    .modal-bg {
+        position:fixed; inset:0;
+        background:rgba(8,20,22,.58);
+        backdrop-filter:blur(14px);
+        z-index:300; display:none;
+        place-items:center; padding:20px;
+    }
+    .modal-bg.open { display:grid; }
+
+    .en-modal {
+        background:#fff; border-radius:28px;
+        padding:36px; width:100%; max-width:660px;
+        max-height:92vh; overflow-y:auto;
+        box-shadow:0 40px 90px rgba(8,20,22,.34);
+        animation:enPop .32s cubic-bezier(.34,1.56,.64,1);
+        position:relative;
+    }
+    @keyframes enPop {
+        from { opacity:0; transform:scale(.92) translateY(18px); }
+        to   { opacity:1; transform:scale(1)   translateY(0); }
+    }
+    .en-modal-head {
+        display:flex; align-items:center; justify-content:space-between;
+        margin-bottom:26px; gap:10px;
+    }
+    .en-modal-title {
+        font-size:20px; font-weight:900; color:var(--en-teal);
+        display:flex; align-items:center; gap:10px;
+    }
+    .en-modal-close {
+        width:36px; height:36px; border-radius:10px; border:none; cursor:pointer;
+        background:var(--en-teal-pale); color:var(--en-teal); font-size:20px;
+        display:grid; place-items:center; transition:background .18s;
+    }
+    .en-modal-close:hover { background:rgba(11,94,99,.16); }
+
+    /* Sektsiya sarlavhasi */
+    .en-section-lbl {
+        display:flex; align-items:center; gap:8px;
+        font-size:11px; font-weight:900; letter-spacing:1px; text-transform:uppercase;
+        color:var(--en-teal); padding:10px 14px; border-radius:10px;
+        background:var(--en-teal-pale); margin:20px 0 14px;
+    }
+    .en-section-lbl:first-of-type { margin-top:0; }
+
+    /* Form grid */
+    .en-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .en-form-full  { grid-column:1/-1; }
+
+    .en-field { display:flex; flex-direction:column; gap:6px; }
+    .en-field label {
+        font-size:11px; font-weight:800; color:var(--text-soft);
+        text-transform:uppercase; letter-spacing:.5px;
+    }
+    .en-field input,
+    .en-field select,
+    .en-field textarea {
+        padding:11px 13px; border-radius:11px; font-size:14px; font-weight:600;
+        color:var(--text);
+        border:1.5px solid rgba(11,94,99,.14);
+        background:rgba(11,94,99,.025);
+        outline:none; transition:border-color .2s,box-shadow .2s;
+        font-family:inherit;
+    }
+    .en-field input:focus,
+    .en-field select:focus,
+    .en-field textarea:focus {
+        border-color:var(--en-teal);
+        box-shadow:0 0 0 4px rgba(11,94,99,.10);
+    }
+    .en-field textarea { resize:vertical; min-height:76px; }
+    .en-field input[type="file"] {
+        padding:9px 13px; font-size:13px;
+    }
+
+    /* Toggle */
+    .en-toggle-row {
+        display:flex; align-items:center; justify-content:space-between;
+        padding:13px 15px; border-radius:13px;
+        background:var(--en-teal-pale); border:1px solid rgba(11,94,99,.12);
+    }
+    .en-toggle-lbl { font-size:13px; font-weight:700; color:var(--en-teal); }
+    .en-switch { position:relative; width:46px; height:25px; }
+    .en-switch input { opacity:0; width:0; height:0; }
+    .en-slider {
+        position:absolute; inset:0; cursor:pointer; border-radius:999px;
+        background:rgba(11,94,99,.20); transition:background .3s;
+    }
+    .en-slider::before {
+        content:""; position:absolute; width:19px; height:19px;
+        left:3px; top:3px; border-radius:50%; background:#fff;
+        box-shadow:0 2px 6px rgba(0,0,0,.18); transition:transform .3s;
+    }
+    .en-switch input:checked + .en-slider { background:var(--en-teal); }
+    .en-switch input:checked + .en-slider::before { transform:translateX(21px); }
+
+    /* Form actions */
+    .en-form-acts {
+        display:flex; gap:11px; justify-content:flex-end; margin-top:22px;
+        padding-top:18px; border-top:1px solid rgba(11,94,99,.09);
+    }
+    .en-btn-cancel {
+        padding:11px 22px; border-radius:11px; font-size:14px; font-weight:800;
+        background:var(--en-teal-pale); color:var(--en-teal); border:none; cursor:pointer;
+        transition:background .18s; font-family:inherit;
+    }
+    .en-btn-cancel:hover { background:rgba(11,94,99,.14); }
+    .en-btn-submit {
+        padding:11px 28px; border-radius:11px; font-size:14px; font-weight:800;
+        background:linear-gradient(135deg,var(--en-teal),var(--en-teal-lt));
+        color:#fff; border:none; cursor:pointer;
+        box-shadow:0 8px 20px rgba(11,94,99,.28);
+        transition:transform .2s,box-shadow .2s; font-family:inherit;
+    }
+    .en-btn-submit:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(11,94,99,.36); }
+
+    /* Delete modal */
+    .en-del-modal { max-width:420px; text-align:center; }
+    .en-del-ico   { font-size:54px; margin-bottom:16px; display:block; }
+    .en-del-title { font-size:20px; font-weight:900; color:var(--en-teal); margin-bottom:10px; }
+    .en-del-text  { font-size:14px; color:var(--text-soft); line-height:1.7; margin-bottom:26px; }
+    .en-btn-danger {
+        padding:11px 28px; border-radius:11px; font-size:14px; font-weight:800;
+        background:linear-gradient(135deg,var(--en-red),#d95555);
+        color:#fff; border:none; cursor:pointer;
+        box-shadow:0 8px 20px rgba(201,64,64,.28);
+        transition:transform .2s; font-family:inherit;
+    }
+    .en-btn-danger:hover { transform:translateY(-2px); }
+
+    /* ── CREDENTIAL BADGE ────────────────────────────── */
+    .cred-badge {
+        display:inline-flex; align-items:center; gap:6px;
+        padding:4px 10px; border-radius:8px;
+        background:var(--en-blue-pale); color:var(--en-blue);
+        font-size:11px; font-weight:800; font-family:monospace;
+        border:1px solid rgba(45,110,204,.18);
+    }
+
+    /* ══════════════════════════════════════════════════
+       DETAIL MODAL
+    ══════════════════════════════════════════════════ */
+    .det-modal { max-width: 960px; padding: 0; overflow: hidden; border-radius: 28px; }
+
+    .det-modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 24px 32px;
+        background: linear-gradient(135deg, var(--en-teal), var(--en-teal-lt));
+        color: #fff;
+    }
+    .det-modal-header-left { display: flex; align-items: center; gap: 16px; }
+    .det-hdr-avatar {
+        width: 56px; height: 56px; border-radius: 16px;
+        background: rgba(255,255,255,.22); border: 2px solid rgba(255,255,255,.30);
+        display: grid; place-items: center;
+        font-size: 20px; font-weight: 900; color: #fff;
+        overflow: hidden; flex-shrink: 0;
+    }
+    .det-hdr-avatar img { width:100%; height:100%; object-fit:cover; }
+    .det-hdr-name  { font-size: 20px; font-weight: 900; line-height: 1.2; }
+    .det-hdr-meta  { font-size: 13px; opacity: .80; margin-top: 3px; }
+    .det-hdr-close {
+        width: 40px; height: 40px; border-radius: 12px; border: none; cursor: pointer;
+        background: rgba(255,255,255,.18); color: #fff; font-size: 22px;
+        display: grid; place-items: center; transition: background .18s;
+    }
+    .det-hdr-close:hover { background: rgba(255,255,255,.30); }
+
+    .det-modal-body {
+        padding: 28px 32px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 18px;
+        max-height: 72vh; overflow-y: auto;
+    }
+
+    .det-block {
+        background: rgba(11,94,99,.04);
+        border: 1px solid rgba(11,94,99,.10);
+        border-radius: 16px; padding: 18px;
+    }
+    .det-block-title {
+        font-size: 11px; font-weight: 900; letter-spacing: .9px;
+        text-transform: uppercase; color: var(--en-teal);
+        margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
+    }
+    .det-row-item {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        padding: 8px 0; border-bottom: 1px solid rgba(11,94,99,.07);
+        gap: 8px; font-size: 13px;
+    }
+    .det-row-item:last-child { border-bottom: none; }
+    .det-row-lbl { color: var(--text-soft); font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+    .det-row-val { font-weight: 800; text-align: right; word-break: break-word; }
+
+    /* pay progress */
+    .det-pay-big {
+        background: linear-gradient(135deg, var(--en-teal), var(--en-teal-lt));
+        border-radius: 14px; padding: 18px; color: #fff; margin-bottom: 12px;
+        box-shadow: 0 8px 20px rgba(11,94,99,.24);
+    }
+    .det-pay-big-lbl { font-size: 11px; font-weight: 800; opacity: .76; letter-spacing: .6px; text-transform: uppercase; }
+    .det-pay-big-val { font-size: 28px; font-weight: 900; margin-top: 3px; line-height: 1; }
+    .det-pay-big-sub { font-size: 12px; opacity: .76; margin-top: 3px; }
+    .det-pay-track   { height: 8px; border-radius: 99px; background: rgba(11,94,99,.10); overflow: hidden; margin: 8px 0 4px; }
+    .det-pay-fill    { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--en-teal), var(--en-teal-lt)); transition: width .5s; }
+    .det-pay-pct     { font-size: 12px; font-weight: 800; color: var(--en-teal); }
+
+    /* notes */
+    .det-notes-list { display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow-y: auto; }
+    .det-note-item  { padding: 12px 14px; border-radius: 12px; background: rgba(11,94,99,.06); border: 1px solid rgba(11,94,99,.10); }
+    .det-note-meta  { font-size: 11px; color: var(--text-soft); font-weight: 700; margin-bottom: 5px; }
+    .det-note-text  { font-size: 13px; font-weight: 600; line-height: 1.6; }
+    .det-empty-note { padding: 20px; text-align: center; color: var(--text-soft); font-size: 13px; font-weight: 600; }
+
+    .det-note-form  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .det-note-form textarea {
+        width: 100%; padding: 11px 13px; border-radius: 11px;
+        font-size: 13px; font-weight: 600; font-family: inherit;
+        color: var(--text); border: 1.5px solid rgba(11,94,99,.14);
+        background: rgba(255,255,255,.80); outline: none; resize: none; min-height: 70px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .det-note-form textarea:focus {
+        border-color: var(--en-teal);
+        box-shadow: 0 0 0 4px rgba(11,94,99,.10);
+    }
+    .det-note-form button {
+        align-self: flex-end; padding: 9px 20px; border-radius: 10px;
+        font-size: 13px; font-weight: 800; font-family: inherit;
+        background: linear-gradient(135deg, var(--en-teal), var(--en-teal-lt));
+        color: #fff; border: none; cursor: pointer;
+        box-shadow: 0 6px 16px rgba(11,94,99,.24);
+        transition: transform .2s;
+    }
+    .det-note-form button:hover { transform: translateY(-2px); }
+
+    /* cred box */
+    .det-cred-box {
+        background: rgba(45,110,204,.07); border: 1px solid rgba(45,110,204,.16);
+        border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px;
+    }
+    .det-cred-row { display: flex; align-items: center; gap: 10px; }
+    .det-cred-lbl { font-size: 11px; font-weight: 800; color: var(--text-soft); text-transform: uppercase; width: 65px; }
+    .det-cred-val {
+        font-family: monospace; font-size: 13px; font-weight: 800;
+        background: rgba(45,110,204,.10); color: #2D6ECC;
+        padding: 3px 9px; border-radius: 7px;
+    }
+
+    .det-modal-footer {
+        padding: 18px 32px;
+        border-top: 1px solid rgba(11,94,99,.09);
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 10px;
+        background: rgba(11,94,99,.03);
+    }
+    .det-footer-info { font-size: 12px; color: var(--text-soft); font-weight: 700; }
+
+    .det-toggle-btn {
+        padding: 10px 20px; border-radius: 11px; font-size: 13px; font-weight: 800;
+        font-family: inherit; border: none; cursor: pointer;
+        background: var(--en-teal-pale); color: var(--en-teal);
+        transition: background .18s;
+    }
+    .det-toggle-btn:hover { background: rgba(11,94,99,.14); }
+    .det-del-btn {
+        padding: 10px 20px; border-radius: 11px; font-size: 13px; font-weight: 800;
+        font-family: inherit; border: none; cursor: pointer;
+        background: var(--en-red-pale); color: var(--en-red);
+        transition: background .18s;
+    }
+    .det-del-btn:hover { background: rgba(201,64,64,.18); }
+
+    /* loading spinner */
+    .det-loading {
+        display: flex; align-items: center; justify-content: center;
+        padding: 60px; font-size: 14px; font-weight: 700; color: var(--text-soft);
+        grid-column: 1/-1;
+    }
+    .det-spinner {
+        width: 32px; height: 32px; border-radius: 50%;
+        border: 3px solid rgba(11,94,99,.15);
+        border-top-color: var(--en-teal);
+        animation: spin .7s linear infinite;
+        margin-right: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    html[data-theme="dark"] .det-modal { background: #0D2427; }
+    html[data-theme="dark"] .det-block { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.08); }
+    html[data-theme="dark"] .det-modal-footer { background: rgba(0,0,0,.20); border-color: rgba(255,255,255,.08); }
+    html[data-theme="dark"] .det-note-form textarea { background: rgba(255,255,255,.08); color: #fff; }
+    html[data-theme="dark"] .det-row-val { color: #fff; }
+
+    @media(max-width:860px) {
+        .det-modal-body { grid-template-columns: 1fr 1fr; }
+    }
+    @media(max-width:600px) {
+        .det-modal-body { grid-template-columns: 1fr; padding: 18px; }
+        .det-modal-header { padding: 18px 20px; }
+        .det-modal-footer { padding: 14px 20px; }
+    }
+
+    /* Dark mode */
+    html[data-theme="dark"] .en-stat,
+    html[data-theme="dark"] .en-table-wrap {
+        background:linear-gradient(170deg,rgba(18,40,44,.94),rgba(12,28,32,.88));
+        border-color:rgba(255,255,255,.08);
+    }
+    html[data-theme="dark"] .en-modal {
+        background:#0D2427;
+    }
+    html[data-theme="dark"] .en-field input,
+    html[data-theme="dark"] .en-field select,
+    html[data-theme="dark"] .en-field textarea {
+        background:rgba(255,255,255,.06);
+        border-color:rgba(255,255,255,.12);
+        color:#fff;
+    }
+    html[data-theme="dark"] .en-field select option { background:#0D2427; }
+    html[data-theme="dark"] .en-name { color:#fff; }
+    html[data-theme="dark"] .en-table tbody tr:hover { background:rgba(11,94,99,.10); }
+
+    @media(max-width:1200px) { .en-stats { grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:900px)  { .en-stats { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:768px)  {
+        .en-toolbar { flex-direction:column; align-items:stretch; }
+        .en-search  { max-width:100%; }
+        .en-form-grid { grid-template-columns:1fr; }
+        .en-stats { grid-template-columns:1fr 1fr; }
+    }
+    @media(max-width:560px) { .en-stats { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="en-shell">
+
+    <!-- ══ STATS ══════════════════════════════════════════════════════ -->
+    <div class="en-stats">
+
+        <div class="en-stat">
+            <div class="en-stat-icon" style="background:var(--en-teal-pale);">📋</div>
+            <div class="en-stat-body">
+                <div class="en-stat-val">{{ total_count }}</div>
+                <div class="en-stat-lbl">Total enrolled</div>
+            </div>
+        </div>
+
+        <div class="en-stat">
+            <div class="en-stat-icon" style="background:var(--en-green-pale);">✅</div>
+            <div class="en-stat-body">
+                <div class="en-stat-val" style="color:var(--en-green)">{{ active_count }}</div>
+                <div class="en-stat-lbl">Active</div>
+            </div>
+        </div>
+
+        <div class="en-stat">
+            <div class="en-stat-icon" style="background:var(--en-gold-pale);">⏳</div>
+            <div class="en-stat-body">
+                <div class="en-stat-val" style="color:var(--en-gold)">{{ pending_count }}</div>
+                <div class="en-stat-lbl">Kutilmoqda</div>
+            </div>
+        </div>
+
+        <div class="en-stat">
+            <div class="en-stat-icon" style="background:var(--en-green-pale);">💰</div>
+            <div class="en-stat-body">
+                <div class="en-stat-val" style="color:var(--en-green)">{{ paid_count }}</div>
+                <div class="en-stat-lbl">Fully paid</div>
+            </div>
+        </div>
+
+        <div class="en-stat">
+            <div class="en-stat-icon" style="background:var(--en-blue-pale);">📈</div>
+            <div class="en-stat-body">
+                <div class="en-stat-val" style="color:var(--en-blue);font-size:18px;">
+                    {{ total_income|floatformat:0 }}
+                </div>
+                <div class="en-stat-lbl">Total income (UZS)</div>
+            </div>
+        </div>
+
+        <div class="en-stat">
+            <div class="en-stat-icon" style="background:var(--en-red-pale);">⚠️</div>
+            <div class="en-stat-body">
+                <div class="en-stat-val" style="color:var(--en-red);font-size:18px;">
+                    {{ total_debt|floatformat:0 }}
+                </div>
+                <div class="en-stat-lbl">Umumiy qarzdorlik</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TOOLBAR ════════════════════════════════════════════════════ -->
+    <div class="en-toolbar">
+        <form method="get" style="display:flex;gap:10px;align-items:center;flex:1;flex-wrap:wrap;">
+            <input type="hidden" name="status" value="{{ status_filter }}">
+            <input type="hidden" name="pay" value="{{ pay_filter }}">
+            <div class="en-search">
+                <span style="color:var(--text-faint);">🔍</span>
+                <input type="text" name="q" value="{{ search_query }}"
+                       placeholder="Name, phone or course...">
+            </div>
+            <button type="submit" class="en-add-btn" style="padding:10px 18px;font-size:13px;">
+                Search
+            </button>
+        </form>
+
+        <!-- Status filterlar -->
+        <div class="en-filter-tabs">
+            <a href="?status=all&pay={{ pay_filter }}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="en-ftab {% if status_filter == 'all' %}active{% endif %}">
+                All
+            </a>
+            <a href="?status=pending&pay={{ pay_filter }}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="en-ftab {% if status_filter == 'pending' %}active{% endif %}">
+                ⏳ Kutilmoqda
+            </a>
+            <a href="?status=active&pay={{ pay_filter }}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="en-ftab {% if status_filter == 'active' %}active{% endif %}">
+                ✅ Active
+            </a>
+            <a href="?status=frozen&pay={{ pay_filter }}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="en-ftab {% if status_filter == 'frozen' %}active{% endif %}">
+                🧊 Muzlatilgan
+            </a>
+            <a href="?status=completed&pay={{ pay_filter }}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="en-ftab {% if status_filter == 'completed' %}active{% endif %}">
+                🏁 Yakunlangan
+            </a>
+            <a href="?status=cancelled&pay={{ pay_filter }}{% if search_query %}&q={{ search_query }}{% endif %}"
+               class="en-ftab {% if status_filter == 'cancelled' %}active{% endif %}">
+                ❌ Cancelled
+            </a>
+        </div>
+
+        <button class="en-add-btn" onclick="openAddModal()">
+            ＋ New enrollment
+        </button>
+    </div>
+
+    <!-- ── To'lov filter ──────────────────────────────────────────── -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:-10px;">
+    <span style="font-size:12px;font-weight:700;color:var(--text-soft);padding:9px 0;align-self:center;">
+        Payment:
+    </span>
+        <a href="?status={{ status_filter }}&pay=all{% if search_query %}&q={{ search_query }}{% endif %}"
+           class="en-ftab {% if pay_filter == 'all' %}active{% endif %}">All</a>
+        <a href="?status={{ status_filter }}&pay=unpaid{% if search_query %}&q={{ search_query }}{% endif %}"
+           class="en-ftab {% if pay_filter == 'unpaid' %}active{% endif %}">❗ To'lanmagan</a>
+        <a href="?status={{ status_filter }}&pay=partial{% if search_query %}&q={{ search_query }}{% endif %}"
+           class="en-ftab {% if pay_filter == 'partial' %}active{% endif %}">🟡 Qisman</a>
+        <a href="?status={{ status_filter }}&pay=paid{% if search_query %}&q={{ search_query }}{% endif %}"
+           class="en-ftab {% if pay_filter == 'paid' %}active{% endif %}">✅ To'liq</a>
+        <a href="?status={{ status_filter }}&pay=overdue{% if search_query %}&q={{ search_query }}{% endif %}"
+           class="en-ftab {% if pay_filter == 'overdue' %}active{% endif %}">🔴 Muddati o'tgan</a>
+    </div>
+
+    <!-- ══ TABLE ══════════════════════════════════════════════════════ -->
+    <div class="en-table-wrap">
+        <table class="en-table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Student</th>
+                <th>Course / Group</th>
+                <th>Teacher</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Summa / Qarz</th>
+                <th>Source</th>
+                <th>Sana</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for en in enrollments %}
+            <tr>
+                <td style="color:var(--text-soft);font-weight:700;font-size:12px;">
+                    {{ forloop.counter }}
+                </td>
+
+                <!-- Talaba -->
+                <td>
+                    <div class="en-student-chip">
+                        <div class="en-avatar">
+                            {% if en.student.image %}
+                            <img src="{{ en.student.image.url }}" alt="">
+                            {% else %}
+                            {{ en.student.first_name|first|upper }}{{ en.student.last_name|first|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="en-name">{{ en.student.full_name }}</div>
+                            <div class="en-meta">📱 {{ en.student.phone }}</div>
+                        </div>
+                    </div>
+                </td>
+
+                <!-- Kurs/Guruh -->
+                <td>
+                    <div class="en-name" style="font-size:13px;">
+                        {{ en.course.title|default:"—" }}
+                    </div>
+                    <div class="en-meta">
+                        {% if en.group %}🏷 {{ en.group.name }}{% else %}—{% endif %}
+                    </div>
+                </td>
+
+                <!-- O'qituvchi -->
+                <td>
+                    <div style="font-size:13px;font-weight:700;">
+                        {% if en.instructor %}
+                        {{ en.instructor.full_name }}
+                        {% else %}—{% endif %}
+                    </div>
+                </td>
+
+                <!-- Holat -->
+                <td>
+                <span class="en-pill pill-{{ en.status }}">
+                    {% if en.status == 'pending' %}⏳{% endif %}
+                    {% if en.status == 'active' %}✅{% endif %}
+                    {% if en.status == 'completed' %}🏁{% endif %}
+                    {% if en.status == 'cancelled' %}❌{% endif %}
+                    {% if en.status == 'frozen' %}🧊{% endif %}
+                    {{ en.get_status_display }}
+                </span>
+                </td>
+
+                <!-- To'lov holati -->
+                <td>
+                <span class="en-pill pill-{{ en.payment_status }}">
+                    {{ en.get_payment_status_display }}
+                </span>
+                </td>
+
+                <!-- Summa -->
+                <td>
+                    <div class="pay-bar-wrap">
+                        <div class="pay-pct">{{ en.payment_percent }}%</div>
+                        <div class="pay-bar-track">
+                            <div class="pay-bar-fill" style="width:{{ en.payment_percent }}%;"></div>
+                        </div>
+                        <div class="en-meta" style="margin-top:3px;">
+                            {{ en.paid_amount|floatformat:0 }} /
+                            {{ en.net_fee|floatformat:0 }} so'm
+                        </div>
+                    </div>
+                </td>
+
+                <!-- Manba -->
+                <td>
+                <span style="font-size:12px;font-weight:700;color:var(--text-soft);">
+                    {{ en.get_source_display }}
+                </span>
+                </td>
+
+                <!-- Sana -->
+                <td>
+                <span style="font-size:12px;color:var(--text-soft);font-weight:700;">
+                    {{ en.enrolled_at|date:"d.m.Y" }}
+                </span>
+                </td>
+
+                <!-- Amallar -->
+                <td>
+                    <div class="en-acts">
+                        <button class="en-act en-act-view"
+                                onclick="openDetailModal({{ en.pk }})"
+                                title="View details">👁
+                        </button>
+
+                        <button class="en-act en-act-edit"
+                                onclick="openEditModal(
+                                {{ en.pk }},
+                                '{{ en.course.pk|default:'' }}',
+                                '{{ en.group.pk|default:'' }}',
+                                '{{ en.instructor.pk|default:'' }}',
+                                '{{ en.status }}',
+                                '{{ en.payment_status }}',
+                                '{{ en.course_fee }}',
+                                '{{ en.discount }}',
+                                '{{ en.paid_amount }}',
+                                '{{ en.start_date|default:'' }}',
+                                '{{ en.end_date|default:'' }}',
+                                '{{ en.source }}',
+                                '{{ en.notes|escapejs }}'
+                            )"
+                                title="Edit">✏️
+                        </button>
+
+                        <form method="post"
+                              action="{% url 'enrollments:enrollment_toggle_status' en.pk %}"
+                              style="display:inline">
+                            {% csrf_token %}
+                            <button class="en-act en-act-toggle" type="submit"
+                                    title="Change status">🔄
+                            </button>
+                        </form>
+
+                        <button class="en-act en-act-del"
+                                onclick="openDelModal({{ en.pk }}, '{{ en.student.full_name|escapejs }}')"
+                                title="O'chirish">🗑️
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10">
+                    <div class="en-empty">
+                        <span class="emo">📋</span>
+                        <p>
+                            {% if search_query %}
+                            No enrollments found for "{{ search_query }}"
+                            {% else %}
+                            Hali hech kim ro'yxatga olinmagan
+                            {% endif %}
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination-bar" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 4px;">
+        <span style="color:var(--text-secondary,#94a3b8);font-size:13px;">
+            {{ page_obj.start_index }}–{{ page_obj.end_index }} / {{ page_obj.paginator.count }} ta yozuv
+        </span>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if pay_filter %}&pay={{ pay_filter }}{% endif %}"
+               style="padding:7px 12px;border-radius:8px;background:#0E5C60;color:#fff;text-decoration:none;font-weight:700;">← Oldingi</a>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span style="padding:7px 12px;border-radius:8px;background:#093D40;color:#fff;font-weight:800;">{{ num }}</span>
+                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                <a href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if pay_filter %}&pay={{ pay_filter }}{% endif %}"
+                   style="padding:7px 12px;border-radius:8px;background:rgba(14,92,96,.18);color:inherit;text-decoration:none;font-weight:700;">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if pay_filter %}&pay={{ pay_filter }}{% endif %}"
+               style="padding:7px 12px;border-radius:8px;background:#0E5C60;color:#fff;text-decoration:none;font-weight:700;">Keyingi →</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div><!-- /en-shell -->
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     ADD MODAL — Yangi ro'yxatga olish (Talaba + Kurs)
+══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="addModal">
+    <div class="en-modal">
+        <div class="en-modal-head">
+            <div class="en-modal-title">📋 New enrollment</div>
+            <button class="en-modal-close" onclick="closeModal('addModal')">×</button>
+        </div>
+
+        <form method="post" action="{% url 'enrollments:enrollment_create' %}"
+              enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="lead_id" id="addLeadId" value="">
+
+            <!-- ── 1. Talaba ma'lumotlari ── -->
+            <div class="en-section-lbl">🎓 Student information</div>
+            <div class="en-form-grid">
+                <div class="en-field">
+                    <label>First name *</label>
+                    <input type="text" name="first_name" placeholder="First name" required>
+                </div>
+                <div class="en-field">
+                    <label>Last name *</label>
+                    <input type="text" name="last_name" placeholder="Last name" required>
+                </div>
+                <div class="en-field">
+                    <label>Phone * (used as login)</label>
+                    <input type="text" name="phone" placeholder="+998901234567" required>
+                </div>
+                <div class="en-field">
+                    <label>Ota-ona telefoni</label>
+                    <input type="text" name="parent_phone" placeholder="+998901234567">
+                </div>
+                <div class="en-field">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="email@example.com">
+                </div>
+                <div class="en-field">
+                    <label>Gender</label>
+                    <select name="gender">
+                        <option value="">— Tanlang —</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Date of birth</label>
+                    <input type="date" name="birth_date">
+                </div>
+                <div class="en-field">
+                    <label>Address</label>
+                    <input type="text" name="address" placeholder="Yashash manzili">
+                </div>
+            </div>
+
+            <!-- ── 2. Login ma'lumotlari ── -->
+            <div class="en-section-lbl">🔑 Tizimga kirish ma'lumotlari</div>
+            <div class="en-form-grid">
+                <div class="en-field">
+                    <label>Username (login)</label>
+                    <input type="text" name="username"
+                           placeholder="Avtomatik: telefon raqami">
+                </div>
+                <div class="en-field">
+                    <label>Password</label>
+                    <input type="text" name="password"
+                           placeholder="Avtomatik: 12345678">
+                </div>
+            </div>
+
+            <!-- ── 3. Kurs ma'lumotlari ── -->
+            <div class="en-section-lbl">📚 Course &amp; group</div>
+            <div class="en-form-grid">
+                <div class="en-field">
+                    <label>Course</label>
+                    <select name="course">
+                        <option value="">— Tanlang —</option>
+                        {% for c in courses %}
+                        <option value="{{ c.pk }}">{{ c.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Group</label>
+                    <select name="group">
+                        <option value="">— Tanlang —</option>
+                        {% for g in groups %}
+                        <option value="{{ g.pk }}">{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Teacher</label>
+                    <select name="instructor">
+                        <option value="">— Tanlang —</option>
+                        {% for i in instructors %}
+                        <option value="{{ i.pk }}">{{ i.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Source</label>
+                    <select name="source">
+                        {% for val,lbl in source_choices %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Start date</label>
+                    <input type="date" name="start_date">
+                </div>
+                <div class="en-field">
+                    <label>End date</label>
+                    <input type="date" name="end_date">
+                </div>
+            </div>
+
+            <!-- ── 4. Moliya ── -->
+            <div class="en-section-lbl">💳 Moliyaviy ma'lumotlar</div>
+            <div class="en-form-grid">
+                <div class="en-field">
+                    <label>Course price (UZS)</label>
+                    <input type="number" name="course_fee" placeholder="0" min="0" step="1000">
+                </div>
+                <div class="en-field">
+                    <label>Discount (UZS)</label>
+                    <input type="number" name="discount" placeholder="0" min="0" step="1000">
+                </div>
+                <div class="en-field">
+                    <label>Initial payment (UZS)</label>
+                    <input type="number" name="paid_amount" placeholder="0" min="0" step="1000">
+                </div>
+                <div class="en-field">
+                    <label>Payment status</label>
+                    <select name="payment_status">
+                        {% for val,lbl in pay_choices %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- ── 5. Holat ── -->
+            <div class="en-section-lbl">⚙️ Status &amp; note</div>
+            <div class="en-form-grid">
+                <div class="en-field">
+                    <label>Enrollment holati</label>
+                    <select name="status">
+                        {% for val,lbl in status_choices %}
+                        <option value="{{ val }}" {% if val == 'pending' %}selected{% endif %}>
+                            {{ lbl }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field en-form-full">
+                    <label>Note</label>
+                    <textarea name="notes" placeholder="Qo'shimcha ma'lumot..."></textarea>
+                </div>
+            </div>
+
+            <div class="en-form-acts">
+                <button type="button" class="en-btn-cancel"
+                        onclick="closeModal('addModal')">Cancel
+                </button>
+                <button type="submit" class="en-btn-submit">✅ Enroll</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     EDIT MODAL
+══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="editModal">
+    <div class="en-modal">
+        <div class="en-modal-head">
+            <div class="en-modal-title">✏️ Enrollment tahrirlash</div>
+            <button class="en-modal-close" onclick="closeModal('editModal')">×</button>
+        </div>
+
+        <form method="post" id="editForm">
+            {% csrf_token %}
+
+            <div class="en-section-lbl">📚 Course &amp; group</div>
+            <div class="en-form-grid">
+                <div class="en-field">
+                    <label>Course</label>
+                    <select name="course" id="e_course">
+                        <option value="">— Tanlang —</option>
+                        {% for c in courses %}
+                        <option value="{{ c.pk }}">{{ c.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Group</label>
+                    <select name="group" id="e_group">
+                        <option value="">— Tanlang —</option>
+                        {% for g in groups %}
+                        <option value="{{ g.pk }}">{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Teacher</label>
+                    <select name="instructor" id="e_instructor">
+                        <option value="">— Tanlang —</option>
+                        {% for i in instructors %}
+                        <option value="{{ i.pk }}">{{ i.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Source</label>
+                    <select name="source" id="e_source">
+                        {% for val,lbl in source_choices %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field">
+                    <label>Start date</label>
+                    <input type="date" name="start_date" id="e_start_date">
+                </div>
+                <div class="en-field">
+                    <label>End date</label>
+                    <input type="date" name="end_date" id="e_end_date">
+                </div>
+            </div>
+
+            <div class="en-section-lbl">💳 Moliyaviy ma'lumotlar</div>
+            <div class="en-form-grid">
+                <div class="en-field">
+                    <label>Course price (UZS)</label>
+                    <input type="number" name="course_fee" id="e_course_fee" min="0" step="1000">
+                </div>
+                <div class="en-field">
+                    <label>Discount (UZS)</label>
+                    <input type="number" name="discount" id="e_discount" min="0" step="1000">
+                </div>
+                <div class="en-field">
+                    <label>Paid amount (UZS)</label>
+                    <input type="number" name="paid_amount" id="e_paid_amount" min="0" step="1000">
+                </div>
+                <div class="en-field">
+                    <label>Payment status</label>
+                    <select name="payment_status" id="e_payment_status">
+                        {% for val,lbl in pay_choices %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="en-section-lbl">⚙️ Status &amp; note</div>
+            <div class="en-form-grid">
+                <div class="en-field">
+                    <label>Enrollment holati</label>
+                    <select name="status" id="e_status">
+                        {% for val,lbl in status_choices %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="en-field en-form-full">
+                    <label>Note</label>
+                    <textarea name="notes" id="e_notes"></textarea>
+                </div>
+            </div>
+
+            <div class="en-form-acts">
+                <button type="button" class="en-btn-cancel"
+                        onclick="closeModal('editModal')">Cancel
+                </button>
+                <button type="submit" class="en-btn-submit">💾 Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     DELETE MODAL
+══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="delModal">
+    <div class="en-modal en-del-modal">
+        <span class="en-del-ico">🗑️</span>
+        <div class="en-del-title">Are you sure you want to delete?</div>
+        <div class="en-del-text" id="delText">
+            This enrollment will be permanently removed from the system.
+        </div>
+        <form method="post" id="delForm">
+            {% csrf_token %}
+            <div class="en-form-acts" style="justify-content:center;">
+                <button type="button" class="en-btn-cancel"
+                        onclick="closeModal('delModal')">Cancel
+                </button>
+                <button type="submit" class="en-btn-danger">Yes, delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     DETAIL MODAL — To'liq ma'lumot (AJAX)
+══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="detailModal">
+    <div class="en-modal det-modal" id="detailModalInner">
+
+        <!-- Header (JS to'ldiradi) -->
+        <div class="det-modal-header" id="detHdr">
+            <div class="det-modal-header-left">
+                <div class="det-hdr-avatar" id="detAvatar">—</div>
+                <div>
+                    <div class="det-hdr-name" id="detName">Yuklanmoqda...</div>
+                    <div class="det-hdr-meta" id="detMeta"></div>
+                </div>
+            </div>
+            <button class="det-hdr-close" onclick="closeModal('detailModal')">×</button>
+        </div>
+
+        <!-- Body (JS to'ldiradi) -->
+        <div class="det-modal-body" id="detBody">
+            <div class="det-loading">
+                <div class="det-spinner"></div>
+                Ma'lumotlar yuklanmoqda...
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="det-modal-footer" id="detFooter" style="display:none;">
+            <div class="det-footer-info" id="detFooterInfo"></div>
+            <div style="display:flex;gap:10px;">
+                <form method="post" id="detToggleForm">
+                    {% csrf_token %}
+                    <button type="submit" class="det-toggle-btn" id="detToggleBtn">🔄 Status</button>
+                </form>
+                <form method="post" id="detDelForm"
+                      onsubmit="return confirm('Are you sure you want to delete?')">
+                    {% csrf_token %}
+                    <button type="submit" class="det-del-btn">🗑️ O'chirish</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    /* ─── Modal helpers ─────────────────────────────── */
+    function openAddModal() {
+        document.getElementById('addModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    /* ─── Telegram lead → enrollment prefill ─────────── */
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const leadId = params.get('lead_id');
+        if (!leadId) return;
+
+        const form = document.querySelector('#addModal form');
+        if (!form) return;
+
+        const setVal = (name, val) => {
+            const el = form.querySelector('[name="' + name + '"]');
+            if (el && val) el.value = val;
+        };
+        setVal('first_name', params.get('lead_first'));
+        setVal('last_name',  params.get('lead_last'));
+        setVal('phone',      params.get('lead_phone'));
+        setVal('email',      params.get('lead_email'));
+        const leadField = document.getElementById('addLeadId');
+        if (leadField) leadField.value = leadId;
+
+        // Modalni avtomatik ochamiz
+        openAddModal();
+
+        // URL ni tozalaymiz (reload qilganda qayta ochilmasligi uchun)
+        if (window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    })();
+
+    /* ─── DETAIL MODAL ──────────────────────────────── */
+    // Barcha enrollment ma'lumotlarini JS object sifatida saqlymiz
+    const ENROLLMENTS = {
+        {% for en in enrollments %}
+        {{ en.pk }}: {
+            pk:             {{ en.pk }},
+            studentName:    "{{ en.student.full_name|escapejs }}",
+            studentPhone:   "{{ en.student.phone|escapejs }}",
+            studentEmail:   "{{ en.student.email|default:''|escapejs }}",
+            studentParent:  "{{ en.student.parent_phone|default:''|escapejs }}",
+            studentGender:  "{{ en.student.gender|default:''|escapejs }}",
+            studentBirth:   "{{ en.student.birth_date|date:'d.m.Y'|default:''|escapejs }}",
+            studentAddress: "{{ en.student.address|default:''|escapejs }}",
+            studentActive:  {{ en.student.is_active|lower }},
+            studentImg:     "{% if en.student.image %}{{ en.student.image.url }}{% endif %}",
+            studentInitials:"{{ en.student.first_name|first|upper }}{{ en.student.last_name|first|upper }}",
+            username:       "{% if en.student.user %}{{ en.student.user.username }}{% endif %}",
+
+            courseName:     "{{ en.course.title|default:'—'|escapejs }}",
+            groupName:      "{{ en.group.name|default:'—'|escapejs }}",
+            instructor:     "{% if en.instructor %}{{ en.instructor.full_name|escapejs }}{% else %}—{% endif %}",
+            status:         "{{ en.status }}",
+            statusLabel:    "{{ en.get_status_display|escapejs }}",
+            payStatus:      "{{ en.payment_status }}",
+            payLabel:       "{{ en.get_payment_status_display|escapejs }}",
+            source:         "{{ en.get_source_display|escapejs }}",
+            startDate:      "{{ en.start_date|date:'d.m.Y'|default:'—' }}",
+            endDate:        "{{ en.end_date|date:'d.m.Y'|default:'—' }}",
+            notes:          "{{ en.notes|escapejs }}",
+            enrolledAt:     "{{ en.enrolled_at|date:'d.m.Y H:i' }}",
+            createdBy:      "{% if en.created_by %}{{ en.created_by.get_full_name|default:en.created_by.username|escapejs }}{% else %}—{% endif %}",
+
+            courseFee:      {{ en.course_fee }},
+            discount:       {{ en.discount }},
+            netFee:         {{ en.net_fee }},
+            paidAmount:     {{ en.paid_amount }},
+            remaining:      {{ en.remaining_amount }},
+            payPercent:     {{ en.payment_percent }},
+
+            notes_list: [
+                {% for note in en.history_notes.all %}
+                {
+                    author: "{% if note.author %}{{ note.author.get_full_name|default:note.author.username|escapejs }}{% else %}Noma'lum{% endif %}",
+                    date:   "{{ note.created_at|date:'d.m.Y H:i' }}",
+                    text:   "{{ note.text|escapejs }}"
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    function openDetailModal(pk) {
+        const en = ENROLLMENTS[pk];
+        if (!en) return;
+
+        // Header
+        const avatar = document.getElementById('detAvatar');
+        if (en.studentImg) {
+            avatar.innerHTML = `<img src="${en.studentImg}" alt="">`;
+        } else {
+            avatar.textContent = en.studentInitials;
+        }
+        document.getElementById('detName').textContent = en.studentName;
+        document.getElementById('detMeta').textContent = `📱 ${en.studentPhone}  •  Enrollment #${en.pk}`;
+
+        // Status pill colors
+        const statusColors = {
+            pending:'#C8952A', active:'#1A9B6C', completed:'#2D6ECC',
+            cancelled:'#C94040', frozen:'#7B4FCC'
+        };
+        const payColors = {
+            unpaid:'#C94040', partial:'#C9621A', paid:'#1A9B6C',
+            overdue:'#C94040', refunded:'#94a3b8'
+        };
+        const sc = statusColors[en.status] || '#64748b';
+        const pc = payColors[en.payStatus] || '#64748b';
+
+        const fmt = n => Number(n).toLocaleString('uz-UZ');
+
+        // Body
+        document.getElementById('detBody').innerHTML = `
+
+          <!-- ── Talaba ── -->
+          <div class="det-block">
+            <div class="det-block-title">🎓 Student</div>
+            <div class="det-row-item"><span class="det-row-lbl">Name</span><span class="det-row-val">${en.studentName}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Phone</span><span class="det-row-val">📱 ${en.studentPhone}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Ota-ona</span><span class="det-row-val">${en.studentParent||'—'}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Email</span><span class="det-row-val">${en.studentEmail||'—'}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Gender</span><span class="det-row-val">${en.studentGender==='male'?'👦 Male':en.studentGender==='female'?'👧 Female':'—'}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Tug'ilgan</span><span class="det-row-val">${en.studentBirth||'—'}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Address</span><span class="det-row-val">${en.studentAddress||'—'}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Status</span>
+              <span class="det-row-val">
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;
+                  font-size:11px;font-weight:800;background:${en.studentActive?'rgba(26,155,108,.10)':'rgba(201,64,64,.10)'};
+                  color:${en.studentActive?'#1A9B6C':'#C94040'}">
+                  ${en.studentActive?'✅ Active':'❌ Nofaol'}
+                </span>
+              </span>
+            </div>
+            ${en.username ? `
+            <div style="margin-top:12px;">
+              <div class="det-block-title" style="margin-bottom:8px;">🔑 Tizimga kirish</div>
+              <div class="det-cred-box">
+                <div class="det-cred-row">
+                  <span class="det-cred-lbl">Login</span>
+                  <span class="det-cred-val">${en.username}</span>
+                </div>
+                <div class="det-cred-row">
+                  <span class="det-cred-lbl">Password</span>
+                  <span class="det-cred-val">••••••••</span>
+                </div>
+              </div>
+            </div>` : ''}
+          </div>
+
+          <!-- ── Kurs ── -->
+          <div class="det-block">
+            <div class="det-block-title">📚 Course information</div>
+            <div class="det-row-item"><span class="det-row-lbl">Course</span><span class="det-row-val">${en.courseName}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Group</span><span class="det-row-val">${en.groupName}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Teacher</span><span class="det-row-val">${en.instructor}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Status</span>
+              <span class="det-row-val">
+                <span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:8px;
+                  font-size:11px;font-weight:800;background:${sc}18;color:${sc};">
+                  ${en.statusLabel}
+                </span>
+              </span>
+            </div>
+            <div class="det-row-item"><span class="det-row-lbl">Source</span><span class="det-row-val">${en.source}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Start</span><span class="det-row-val">${en.startDate}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">End</span><span class="det-row-val">${en.endDate}</span></div>
+            <div class="det-row-item"><span class="det-row-lbl">Created by</span><span class="det-row-val">${en.createdBy}</span></div>
+            ${en.notes ? `
+            <div style="margin-top:12px;padding:11px 13px;border-radius:11px;
+                background:rgba(11,94,99,.06);border:1px solid rgba(11,94,99,.12);">
+              <div style="font-size:10px;font-weight:900;color:var(--en-teal);
+                  text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">📝 Note</div>
+              <div style="font-size:13px;font-weight:600;line-height:1.6;">${en.notes}</div>
+            </div>` : ''}
+          </div>
+
+          <!-- ── To'lov ── -->
+          <div class="det-block">
+            <div class="det-block-title">💳 Financial status</div>
+            <div class="det-pay-big">
+              <div class="det-pay-big-lbl">Paid amount</div>
+              <div class="det-pay-big-val">${fmt(en.paidAmount)} UZS</div>
+              <div class="det-pay-big-sub">Total: ${fmt(en.netFee)} UZS${en.discount>0?' (discount: '+fmt(en.discount)+' UZS)':''}</div>
+            </div>
+            <div class="det-pay-track">
+              <div class="det-pay-fill" style="width:${en.payPercent}%"></div>
+            </div>
+            <div class="det-pay-pct">${en.payPercent}% paid</div>
+
+            <div style="margin-top:10px;">
+              <div class="det-row-item"><span class="det-row-lbl">Course price</span><span class="det-row-val">${fmt(en.courseFee)} UZS</span></div>
+              <div class="det-row-item"><span class="det-row-lbl">Discount</span><span class="det-row-val" style="color:var(--en-green);">-${fmt(en.discount)} UZS</span></div>
+              <div class="det-row-item"><span class="det-row-lbl">Net price</span><span class="det-row-val">${fmt(en.netFee)} UZS</span></div>
+              <div class="det-row-item"><span class="det-row-lbl">Paid</span><span class="det-row-val" style="color:var(--en-green);">${fmt(en.paidAmount)} UZS</span></div>
+              <div class="det-row-item"><span class="det-row-lbl">Remaining</span><span class="det-row-val" style="color:var(--en-red);">${fmt(en.remaining)} UZS</span></div>
+              <div class="det-row-item"><span class="det-row-lbl">Payment</span>
+                <span class="det-row-val">
+                  <span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:8px;
+                    font-size:11px;font-weight:800;background:${pc}18;color:${pc};">
+                    ${en.payLabel}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Izohlar (full width) ── -->
+          <div class="det-block" style="grid-column:1/-1;">
+            <div class="det-block-title">💬 Note history</div>
+            <form class="det-note-form" method="post" action="/enrollments/${pk}/note/">
+              <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrf()}">
+              <textarea name="text" placeholder="Write a new note..." rows="2"></textarea>
+              <button type="submit">➕ Add note</button>
+            </form>
+            <div class="det-notes-list">
+              ${en.notes_list.length ? en.notes_list.map(n => `
+                <div class="det-note-item">
+                  <div class="det-note-meta">👤 ${n.author} • ${n.date}</div>
+                  <div class="det-note-text">${n.text}</div>
+                </div>`).join('') :
+              '<div class="det-empty-note">💬 No notes yet</div>'}
+            </div>
+          </div>
+        `;
+
+        // Footer
+        document.getElementById('detFooter').style.display = 'flex';
+        document.getElementById('detFooterInfo').textContent =
+            `Enrolled: ${en.enrolledAt}`;
+        document.getElementById('detToggleForm').action = `/enrollments/${pk}/toggle-status/`;
+        document.getElementById('detToggleBtn').textContent =
+            `🔄 Change status (${en.statusLabel})`;
+        document.getElementById('detDelForm').action = `/enrollments/${pk}/delete/`;
+
+        document.getElementById('detailModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function getCsrf() {
+        const el = document.querySelector('[name=csrfmiddlewaretoken]');
+        return el ? el.value : '';
+    }
+
+    function openEditModal(pk, courseId, groupId, instructorId,
+                           status, payStatus, fee, discount, paid,
+                           startDate, endDate, source, notes) {
+        const form = document.getElementById('editForm');
+        form.action = `/enrollments/${pk}/update/`;
+
+        setVal('e_course',         courseId);
+        setVal('e_group',          groupId);
+        setVal('e_instructor',     instructorId);
+        setVal('e_status',         status);
+        setVal('e_payment_status', payStatus);
+        setVal('e_course_fee',     fee);
+        setVal('e_discount',       discount);
+        setVal('e_paid_amount',    paid);
+        setVal('e_start_date',     startDate);
+        setVal('e_end_date',       endDate);
+        setVal('e_source',         source);
+        setVal('e_notes',          notes);
+
+        document.getElementById('editModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function openDelModal(pk, name) {
+        document.getElementById('delForm').action = `/enrollments/${pk}/delete/`;
+        var _tpl = (window.WSI18N ? WSI18N.t('"{name}" enrollment will be permanently removed. This action cannot be undone.')
+                                  : '"{name}" enrollment will be permanently removed. This action cannot be undone.');
+        document.getElementById('delText').textContent = _tpl.replace('{name}', name);
+        document.getElementById('delModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function setVal(id, val) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = val ?? '';
+    }
+
+    /* ─── Keyboard & backdrop close ────────────────── */
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape')
+            ['addModal','editModal','delModal','detailModal'].forEach(closeModal);
+    });
+
+    document.querySelectorAll('.modal-bg').forEach(bg => {
+        bg.addEventListener('click', e => {
+            if (e.target === bg) closeModal(bg.id);
+        });
+    });
+
+    /* ─── Kurs narxi → to'lov statusini hisoblash ── */
+    const feeInput  = document.querySelector('[name="course_fee"]');
+    const paidInput = document.querySelector('[name="paid_amount"]');
+    const paySelect = document.querySelector('[name="payment_status"]');
+
+    function autoPayStatus() {
+        if (!feeInput || !paidInput || !paySelect) return;
+        const fee  = parseFloat(feeInput.value)  || 0;
+        const paid = parseFloat(paidInput.value) || 0;
+        if (fee <= 0)       { paySelect.value = 'unpaid';  return; }
+        if (paid <= 0)      { paySelect.value = 'unpaid';  return; }
+        if (paid >= fee)    { paySelect.value = 'paid';    return; }
+        paySelect.value = 'partial';
+    }
+
+    if (feeInput)  feeInput.addEventListener('input',  autoPayStatus);
+    if (paidInput) paidInput.addEventListener('input', autoPayStatus);
+</script>
+{% endblock %}

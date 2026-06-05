@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Street | Login</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+          rel="stylesheet">
+   {% load static %}
+
+    <link rel="icon" type="image/png" href="{% static 'images/logo_transparent.png' %}">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --dark: #061b20;
+            --dark-2: #092a30;
+            --gold: #e7c56f;
+            --gold-2: #c79d37;
+            --teal: #0f6f74;
+            --teal-2: #11858d;
+            --white: #ffffff;
+            --muted: rgba(255,255,255,.68);
+            --danger: #ff9aaa;
+            --success: #8ef0bf;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            color: var(--white);
+            background:
+                radial-gradient(circle at 15% 15%, rgba(231,197,111,.11), transparent 28%),
+                radial-gradient(circle at 85% 75%, rgba(17,133,141,.16), transparent 30%),
+                linear-gradient(135deg, #031012 0%, var(--dark) 42%, #02090a 100%);
+            overflow-x: hidden;
+        }
+
+        .auth-shell {
+            width: 100%;
+            max-width: 920px;
+            min-height: 540px;
+            display: grid;
+            grid-template-columns: 1fr .95fr;
+            border-radius: 28px;
+            overflow: hidden;
+            background: rgba(255,255,255,.045);
+            border: 1px solid rgba(255,255,255,.10);
+            box-shadow: 0 25px 80px rgba(0,0,0,.45);
+            backdrop-filter: blur(22px);
+        }
+
+        .hero {
+            position: relative;
+            padding: 30px;
+            background:
+                radial-gradient(circle at top left, rgba(231,197,111,.14), transparent 30%),
+                linear-gradient(160deg, rgba(15,111,116,.30), rgba(4,18,21,.92));
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            right: -100px;
+            bottom: -100px;
+            background: rgba(231,197,111,.10);
+            filter: blur(8px);
+        }
+
+        .brand {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(231,197,111,.24);
+            background: rgba(255,255,255,.08);
+            box-shadow: 0 14px 30px rgba(0,0,0,.25);
+        }
+
+        .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .brand-text h2 {
+            font-size: 23px;
+            font-weight: 900;
+            letter-spacing: -.04em;
+        }
+
+        .brand-text span {
+            display: block;
+            margin-top: 5px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            color: var(--gold);
+            text-transform: uppercase;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            margin-top: 46px;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(34px, 4vw, 48px);
+            line-height: 1.04;
+            font-weight: 900;
+            letter-spacing: -.06em;
+        }
+
+        .hero-content p {
+            margin-top: 16px;
+            max-width: 430px;
+            color: var(--muted);
+            line-height: 1.65;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .hero-badges {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .badge {
+            padding: 9px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(255,255,255,.10);
+            color: rgba(255,255,255,.86);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .form-side {
+            padding: 34px 34px;
+            background: linear-gradient(180deg, rgba(6,27,32,.88), rgba(3,14,16,.96));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-head {
+            margin-bottom: 20px;
+        }
+
+        .form-head h1 {
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: -.04em;
+        }
+
+        .form-head p {
+            margin-top: 8px;
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .messages {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .message {
+            padding: 10px 13px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.5;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.09);
+        }
+
+        .message.error {
+            color: var(--danger);
+            background: rgba(255,115,133,.10);
+            border-color: rgba(255,115,133,.22);
+        }
+
+        .message.success {
+            color: var(--success);
+            background: rgba(87,216,159,.10);
+            border-color: rgba(87,216,159,.22);
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .10em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.82);
+        }
+
+        .input-wrap {
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            border-radius: 15px;
+            background: rgba(255,255,255,.055);
+            border: 1px solid rgba(255,255,255,.10);
+            overflow: hidden;
+            transition: .28s ease;
+        }
+
+        .input-wrap:focus-within {
+            border-color: rgba(231,197,111,.55);
+            box-shadow: 0 0 0 4px rgba(231,197,111,.10);
+            background: rgba(255,255,255,.075);
+        }
+
+        .input-icon {
+            width: 46px;
+            text-align: center;
+            color: var(--gold);
+            font-size: 17px;
+        }
+
+        .input-wrap input {
+            width: 100%;
+            background: transparent;
+            border: 0;
+            outline: 0;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 14px 12px 14px 0;
+        }
+
+        .input-wrap input::placeholder {
+            color: rgba(255,255,255,.35);
+        }
+
+        .toggle-pass {
+            width: 46px;
+            border: 0;
+            background: transparent;
+            color: var(--gold);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .auth-options {
+            margin: 2px 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .auth-options a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 900;
+            transition: .25s ease;
+        }
+
+        .auth-options a:hover {
+            color: #fff;
+            text-shadow: 0 0 18px rgba(231,197,111,.55);
+        }
+
+        .submit-btn {
+            width: 100%;
+            min-height: 52px;
+            border: 0;
+            border-radius: 15px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--teal), var(--teal-2));
+            box-shadow: 0 16px 35px rgba(17,133,141,.25);
+            transition: .28s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 22px 46px rgba(17,133,141,.32);
+        }
+
+        .bottom-link {
+            margin-top: 18px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .bottom-link a {
+            color: var(--gold);
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        .forgot-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(0, 0, 0, .62);
+            backdrop-filter: blur(16px);
+        }
+
+        .forgot-modal-overlay.active {
+            display: flex;
+            animation: modalFade .35s ease forwards;
+        }
+
+        .forgot-modal {
+            position: relative;
+            width: 100%;
+            max-width: 430px;
+            padding: 28px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at top left, rgba(231,197,111,.16), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(17,133,141,.18), transparent 34%),
+                linear-gradient(145deg, rgba(6,27,32,.96), rgba(3,14,16,.98));
+            border: 1px solid rgba(255,255,255,.12);
+            box-shadow: 0 30px 80px rgba(0,0,0,.58);
+            animation: modalScale .38s cubic-bezier(.2,.9,.25,1.2) forwards;
+        }
+
+        .forgot-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #fff;
+            font-size: 22px;
+            background: rgba(255,255,255,.08);
+            transition: .25s ease;
+        }
+
+        .forgot-close:hover {
+            transform: rotate(90deg) scale(1.08);
+            background: rgba(231,197,111,.22);
+            color: var(--gold);
+        }
+
+        .forgot-icon {
+            width: 62px;
+            height: 62px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            font-size: 28px;
+            background: rgba(231,197,111,.12);
+            border: 1px solid rgba(231,197,111,.25);
+            box-shadow: 0 14px 35px rgba(231,197,111,.12);
+        }
+
+        .forgot-modal h2 {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: -.04em;
+            margin-bottom: 8px;
+        }
+
+        .forgot-modal p {
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        .forgot-note {
+            margin-top: 12px;
+            padding: 11px 13px;
+            border-radius: 14px;
+            background: rgba(231,197,111,.08);
+            border: 1px solid rgba(231,197,111,.16);
+            color: rgba(255,255,255,.75);
+            font-size: 12px;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalScale {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(.92);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media(max-width: 900px) {
+            .auth-shell {
+                grid-template-columns: 1fr;
+                max-width: 440px;
+                min-height: auto;
+            }
+
+            .hero {
+                display: none;
+            }
+
+            .form-side {
+                padding: 30px 22px;
+            }
+        }
+
+        @media(max-width: 540px) {
+            body {
+                padding: 10px;
+            }
+
+            .auth-shell {
+                border-radius: 22px;
+            }
+
+            .forgot-modal {
+                padding: 24px 18px;
+                border-radius: 22px;
+            }
+
+            .auth-options {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-shell">
+    <section class="hero">
+        <div class="brand">
+            <div class="brand-logo">
+                <img src="{% static 'images/wallstreet-logo.png' %}" alt="Wall Street Logo">
+            </div>
+            <div class="brand-text">
+                <h2>Wall Street</h2>
+                <span>Education CRM</span>
+            </div>
+        </div>
+
+        <div class="hero-content">
+            <h1>Welcome back</h1>
+            <p>
+                Manage your education center, teacher monitoring, student tracking and payments
+                through one professional CRM.
+            </p>
+
+            <div class="hero-badges">
+                <div class="badge">Admin Panel</div>
+                <div class="badge">Teacher Calendar</div>
+                <div class="badge">Secure Login</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-side">
+        <div class="form-head">
+            <h1>Sign in</h1>
+            <p>Sign in with your username or Gmail address and password.</p>
+        </div>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="field">
+                <label>Username or Gmail</label>
+                <div class="input-wrap">
+                    <div class="input-icon">✉</div>
+                    <input type="text" name="username" placeholder="username or gmail@gmail.com" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Password</label>
+                <div class="input-wrap">
+                    <div class="input-icon">🔒</div>
+                    <input type="password" name="password" id="passwordInput" placeholder="Enter your password"
+                           required>
+                    <button class="toggle-pass" type="button" onclick="togglePassword()">👁</button>
+                </div>
+            </div>
+
+            <div class="auth-options">
+                <label>
+                    <input type="checkbox"> Remember me
+                </label>
+
+                <a href="javascript:void(0)" onclick="openForgotModal()">
+                    Forgot password?
+                </a>
+            </div>
+
+            <button type="submit" class="submit-btn">Sign in</button>
+        </form>
+
+        <div class="bottom-link">
+            Don't have an account?
+            <a href="{% url 'register' %}">Sign up</a>
+        </div>
+    </section>
+</div>
+
+<div class="forgot-modal-overlay {% if show_forgot_modal %}active{% endif %}" id="forgotModal">
+    <div class="forgot-modal">
+        <button type="button" class="forgot-close" onclick="closeForgotModal()">×</button>
+
+        <div class="forgot-icon">🔐</div>
+
+        <h2>Reset password</h2>
+        <p>
+            Enter your username or Gmail address. The system automatically detects the method you registered with:
+            if you signed up via Gmail the code is sent to Gmail, if via Telegram it is sent to the Telegram bot.
+        </p>
+
+        <form method="post" action="{% url 'forgot_password' %}">
+            {% csrf_token %}
+
+            <div class="field">
+                <label>Username or Gmail</label>
+                <div class="input-wrap">
+                    <div class="input-icon">✉</div>
+                    <input type="text"
+                           name="reset_identifier"
+                           placeholder="username or gmail@gmail.com"
+                           required>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Resend code
+            </button>
+        </form>
+
+        <div class="forgot-note">
+            Note: the code is sent based on the user's previous verification method.
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePassword() {
+        const input = document.getElementById('passwordInput');
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function openForgotModal() {
+        const modal = document.getElementById('forgotModal');
+        modal.classList.add('active');
+    }
+
+    function closeForgotModal() {
+        const modal = document.getElementById('forgotModal');
+        modal.classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeForgotModal();
+        }
+    });
+
+    document.getElementById('forgotModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeForgotModal();
+        }
+    });
+</script>
+
+<script src="{% static 'js/i18n.js' %}"></script>
+</body>
+</html>

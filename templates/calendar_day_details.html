@@ -1,0 +1,31 @@
+{% if events %}
+<div class="cal-modal-events">
+    {% for evt in events %}
+    <div class="modal-evt {{ evt.type }}">
+        <div class="modal-evt-emo">{{ evt.icon }}</div>
+        <div>
+            <div class="modal-evt-name">{{ evt.title }}</div>
+            <div class="modal-evt-type">
+                {% if evt.type == 'mock_day' %}Mock Day
+                {% elif evt.type == 'mock_result' %}Mock Result
+                {% elif evt.type == 'holiday' %}Holiday
+                {% elif evt.type == 'study_break' %}Study Break
+                {% else %}{{ evt.type }}{% endif %}
+            </div>
+            {% if evt.title_uz %}
+            <div class="modal-evt-type">{{ evt.title_uz }}</div>
+            {% endif %}
+            {% if evt.description %}
+            <div class="modal-evt-desc">{{ evt.description }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="modal-empty">
+    <div class="modal-empty-emo">📭</div>
+    <div class="modal-empty-title">No events</div>
+    <div class="modal-empty-text">There are no events or marks on this day.</div>
+</div>
+{% endif %}

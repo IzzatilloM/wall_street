@@ -1,0 +1,59 @@
+{% load static %}
+<div class="user-table-wrap">
+    <table class="user-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Status</th>
+                <th class="ut-actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td data-label="Name">
+                    <div class="ut-name">{{ u.get_full_name|default:u.username }}</div>
+                </td>
+                <td data-label="Username">
+                    <span class="ut-mono">{{ u.username }}</span>
+                    <button type="button" class="ut-copy" data-copy="{{ u.username }}" title="Copy username"><i class="far fa-copy"></i></button>
+                </td>
+                <td data-label="Password">
+                    {% if u.plain_password %}
+                    <span class="ut-pass ut-mono" data-pass="{{ u.plain_password }}">
+                        <span class="ut-pass-text">••••••••</span>
+                    </span>
+                    <button type="button" class="ut-eye" title="Show / hide"><i class="far fa-eye"></i></button>
+                    <button type="button" class="ut-copy" data-copy="{{ u.plain_password }}" title="Copy password"><i class="far fa-copy"></i></button>
+                    {% else %}
+                    <span class="ut-pass-none">— set a new one —</span>
+                    {% endif %}
+                </td>
+                <td data-label="Status">
+                    {% if u.is_active %}
+                    <span class="ut-badge ut-badge-on">Active</span>
+                    {% else %}
+                    <span class="ut-badge ut-badge-off">Inactive</span>
+                    {% endif %}
+                </td>
+                <td data-label="Actions" class="ut-actions">
+                    <button type="button" class="ut-btn ut-edit"
+                            data-id="{{ u.id }}"
+                            data-username="{{ u.username }}"
+                            data-name="{{ u.get_full_name|default:u.username }}"
+                            data-active="{{ u.is_active|yesno:'1,0' }}"
+                            title="Edit"><i class="fas fa-pen"></i></button>
+                    <button type="button" class="ut-btn ut-del"
+                            data-id="{{ u.id }}"
+                            data-name="{{ u.get_full_name|default:u.username }}"
+                            title="Delete"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="ut-empty">{{ empty_label }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

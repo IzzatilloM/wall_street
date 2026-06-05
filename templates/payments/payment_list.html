@@ -1,0 +1,888 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Payments — Wall Street CMS{% endblock %}
+{% block header_section %}Payments{% endblock %}
+{% block breadcrumb %}Payments list{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Payments Design System ──────────────────────────────── */
+:root {
+  --pay-primary:   #0E5C60;
+  --pay-dark:      #093D40;
+  --pay-light:     #e6f4f5;
+  --pay-gold:      #C9A84C;
+  --pay-gold-lt:   #f5e6b8;
+  --pay-success:   #10b981;
+  --pay-warning:   #f59e0b;
+  --pay-danger:    #ef4444;
+  --pay-info:      #3b82f6;
+  --pay-partial:   #8b5cf6;
+}
+
+/* ── Stats row ─────────────────────────────────────────── */
+.pay-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(14,92,96,0.10);
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(14,92,96,0.08);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+.stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 32px rgba(14,92,96,0.14); }
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  opacity: .08;
+  background: var(--sc-color, var(--pay-primary));
+}
+
+.stat-card .sc-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  font-size: 22px;
+  background: color-mix(in srgb, var(--sc-color, var(--pay-primary)) 12%, white);
+  margin-bottom: 14px;
+}
+
+.stat-card .sc-val {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--sc-color, var(--pay-primary));
+  letter-spacing: -.02em;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-card .sc-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+/* ── Filter bar ─────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  padding: 20px 22px;
+  border-radius: 18px;
+  background: var(--pay-light);
+  border: 1px solid rgba(14,92,96,0.12);
+  margin-bottom: 24px;
+}
+
+.filter-group { display: flex; flex-direction: column; gap: 6px; }
+.filter-group label { font-size: 11px; font-weight: 800; color: var(--pay-primary); text-transform: uppercase; letter-spacing: .1em; }
+
+.filter-input, .filter-select {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(14,92,96,0.18);
+  background: #fff;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 150px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.filter-input:focus, .filter-select:focus {
+  outline: none;
+  border-color: var(--pay-primary);
+  box-shadow: 0 0 0 4px rgba(14,92,96,0.10);
+}
+
+.filter-actions { display: flex; gap: 10px; align-items: flex-end; }
+
+.btn-filter {
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .25s ease;
+}
+.btn-primary-sm {
+  background: var(--pay-primary);
+  color: #fff;
+  border: none;
+  box-shadow: 0 6px 18px rgba(14,92,96,0.28);
+}
+.btn-primary-sm:hover { background: var(--pay-dark); transform: translateY(-2px); }
+.btn-ghost-sm { background: #fff; color: var(--pay-primary); border: 1.5px solid rgba(14,92,96,0.25); }
+.btn-ghost-sm:hover { background: var(--pay-light); }
+
+/* ── Action row ─────────────────────────────────────────── */
+.table-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 24px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--pay-primary), var(--pay-dark));
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(14,92,96,0.32);
+  transition: all .28s ease;
+  text-decoration: none;
+}
+.btn-add:hover { transform: translateY(-4px); box-shadow: 0 14px 32px rgba(14,92,96,0.40); }
+
+.result-count { font-size: 13px; font-weight: 700; color: var(--text-soft); }
+
+/* ── Table ──────────────────────────────────────────────── */
+.pay-table-wrap {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(14,92,96,0.10);
+  box-shadow: 0 4px 24px rgba(14,92,96,0.07);
+}
+
+.pay-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.pay-table thead {
+  background: var(--pay-primary);
+  color: #fff;
+}
+
+.pay-table thead th {
+  padding: 14px 16px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pay-table tbody tr {
+  border-bottom: 1px solid rgba(14,92,96,0.07);
+  transition: background .18s;
+}
+.pay-table tbody tr:hover { background: rgba(14,92,96,0.035); }
+.pay-table tbody tr:last-child { border-bottom: none; }
+
+.pay-table td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--text);
+  vertical-align: middle;
+}
+
+/* ── Status badges ─────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.badge-paid     { background: rgba(16,185,129,0.12); color: #059669; }
+.badge-pending  { background: rgba(245,158,11,0.12); color: #d97706; }
+.badge-partial  { background: rgba(139,92,246,0.12); color: #7c3aed; }
+.badge-overdue  { background: rgba(239,68,68,0.12);  color: #dc2626; }
+.badge-cancelled{ background: rgba(107,114,128,0.12);color: #4b5563; }
+
+/* ── Amount chip ────────────────────────────────────────── */
+.amount-chip {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 10px;
+  background: rgba(14,92,96,0.08);
+  color: var(--pay-primary);
+  font-weight: 900;
+  font-size: 13px;
+}
+
+/* ── Receipt btn ────────────────────────────────────────── */
+.receipt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--pay-gold-lt);
+  color: #8a6a10;
+  border: 1.5px solid rgba(201,168,76,0.35);
+  cursor: pointer;
+  transition: all .22s;
+  text-decoration: none;
+}
+.receipt-btn:hover { background: var(--pay-gold); color: #fff; transform: translateY(-2px); }
+
+/* ── Action dots ────────────────────────────────────────── */
+.action-dots {
+  display: flex;
+  gap: 6px;
+}
+.dot-btn {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: grid; place-items: center;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+}
+.dot-view   { background: rgba(59,130,246,0.1);  color: #2563eb; }
+.dot-edit   { background: rgba(245,158,11,0.1);  color: #d97706; }
+.dot-delete { background: rgba(239,68,68,0.1);   color: #dc2626; }
+.dot-view:hover   { background: #2563eb; color: #fff; }
+.dot-edit:hover   { background: #d97706; color: #fff; }
+.dot-delete:hover { background: #dc2626; color: #fff; }
+
+/* ── Chart section ──────────────────────────────────────── */
+.chart-section {
+  margin-top: 30px;
+  padding: 24px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(14,92,96,0.10);
+  box-shadow: 0 4px 20px rgba(14,92,96,0.07);
+}
+.chart-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--pay-primary);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar { width: 100%; border-radius: 6px 6px 0 0; background: var(--pay-primary); transition: height .6s ease, opacity .3s; min-height: 2px; }
+.bar:hover { opacity: .78; }
+.bar-label { font-size: 9px; font-weight: 800; color: var(--text-soft); text-transform: uppercase; }
+
+/* ── Pagination ─────────────────────────────────────────── */
+.pagination-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+.page-btn {
+  min-width: 38px; height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1.5px solid rgba(14,92,96,0.18);
+  background: #fff;
+  color: var(--pay-primary);
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  display: grid;
+  place-items: center;
+}
+.page-btn:hover, .page-btn.active {
+  background: var(--pay-primary);
+  color: #fff;
+  border-color: var(--pay-primary);
+}
+.page-btn.disabled { opacity: .4; pointer-events: none; }
+
+/* ── Empty state ─────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+.empty-state .es-icon { font-size: 56px; margin-bottom: 16px; }
+.empty-state .es-title { font-size: 18px; font-weight: 900; color: var(--pay-primary); margin-bottom: 8px; }
+.empty-state .es-sub { font-size: 13px; color: var(--text-soft); }
+
+/* ── Student/teacher name cell ──────────────────────────── */
+.name-cell { display: flex; flex-direction: column; gap: 2px; }
+.name-cell strong { font-size: 13px; font-weight: 800; }
+.name-cell span { font-size: 11px; color: var(--text-soft); }
+
+/* ── Kontrast tuzatish — oq fonli jadval/filtr ichida matn TO'Q bo'lsin ──
+   (base.html dark mavzu uchun --text/--text-soft ni OCH qiladi, oq fonda ko'rinmaydi) */
+.pay-table,
+.pay-table-wrap,
+.filter-bar,
+.filter-input,
+.filter-select {
+  --text: #1e293b;
+  --text-soft: #64748b;
+}
+.pay-table td { color: #1e293b; }
+.pay-table .name-cell strong { color: #0f172a; }
+.filter-input, .filter-select { color: #1e293b; }
+.filter-input::placeholder { color: #94a3b8; }
+
+/* ── Payment modal ── */
+.pm-overlay{
+  position:fixed;inset:0;z-index:1000;display:none;
+  align-items:flex-start;justify-content:center;padding:32px 16px;
+  background:rgba(9,61,64,.55);backdrop-filter:blur(6px);overflow-y:auto;
+}
+.pm-overlay.open{display:flex;}
+.pm-modal{
+  width:100%;max-width:760px;background:#fff;border-radius:20px;
+  box-shadow:0 30px 80px rgba(9,61,64,.40);animation:pmIn .25s ease;
+  --text:#1e293b;--text-soft:#64748b;color:#0a2426;
+}
+@keyframes pmIn{from{opacity:0;transform:translateY(-18px) scale(.98);}to{opacity:1;transform:none;}}
+.pm-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 26px;border-bottom:1px solid rgba(14,92,96,.12);
+  background:linear-gradient(135deg,var(--pay-primary),var(--pay-dark));
+  border-radius:20px 20px 0 0;color:#fff;
+}
+.pm-head h3{margin:0;font-size:18px;font-weight:900;}
+.pm-close{font-size:26px;color:#fff;cursor:pointer;background:none;border:none;line-height:1;opacity:.85;}
+.pm-close:hover{opacity:1;}
+.pm-body{padding:24px 26px;max-height:62vh;overflow-y:auto;}
+.pm-foot{padding:18px 26px;border-top:1px solid rgba(14,92,96,.12);display:flex;justify-content:flex-end;gap:12px;}
+.pm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
+.pm-group{display:flex;flex-direction:column;gap:7px;}
+.pm-group.full{grid-column:1/-1;}
+.pm-label{font-size:11px;font-weight:900;color:var(--pay-primary);text-transform:uppercase;letter-spacing:.08em;}
+.pm-label .req{color:#ef4444;}
+.pm-control{
+  height:46px;padding:0 14px;border-radius:12px;border:2px solid rgba(14,92,96,.15);
+  background:#fff;color:#0a2426;font-size:14px;font-weight:600;width:100%;
+  transition:border-color .2s,box-shadow .2s;
+}
+.pm-control:focus{outline:none;border-color:var(--pay-primary);box-shadow:0 0 0 4px rgba(14,92,96,.10);}
+textarea.pm-control{height:auto;padding:12px 14px;resize:vertical;}
+.pm-section-title{font-size:12px;font-weight:900;color:var(--pay-primary);text-transform:uppercase;letter-spacing:.1em;margin:6px 0 2px;grid-column:1/-1;border-bottom:2px solid rgba(14,92,96,.10);padding-bottom:8px;}
+.pm-preview{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:18px;border-radius:14px;background:linear-gradient(135deg,var(--pay-primary),var(--pay-dark));color:#fff;}
+.pm-preview .pl{font-size:10px;font-weight:800;opacity:.75;text-transform:uppercase;letter-spacing:.08em;}
+.pm-preview .pv{font-size:18px;font-weight:900;}
+.pm-preview .net{color:var(--pay-gold-lt);}
+.pm-hint{grid-column:1/-1;display:none;padding:10px 14px;border-radius:10px;background:var(--pay-gold-lt);color:#7a5c10;font-size:12px;font-weight:700;}
+.pm-hint.show{display:block;}
+.btn-light-sm{background:rgba(14,92,96,.08);color:var(--pay-primary);border:1.5px solid rgba(14,92,96,.20);height:44px;padding:0 22px;border-radius:12px;font-weight:800;cursor:pointer;}
+.btn-light-sm:hover{background:rgba(14,92,96,.15);}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats row -->
+<div class="pay-stats">
+  <div class="stat-card" style="--sc-color:#0E5C60">
+    <div class="sc-icon">💰</div>
+    <div class="sc-val">{{ total_income|floatformat:0 }} <small style="font-size:13px">UZS</small></div>
+    <div class="sc-label">Yearly income</div>
+  </div>
+  <div class="stat-card" style="--sc-color:#10b981">
+    <div class="sc-icon">📅</div>
+    <div class="sc-val">{{ month_income|floatformat:0 }} <small style="font-size:13px">UZS</small></div>
+    <div class="sc-label">This month's income</div>
+  </div>
+  <div class="stat-card" style="--sc-color:#f59e0b">
+    <div class="sc-icon">⏳</div>
+    <div class="sc-val">{{ pending_count }}</div>
+    <div class="sc-label">Pending</div>
+  </div>
+  <div class="stat-card" style="--sc-color:#C9A84C">
+    <div class="sc-icon">🎁</div>
+    <div class="sc-val">{{ total_discount|floatformat:0 }} <small style="font-size:13px">UZS</small></div>
+    <div class="sc-label">Total discounts</div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<form method="get" class="filter-bar">
+  <div class="filter-group">
+    <label>Search</label>
+    <input type="text" name="q" value="{{ q }}" placeholder="Name, course, receipt №..."
+           class="filter-input" style="min-width:200px">
+  </div>
+  <div class="filter-group">
+    <label>Status</label>
+    <select name="status" class="filter-select">
+      <option value="">All</option>
+      {% for val, label in payment_statuses %}
+        <option value="{{ val }}" {% if status_f == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Method</label>
+    <select name="method" class="filter-select">
+      <option value="">All</option>
+      {% for val, label in payment_methods %}
+        <option value="{{ val }}" {% if method_f == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Month</label>
+    <select name="month" class="filter-select">
+      <option value="">All</option>
+      {% for val, label in months %}
+        <option value="{{ val }}" {% if month_f == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Year</label>
+    <select name="year" class="filter-select">
+      {% for y in years %}
+        <option value="{{ y }}" {% if year_f == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% if courses %}
+  <div class="filter-group">
+    <label>Course</label>
+    <select name="course" class="filter-select">
+      <option value="">All courses</option>
+      {% for course in courses %}
+        <option value="{{ course.pk }}" {% if course_f == course.pk|stringformat:"s" %}selected{% endif %}>{{ course.title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  <div class="filter-actions">
+    <button type="submit" class="btn-filter btn-primary-sm">🔍 Filter</button>
+    <a href="{% url 'payments:payment_list' %}" class="btn-filter btn-ghost-sm">✖ Clear</a>
+  </div>
+</form>
+
+<!-- Table header actions -->
+<div class="table-actions">
+  <span class="result-count">
+    <strong>{{ page_obj.paginator.count }}</strong> payments found
+  </span>
+  <button type="button" class="btn-add" onclick="openPaymentModal()">
+    ➕ New payment
+  </button>
+</div>
+
+<!-- Payments table -->
+<div class="pay-table-wrap">
+  {% if page_obj.object_list %}
+  <table class="pay-table">
+    <thead>
+      <tr>
+        <th>Receipt №</th>
+        <th>Student</th>
+        <th>Course</th>
+        <th>Teacher</th>
+        <th>Month / Year</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Receipt</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in page_obj %}
+      <tr>
+        <td>
+          <span style="font-family:monospace;font-weight:800;color:var(--pay-primary);font-size:12px">
+            {{ p.receipt_number }}
+          </span>
+        </td>
+        <td>
+          <div class="name-cell">
+            <strong>{{ p.student.first_name }} {{ p.student.last_name }}</strong>
+            {% if p.student.phone %}
+            <span>{{ p.student.phone }}</span>
+            {% endif %}
+          </div>
+        </td>
+        <td>
+          <div class="name-cell">
+            <strong>{{ p.course.title|truncatechars:24 }}</strong>
+          </div>
+        </td>
+        <td>
+          {% if p.instructor %}
+            <div class="name-cell">
+              <strong>{{ p.instructor.full_name }}</strong>
+            </div>
+          {% else %}
+            <span style="color:var(--text-soft)">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <span style="font-weight:700;font-size:12px">
+            {{ p.get_payment_month_display }} {{ p.payment_year }}
+          </span>
+        </td>
+        <td>
+          <div>
+            <span class="amount-chip">{{ p.amount|floatformat:0 }} UZS</span>
+            {% if p.discount > 0 %}
+            <br><span style="font-size:11px;color:var(--pay-gold);font-weight:700">
+              -{{ p.discount|floatformat:0 }} discount
+            </span>
+            {% endif %}
+          </div>
+        </td>
+        <td>
+          <span style="font-size:12px;font-weight:700">{{ p.get_payment_method_display }}</span>
+        </td>
+        <td>
+          <span class="badge badge-{{ p.status }}">
+            {{ p.get_status_display }}
+          </span>
+        </td>
+        <td>
+          <span style="font-size:12px;color:var(--text-soft)">
+            {{ p.paid_at|date:"d.m.Y" }}<br>
+            <span style="font-size:10px">{{ p.paid_at|date:"H:i" }}</span>
+          </span>
+        </td>
+        <td>
+          <button type="button"
+             class="receipt-btn"
+             title="View / download PDF receipt"
+             onclick="openReceiptModal('{% url 'payments:payment_receipt_pdf' p.pk %}', '{{ p.receipt_number }}')">
+            🧾 PDF
+          </button>
+        </td>
+        <td>
+          <div class="action-dots">
+            <a href="{% url 'payments:payment_detail' p.pk %}" class="dot-btn dot-view" title="View">👁</a>
+            <a href="{% url 'payments:payment_edit' p.pk %}" class="dot-btn dot-edit" title="Edit">✏️</a>
+            <a href="{% url 'payments:payment_confirm_delete' p.pk %}" class="dot-btn dot-delete" title="Delete">🗑</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <div class="es-icon">💳</div>
+    <div class="es-title">No payments found</div>
+    <div class="es-sub">Change the filters or add a new payment</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination-row">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status_f }}&year={{ year_f }}" class="page-btn">‹</a>
+  {% else %}
+    <span class="page-btn disabled">‹</span>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="page-btn active">{{ num }}</span>
+    {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+      <a href="?page={{ num }}&q={{ q }}&status={{ status_f }}&year={{ year_f }}" class="page-btn">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status_f }}&year={{ year_f }}" class="page-btn">›</a>
+  {% else %}
+    <span class="page-btn disabled">›</span>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Monthly chart -->
+<div class="chart-section">
+  <div class="chart-title">📊 {{ current_year }} — Monthly income</div>
+  <div class="bar-chart" id="barChart"></div>
+</div>
+
+<!-- ── New payment modal ── -->
+<div class="pm-overlay" id="paymentModal">
+  <div class="pm-modal">
+    <form method="post" action="{% url 'payments:payment_create' %}" id="paymentForm">
+      {% csrf_token %}
+      <div class="pm-head">
+        <h3>💳 New payment</h3>
+        <button type="button" class="pm-close" onclick="closePaymentModal()">&times;</button>
+      </div>
+      <div class="pm-body">
+        <div class="pm-grid">
+          <div class="pm-section-title">👤 Student &amp; course</div>
+
+          <div class="pm-group">
+            <label class="pm-label">Student <span class="req">*</span></label>
+            <select name="student" class="pm-control" required>
+              <option value="">— Select student —</option>
+              {% for s in modal_students %}
+                <option value="{{ s.pk }}">{{ s.first_name }} {{ s.last_name }}{% if s.phone %} | {{ s.phone }}{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="pm-group">
+            <label class="pm-label">Course <span class="req">*</span></label>
+            <select name="course" class="pm-control" id="pmCourse" required>
+              <option value="">— Select course —</option>
+              {% for c in courses %}
+                <option value="{{ c.pk }}">{{ c.title }}{% if c.price %} — {{ c.price|floatformat:0 }} UZS{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="pm-group">
+            <label class="pm-label">Teacher</label>
+            <select name="instructor" class="pm-control" id="pmInstructor">
+              <option value="">— Select teacher —</option>
+              {% for i in modal_instructors %}
+                <option value="{{ i.pk }}">{{ i.full_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="pm-hint" id="pmHint">✨ Course price filled automatically</div>
+
+          <div class="pm-section-title">💳 Payment details</div>
+
+          <div class="pm-group">
+            <label class="pm-label">Amount (UZS) <span class="req">*</span></label>
+            <input type="number" name="amount" id="pmAmount" min="0" step="1000" class="pm-control" placeholder="0" required>
+          </div>
+
+          <div class="pm-group">
+            <label class="pm-label">Discount (UZS)</label>
+            <input type="number" name="discount" id="pmDiscount" min="0" step="1000" class="pm-control" placeholder="0" value="0">
+          </div>
+
+          <div class="pm-group">
+            <label class="pm-label">Payment method <span class="req">*</span></label>
+            <select name="payment_method" class="pm-control" required>
+              {% for val, label in payment_methods %}
+                <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="pm-group">
+            <label class="pm-label">Status</label>
+            <select name="status" class="pm-control">
+              {% for val, label in modal_statuses %}
+                <option value="{{ val }}" {% if val == 'paid' %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="pm-group">
+            <label class="pm-label">Month <span class="req">*</span></label>
+            <select name="payment_month" class="pm-control" required>
+              {% for val, label in months %}
+                <option value="{{ val }}" {% if val == modal_now_month %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="pm-group">
+            <label class="pm-label">Year <span class="req">*</span></label>
+            <select name="payment_year" class="pm-control" required>
+              {% for y in modal_years %}
+                <option value="{{ y }}" {% if y == modal_now_year %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="pm-preview">
+            <div><div class="pl">Amount</div><div class="pv" id="pvAmount">0 UZS</div></div>
+            <div><div class="pl">Discount</div><div class="pv" id="pvDiscount">0 UZS</div></div>
+            <div><div class="pl">Net total</div><div class="pv net" id="pvNet">0 UZS</div></div>
+          </div>
+
+          <div class="pm-group full">
+            <label class="pm-label">Note</label>
+            <textarea name="note" class="pm-control" rows="2" placeholder="Additional info..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="pm-foot">
+        <button type="button" class="btn-light-sm" onclick="closePaymentModal()">Cancel</button>
+        <button type="submit" class="btn-add">💾 Save &amp; issue receipt</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Receipt preview modal ── -->
+<div class="pm-overlay" id="receiptModal">
+  <div class="pm-modal" style="max-width:840px;">
+    <div class="pm-head">
+      <h3>🧾 Receipt <span id="rcptNum" style="opacity:.85;font-weight:700"></span></h3>
+      <button type="button" class="pm-close" onclick="closeReceiptModal()">&times;</button>
+    </div>
+    <div class="pm-body" style="padding:0;max-height:72vh;background:#33484a;">
+      <iframe id="receiptFrame" title="Receipt PDF"
+              style="width:100%;height:72vh;border:none;display:block;background:#fff;"></iframe>
+    </div>
+    <div class="pm-foot">
+      <button type="button" class="btn-light-sm" onclick="closeReceiptModal()">Close</button>
+      <a id="receiptDownload" class="btn-add" href="#" download>⬇ Download PDF</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Payment modal ──
+function openPaymentModal() {
+  document.getElementById('paymentModal').classList.add('open');
+}
+function closePaymentModal() {
+  document.getElementById('paymentModal').classList.remove('open');
+}
+
+// ── Receipt preview modal ──
+// PDF ni fetch() orqali blob qilib olib, blob: URL bilan ko'rsatamiz.
+// Bu usul X-Frame-Options / iframe cheklovlariga bog'liq emas — har doim ishlaydi.
+let _rcptBlobUrl = null;
+function openReceiptModal(url, receiptNum) {
+  const overlay = document.getElementById('receiptModal');
+  const frame   = document.getElementById('receiptFrame');
+  const dl      = document.getElementById('receiptDownload');
+  const err     = document.getElementById('rcptError');
+
+  document.getElementById('rcptNum').textContent = receiptNum ? ('• ' + receiptNum) : '';
+  overlay.classList.add('open');
+  if (err) err.style.display = 'none';
+  frame.style.display = 'block';
+  frame.src = 'about:blank';
+
+  if (_rcptBlobUrl) { URL.revokeObjectURL(_rcptBlobUrl); _rcptBlobUrl = null; }
+
+  const inlineUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'inline=1';
+  dl.href = url;  // zaxira: to'g'ridan-to'g'ri yuklab olish
+
+  fetch(inlineUrl, { credentials: 'same-origin' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+    .then(blob => {
+      _rcptBlobUrl = URL.createObjectURL(blob);
+      frame.src = _rcptBlobUrl;
+      dl.href = _rcptBlobUrl;
+      dl.setAttribute('download', 'receipt_' + (receiptNum || 'wallstreet') + '.pdf');
+    })
+    .catch(() => {
+      // oxirgi zaxira: to'g'ridan-to'g'ri iframe ichida ochib ko'rish
+      frame.src = inlineUrl;
+    });
+}
+function closeReceiptModal() {
+  const overlay = document.getElementById('receiptModal');
+  overlay.classList.remove('open');
+  document.getElementById('receiptFrame').src = 'about:blank';
+  if (_rcptBlobUrl) { URL.revokeObjectURL(_rcptBlobUrl); _rcptBlobUrl = null; }
+}
+(function () {
+  const overlay = document.getElementById('receiptModal');
+  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeReceiptModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeReceiptModal(); });
+})();
+(function () {
+  const overlay = document.getElementById('paymentModal');
+  if (overlay) {
+    overlay.addEventListener('click', e => { if (e.target === overlay) closePaymentModal(); });
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePaymentModal(); });
+
+  const fmt = n => n.toLocaleString('en-US') + ' UZS';
+  function updatePreview() {
+    const amt = parseFloat(document.getElementById('pmAmount').value) || 0;
+    const disc = parseFloat(document.getElementById('pmDiscount').value) || 0;
+    const net = Math.max(amt - disc, 0);
+    document.getElementById('pvAmount').textContent = fmt(amt);
+    document.getElementById('pvDiscount').textContent = fmt(disc);
+    document.getElementById('pvNet').textContent = fmt(net);
+  }
+  const amtEl = document.getElementById('pmAmount');
+  const discEl = document.getElementById('pmDiscount');
+  if (amtEl) amtEl.addEventListener('input', updatePreview);
+  if (discEl) discEl.addEventListener('input', updatePreview);
+
+  // Course autofill (price + teacher)
+  const courseEl = document.getElementById('pmCourse');
+  if (courseEl) {
+    courseEl.addEventListener('change', function () {
+      if (!this.value) return;
+      fetch(`{% url 'payments:get_course_price' %}?course_id=${this.value}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.price) {
+            document.getElementById('pmAmount').value = data.price;
+            updatePreview();
+            const hint = document.getElementById('pmHint');
+            hint.classList.add('show');
+            setTimeout(() => hint.classList.remove('show'), 3000);
+          }
+          if (data.instructor_id) document.getElementById('pmInstructor').value = data.instructor_id;
+        })
+        .catch(() => {});
+    });
+  }
+})();
+
+(function() {
+  const data = {{ monthly_data|safe }};
+  const maxVal = Math.max(...data.map(d => d.amount), 1);
+  const container = document.getElementById('barChart');
+  if (!container) return;
+
+  data.forEach(d => {
+    const pct = (d.amount / maxVal) * 100;
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `
+      <div class="bar" style="height:${Math.max(pct, 2)}%;background:${pct > 0 ? 'var(--pay-primary)' : '#e2e8ea'}"
+           title="${d.month}: ${d.amount.toLocaleString()} UZS"></div>
+      <span class="bar-label">${d.month.substring(0,3)}</span>
+    `;
+    container.appendChild(col);
+  });
+})();
+</script>
+{% endblock %}

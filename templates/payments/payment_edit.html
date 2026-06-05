@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit payment — {{ payment.receipt_number }}{% endblock %}
+{% block header_section %}Edit payment{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'payments:payment_list' %}">Payments</a>
+  <span>•</span>
+  <a href="{% url 'payments:payment_detail' payment.pk %}">{{ payment.receipt_number }}</a>
+  <span>•</span> Edit
+{% endblock %}
+
+{% block extra_css %}
+<style>
+:root { --p:#0E5C60; --pd:#093D40; --pl:#e6f4f5; --gold:#C9A84C; --gold-lt:#f5e6b8; }
+
+.edit-wrap { max-width: 960px; margin: 0 auto; }
+
+.edit-card {
+  background:#fff;
+  border:1px solid rgba(14,92,96,.12);
+  border-radius:22px;
+  box-shadow:0 18px 50px rgba(9,61,64,.12);
+  overflow:hidden;
+  --text:#1e293b; --text-soft:#64748b; color:#0a2426;
+}
+.edit-head {
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:22px 28px;
+  background:linear-gradient(135deg,var(--p),var(--pd));
+  color:#fff;
+}
+.edit-head h2 { margin:0; font-size:20px; font-weight:900; display:flex; align-items:center; gap:10px; }
+.edit-head .rcpt {
+  font-family:monospace; font-size:13px; font-weight:800;
+  background:rgba(255,255,255,.16); padding:7px 14px; border-radius:999px;
+}
+.edit-body { padding:26px 28px; }
+
+.section-title {
+  font-size:12px; font-weight:900; color:var(--p); text-transform:uppercase;
+  letter-spacing:.12em; padding:0 0 10px; border-bottom:2px solid rgba(14,92,96,.12);
+  margin:6px 0 18px;
+}
+.section-title:not(:first-child){ margin-top:30px; }
+
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+.form-group { display:flex; flex-direction:column; gap:7px; }
+.form-group.full { grid-column:1/-1; }
+.form-label { font-size:11px; font-weight:900; color:var(--p); text-transform:uppercase; letter-spacing:.08em; }
+.form-label .req { color:#ef4444; }
+
+.form-control {
+  height:48px; padding:0 14px; border-radius:12px;
+  border:2px solid rgba(14,92,96,.15); background:#fff;
+  color:#0a2426; font-size:14px; font-weight:600; width:100%;
+  transition:border-color .2s, box-shadow .2s;
+}
+.form-control:focus { outline:none; border-color:var(--p); box-shadow:0 0 0 4px rgba(14,92,96,.10); }
+select.form-control { appearance:auto; cursor:pointer; }
+textarea.form-control { height:auto; padding:12px 14px; resize:vertical; }
+
+/* Net preview */
+.edit-preview {
+  grid-column:1/-1;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+  padding:18px; border-radius:14px; margin-top:4px;
+  background:linear-gradient(135deg,var(--p),var(--pd)); color:#fff;
+}
+.edit-preview .pl { font-size:10px; font-weight:800; opacity:.75; text-transform:uppercase; letter-spacing:.08em; }
+.edit-preview .pv { font-size:18px; font-weight:900; margin-top:4px; }
+.edit-preview .net { color:var(--gold-lt); }
+
+.edit-foot {
+  display:flex; justify-content:flex-end; gap:14px;
+  padding:20px 28px; border-top:1px solid rgba(14,92,96,.10);
+  background:rgba(14,92,96,.03);
+}
+.btn-s { padding:13px 30px; border-radius:13px; font-size:14px; font-weight:900; cursor:pointer; transition:all .25s; border:none; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+.btn-save { background:linear-gradient(135deg,var(--p),var(--pd)); color:#fff; box-shadow:0 8px 22px rgba(14,92,96,.28); }
+.btn-save:hover { transform:translateY(-3px); box-shadow:0 12px 28px rgba(14,92,96,.36); }
+.btn-cancel { background:#fff; color:var(--p); border:2px solid rgba(14,92,96,.22); }
+.btn-cancel:hover { background:var(--pl); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-wrap">
+  <form method="post">
+    {% csrf_token %}
+    <div class="edit-card">
+
+      <div class="edit-head">
+        <h2>✏️ Edit payment</h2>
+        <span class="rcpt"># {{ payment.receipt_number }}</span>
+      </div>
+
+      <div class="edit-body">
+        <div class="section-title">👤 Student &amp; course</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Student <span class="req">*</span></label>
+            <select name="student" class="form-control" required>
+              {% for s in students %}
+                <option value="{{ s.pk }}" {% if s.pk == payment.student_id %}selected{% endif %}>
+                  {{ s.first_name }} {{ s.last_name }}{% if s.phone %} | {{ s.phone }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Course <span class="req">*</span></label>
+            <select name="course" class="form-control" required>
+              {% for co in courses %}
+                <option value="{{ co.pk }}" {% if co.pk == payment.course_id %}selected{% endif %}>
+                  {{ co.title }}{% if co.price %} — {{ co.price|floatformat:0 }} UZS{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Teacher</label>
+            <select name="instructor" class="form-control">
+              <option value="">— Select teacher —</option>
+              {% for i in instructors %}
+                <option value="{{ i.pk }}" {% if i.pk == payment.instructor_id %}selected{% endif %}>
+                  {{ i.full_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="section-title">💳 Payment details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Amount (UZS) <span class="req">*</span></label>
+            <input type="number" name="amount" id="eAmount" value="{{ payment.amount|floatformat:0 }}" min="0" step="1000" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Discount (UZS)</label>
+            <input type="number" name="discount" id="eDiscount" value="{{ payment.discount|floatformat:0 }}" min="0" step="1000" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment method <span class="req">*</span></label>
+            <select name="payment_method" class="form-control" required>
+              {% for val, label in payment_methods %}
+                <option value="{{ val }}" {% if val == payment.payment_method %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-control">
+              {% for val, label in statuses %}
+                <option value="{{ val }}" {% if val == payment.status %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Month <span class="req">*</span></label>
+            <select name="payment_month" class="form-control" required>
+              {% for val, label in months %}
+                <option value="{{ val }}" {% if val == payment.payment_month %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year <span class="req">*</span></label>
+            <select name="payment_year" class="form-control" required>
+              {% for y in years %}
+                <option value="{{ y }}" {% if y == payment.payment_year %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="edit-preview">
+            <div><div class="pl">Amount</div><div class="pv" id="pvAmount">0 UZS</div></div>
+            <div><div class="pl">Discount</div><div class="pv" id="pvDiscount">0 UZS</div></div>
+            <div><div class="pl">Net total</div><div class="pv net" id="pvNet">0 UZS</div></div>
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label">Note</label>
+            <textarea name="note" class="form-control" rows="3" placeholder="Additional info...">{{ payment.note }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit-foot">
+        <a href="{% url 'payments:payment_detail' payment.pk %}" class="btn-s btn-cancel">✖ Cancel</a>
+        <button type="submit" class="btn-s btn-save">💾 Save changes</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const fmt = n => n.toLocaleString('en-US') + ' UZS';
+  function update() {
+    const amt  = parseFloat(document.getElementById('eAmount').value) || 0;
+    const disc = parseFloat(document.getElementById('eDiscount').value) || 0;
+    const net  = Math.max(amt - disc, 0);
+    document.getElementById('pvAmount').textContent   = fmt(amt);
+    document.getElementById('pvDiscount').textContent = fmt(disc);
+    document.getElementById('pvNet').textContent      = fmt(net);
+  }
+  document.getElementById('eAmount').addEventListener('input', update);
+  document.getElementById('eDiscount').addEventListener('input', update);
+  update();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Delete confirmation — {{ payment.receipt_number }}{% endblock %}
+{% block header_section %}Delete payment{% endblock %}
+{% block breadcrumb %}
+  <a href="{% url 'payments:payment_list' %}">Payments</a> <span>•</span> Delete confirmation
+{% endblock %}
+{% block content %}
+<style>
+.confirm-box { max-width:520px; margin:40px auto; text-align:center; }
+.warn-icon { font-size:64px; margin-bottom:20px; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+.confirm-title { font-size:22px; font-weight:900; color:#dc2626; margin-bottom:10px; }
+.confirm-sub { font-size:14px; color:#475569; margin-bottom:28px; line-height:1.7; }
+.confirm-card {
+  padding:20px 24px; border-radius:16px;
+  background:rgba(239,68,68,0.06); border:1.5px solid rgba(239,68,68,0.18);
+  margin-bottom:28px; text-align:left;
+}
+.cc-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(239,68,68,0.08); font-size:13px; }
+.cc-row:last-child { border:none; }
+.cc-key { color:#6b7280; font-weight:700; }
+.cc-val { font-weight:900; color:#0a2426; }
+.confirm-actions { display:flex; gap:14px; justify-content:center; }
+.btn-del { padding:13px 28px; border-radius:14px; font-size:14px; font-weight:900; cursor:pointer; border:none; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; box-shadow:0 8px 22px rgba(239,68,68,0.30); transition:all .25s; }
+.btn-del:hover { transform:translateY(-3px); }
+.btn-back { padding:13px 28px; border-radius:14px; font-size:14px; font-weight:900; background:rgba(14,92,96,0.08); color:#0E5C60; border:2px solid rgba(14,92,96,0.20); text-decoration:none; display:inline-flex; align-items:center; transition:all .2s; }
+.btn-back:hover { background:#e6f4f5; }
+</style>
+
+<div class="confirm-box">
+  <div class="warn-icon">⚠️</div>
+  <div class="confirm-title">Delete this payment?</div>
+  <div class="confirm-sub">
+    This action cannot be undone. <strong>{{ payment.receipt_number }}</strong> will be permanently removed from the system.
+  </div>
+
+  <div class="confirm-card">
+    <div class="cc-row"><span class="cc-key">Receipt №</span><span class="cc-val">{{ payment.receipt_number }}</span></div>
+    <div class="cc-row"><span class="cc-key">Student</span><span class="cc-val">{{ payment.student.first_name }} {{ payment.student.last_name }}</span></div>
+    <div class="cc-row"><span class="cc-key">Course</span><span class="cc-val">{{ payment.course.name }}</span></div>
+    <div class="cc-row"><span class="cc-key">Amount</span><span class="cc-val">{{ payment.amount|floatformat:0 }} UZS</span></div>
+    <div class="cc-row"><span class="cc-key">Date</span><span class="cc-val">{{ payment.paid_at|date:"d.m.Y" }}</span></div>
+  </div>
+
+  <form method="post" class="confirm-actions">
+    {% csrf_token %}
+    <a href="{% url 'payments:payment_detail' payment.pk %}" class="btn-back">← Back</a>
+    <button type="submit" class="btn-del">🗑 Yes, delete</button>
+  </form>
+</div>
+{% endblock %}

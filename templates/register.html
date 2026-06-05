@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Wall Street | Register</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+          rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'images/logo_transparent.png' %}">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg1: #031517;
+            --bg2: #062327;
+            --panel: rgba(5, 22, 26, 0.94);
+            --panel2: rgba(6, 27, 31, 0.98);
+            --gold: #e7c56f;
+            --gold2: #c79d37;
+            --teal: #0e6e73;
+            --gmail: #ea4335;
+            --telegram: #229ED9;
+            --text: #f8fbfb;
+            --muted: rgba(232, 241, 241, 0.72);
+            --danger: #ff7385;
+            --success: #57d89f;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 10%, rgba(231,197,111,.10), transparent 24%),
+                radial-gradient(circle at 90% 18%, rgba(34,158,217,.10), transparent 24%),
+                linear-gradient(135deg, var(--bg1), var(--bg2) 48%, #020b0d);
+            overflow-x: hidden;
+        }
+
+        .page {
+            min-height: 100vh;
+            padding: 12px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 860px;
+            margin: 8px auto;
+            border-radius: 26px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(231,197,111,.08), transparent 24%),
+                linear-gradient(180deg, var(--panel), var(--panel2));
+            border: 1px solid rgba(255,255,255,.09);
+            box-shadow: 0 26px 75px rgba(0,0,0,.44);
+            backdrop-filter: blur(22px);
+        }
+
+        .register-inner {
+            padding: 24px;
+        }
+
+        .logo-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .logo-box {
+            width: 76px;
+            height: 76px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(231,197,111,.22);
+            background: rgba(255,255,255,.08);
+            box-shadow: 0 16px 34px rgba(0,0,0,.25);
+        }
+
+        .logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: clamp(26px, 4vw, 34px);
+            font-weight: 900;
+            letter-spacing: -.05em;
+            line-height: 1.05;
+        }
+
+        .header p {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+            font-weight: 600;
+        }
+
+        .messages {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .message {
+            padding: 10px 13px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.5;
+            border: 1px solid rgba(255,255,255,.09);
+            background: rgba(255,255,255,.05);
+        }
+
+        .message.error {
+            color: #ffb0bc;
+            border-color: rgba(255,115,133,.24);
+            background: rgba(255,115,133,.09);
+        }
+
+        .message.success {
+            color: #96f0c1;
+            border-color: rgba(87,216,159,.24);
+            background: rgba(87,216,159,.09);
+        }
+
+        .section-title {
+            margin: 16px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(244,249,250,.9);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, var(--gold), var(--gold2));
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .choice-card {
+            position: relative;
+            min-height: 74px;
+            padding: 12px;
+            border-radius: 17px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.03));
+            border: 1px solid rgba(255,255,255,.09);
+            transition: .26s ease;
+            overflow: hidden;
+        }
+
+        .choice-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(231,197,111,.28);
+        }
+
+        .choice-card input {
+            display: none;
+        }
+
+        .choice-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            font-size: 20px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.10);
+        }
+
+        .choice-copy strong {
+            display: block;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .choice-copy span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+
+        .choice-card:has(input:checked) {
+            border-color: rgba(231,197,111,.44);
+            background: linear-gradient(180deg, rgba(231,197,111,.13), rgba(255,255,255,.04));
+            box-shadow: 0 14px 28px rgba(231,197,111,.08);
+        }
+
+        .choice-card:has(input[value="admin"]:checked) .choice-icon,
+        .choice-card:has(input[value="teacher"]:checked) .choice-icon {
+            color: #fff;
+            background: linear-gradient(135deg, var(--teal), #11858d);
+        }
+
+        .auth-method-grid {
+            gap: 10px;
+        }
+
+        .method-choice {
+            min-height: 70px;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #1f2937;
+            border: 2px solid rgba(255,255,255,.18);
+            box-shadow: 0 12px 28px rgba(0,0,0,.16);
+            transition: .28s ease;
+        }
+
+        .method-choice:hover {
+            transform: translateY(-3px) scale(1.005);
+            box-shadow: 0 18px 40px rgba(0,0,0,.22);
+        }
+
+        .method-choice .choice-copy strong {
+            color: #273142;
+        }
+
+        .method-choice .choice-copy span {
+            color: rgba(39,49,66,.62);
+        }
+
+        .method-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 1px solid rgba(17,24,39,.10);
+        }
+
+        .method-icon svg {
+            display: block;
+            transition: .28s ease;
+        }
+
+        .method-choice:hover .method-icon svg {
+            transform: scale(1.06) rotate(-2deg);
+        }
+
+        .gmail-choice {
+            border-color: rgba(234,67,53,.28);
+        }
+
+        .telegram-choice {
+            border-color: rgba(34,158,217,.30);
+        }
+
+        .gmail-choice:has(input:checked) {
+            border-color: #ea4335;
+            background: #fff;
+            box-shadow: 0 16px 38px rgba(234,67,53,.20);
+        }
+
+        .telegram-choice:has(input:checked) {
+            border-color: #229ED9;
+            background: #fff;
+            box-shadow: 0 16px 38px rgba(34,158,217,.22);
+        }
+
+        .note {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            color: #f2dfac;
+            background: rgba(231,197,111,.08);
+            border: 1px solid rgba(231,197,111,.18);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: rgba(248,251,251,.86);
+        }
+
+        .input-shell {
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,.09);
+            background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.03));
+            overflow: hidden;
+            transition: .25s ease;
+        }
+
+        .input-shell:focus-within {
+            border-color: rgba(231,197,111,.48);
+            box-shadow: 0 0 0 4px rgba(231,197,111,.10);
+        }
+
+        .input-icon,
+        .toggle-pass {
+            width: 44px;
+            display: grid;
+            place-items: center;
+            color: var(--gold);
+            flex-shrink: 0;
+            background: transparent;
+            border: 0;
+            font-size: 14px;
+        }
+
+        .toggle-pass {
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .input-shell input {
+            width: 100%;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 800;
+            padding: 13px 10px 13px 0;
+        }
+
+        .input-shell input::placeholder {
+            color: rgba(255,255,255,.30);
+            font-weight: 600;
+        }
+
+        .method-field {
+            display: none;
+        }
+
+        .method-field.active {
+            display: flex;
+        }
+
+        .submit-row {
+            display: grid;
+            grid-template-columns: 1fr 160px;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .submit-btn,
+        .reset-btn,
+        .modal-btn {
+            min-height: 50px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: 0;
+            transition: .26s ease;
+        }
+
+        .submit-btn,
+        .modal-btn.primary {
+            color: #fff;
+            background: linear-gradient(135deg, var(--teal), #11858d);
+            box-shadow: 0 16px 34px rgba(17,133,141,.22);
+        }
+
+        .submit-btn:hover,
+        .modal-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 44px rgba(17,133,141,.30);
+        }
+
+        .reset-btn,
+        .modal-btn.secondary {
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.05);
+            color: var(--text);
+        }
+
+        .bottom-link {
+            margin-top: 14px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .bottom-link a {
+            color: var(--gold);
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        .verify-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.68);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+
+        .verify-modal-overlay.show {
+            display: flex;
+        }
+
+        .verify-modal {
+            width: 100%;
+            max-width: 460px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,.10);
+            background:
+                radial-gradient(circle at top right, rgba(34,158,217,.14), transparent 30%),
+                linear-gradient(180deg, rgba(5,22,26,.98), rgba(6,27,31,1));
+            box-shadow: 0 24px 75px rgba(0,0,0,.46);
+            padding: 24px 22px;
+        }
+
+        .verify-head {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .verify-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 12px;
+            border-radius: 20px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, rgba(231,197,111,.18), rgba(34,158,217,.14));
+            color: var(--gold);
+            border: 1px solid rgba(231,197,111,.18);
+            font-size: 28px;
+        }
+
+        .verify-head h2 {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 7px;
+        }
+
+        .verify-head p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+            font-weight: 600;
+        }
+
+        .verify-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .tiny-note {
+            margin-top: 10px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+
+        @media(max-width: 760px) {
+            .register-inner {
+                padding: 20px 14px;
+            }
+
+            .grid-2,
+            .submit-row,
+            .verify-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .register-card {
+                border-radius: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <div class="register-card">
+        <div class="register-inner">
+            <div class="logo-wrap">
+                <div class="logo-box">
+                    <img src="{% static 'images/wallstreet-logo.png' %}" alt="Wall Street logo">
+                </div>
+            </div>
+
+            <div class="header">
+                <h1>Sign up</h1>
+                <p>
+                    Create a teacher or admin account in the Wall Street CRM.
+                    Receive your verification code via Gmail or Telegram.
+                </p>
+            </div>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" id="registerForm" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="register">
+
+                <div class="section-title">Select role</div>
+
+                <div class="grid-2">
+                    <label class="choice-card">
+                        <input type="radio"
+                               name="role"
+                               value="teacher"
+                               {% if is_teacher_selected %}checked{% endif %}>
+
+                        <div class="choice-icon">👨‍🏫</div>
+                        <div class="choice-copy">
+                            <strong>Teacher</strong>
+                            <span>For attendance and learning</span>
+                        </div>
+                    </label>
+
+                    <label class="choice-card">
+                        <input type="radio"
+                               name="role"
+                               value="admin"
+                               {% if is_admin_selected %}checked{% endif %}>
+
+                        <div class="choice-icon">👑</div>
+                        <div class="choice-copy">
+                            <strong>Admin</strong>
+                            <span>For the full management panel</span>
+                        </div>
+                    </label>
+                </div>
+
+
+                <div class="section-title">Verification method</div>
+
+                <div class="grid-2 auth-method-grid">
+                    <label class="choice-card method-choice gmail-choice">
+                        <input type="radio"
+                               name="verification_method"
+                               value="gmail"
+                               {% if is_gmail_selected %}checked{% endif %}
+                               onchange="toggleMethodFields()">
+
+                        <div class="choice-icon method-icon">
+                            <svg viewBox="0 0 48 48" width="28" height="28" aria-hidden="true">
+                                <path fill="#EA4335"
+                                      d="M24 24.5 8 12.5V36c0 1.7 1.3 3 3 3h4V22l9 6.8 9-6.8v17h4c1.7 0 3-1.3 3-3V12.5L24 24.5z"/>
+                                <path fill="#FBBC04"
+                                      d="M40 12.5v-.9c0-2.5-2.8-4-4.9-2.6L24 17.4 12.9 9C10.8 7.4 8 9.1 8 11.6v.9l16 12 16-12z"/>
+                                <path fill="#34A853" d="M33 39h4c1.7 0 3-1.3 3-3V12.5L33 17.8V39z"/>
+                                <path fill="#4285F4" d="M8 12.5V36c0 1.7 1.3 3 3 3h4V17.8L8 12.5z"/>
+                            </svg>
+                        </div>
+
+                        <div class="choice-copy">
+                            <strong>Sign up with Gmail</strong>
+                            <span>A 6-digit code is sent to your email</span>
+                        </div>
+                    </label>
+
+                    <label class="choice-card method-choice telegram-choice">
+                        <input type="radio"
+                               name="verification_method"
+                               value="telegram"
+                               {% if is_telegram_selected %}checked{% endif %}
+                               onchange="toggleMethodFields()">
+
+                        <div class="choice-icon method-icon">
+                            <svg viewBox="0 0 240 240" width="28" height="28" aria-hidden="true">
+                                <circle cx="120" cy="120" r="120" fill="#229ED9"/>
+                                <path fill="#FFFFFF"
+                                      d="M179.4 74.6 157 180.1c-1.7 7.5-6.1 9.4-12.3 5.8l-34-25.1-16.4 15.8c-1.8 1.8-3.3 3.3-6.8 3.3l2.4-34.6 62.9-56.8c2.7-2.4-.6-3.8-4.2-1.4l-77.7 48.9-33.5-10.5c-7.3-2.3-7.4-7.3 1.5-10.8l130.9-50.4c6.1-2.3 11.4 1.5 9.6 10.3z"/>
+                            </svg>
+                        </div>
+
+                        <div class="choice-copy">
+                            <strong>Sign up with Telegram</strong>
+                            <span>A 6-digit code is sent via the bot</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="section-title">Personal information</div>
+
+                <div class="grid-2">
+                    <div class="field">
+                        <label>First name</label>
+                        <div class="input-shell">
+                            <div class="input-icon">👤</div>
+                            <input type="text" name="first_name" placeholder="Your first name"
+                                   value="{{ form_data.first_name|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Last name</label>
+                        <div class="input-shell">
+                            <div class="input-icon">👤</div>
+                            <input type="text" name="last_name" placeholder="Your last name"
+                                   value="{{ form_data.last_name|default:'' }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top:10px;">
+                    <div class="field">
+                        <label>Username</label>
+                        <div class="input-shell">
+                            <div class="input-icon">#</div>
+                            <input type="text" name="username" placeholder="username"
+                                   value="{{ form_data.username|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Phone number</label>
+                        <div class="input-shell">
+                            <div class="input-icon">+998</div>
+                            <input type="text" name="phone" maxlength="9" placeholder="901234567"
+                                   value="{{ form_data.phone|default:'' }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top:10px;">
+                    <div class="field method-field" id="gmailField">
+                        <label>Gmail address</label>
+                        <div class="input-shell">
+                            <div class="input-icon">📧</div>
+                            <input type="email" name="email" placeholder="example@gmail.com"
+                                   value="{{ form_data.email|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="field method-field" id="telegramField">
+                        <label>Telegram Chat ID</label>
+                        <div class="input-shell">
+                            <div class="input-icon">✈</div>
+                            <input type="text" name="telegram_chat_id" placeholder="ID given by the Telegram bot"
+                                   value="{{ form_data.telegram_chat_id|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title">Create password</div>
+
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Password</label>
+                        <div class="input-shell">
+                            <div class="input-icon">🔒</div>
+                            <input type="password" name="password" id="password1" placeholder="At least 8 characters"
+                                   required>
+                            <button class="toggle-pass" type="button" onclick="togglePassword('password1')">👁</button>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Confirm password</label>
+                        <div class="input-shell">
+                            <div class="input-icon">🔐</div>
+                            <input type="password" name="password2" id="password2" placeholder="Re-enter the password"
+                                   required>
+                            <button class="toggle-pass" type="button" onclick="togglePassword('password2')">👁</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="submit-row">
+                    <button type="submit" class="submit-btn">Send code</button>
+                    <button type="reset" class="reset-btn">Clear</button>
+                </div>
+            </form>
+
+            <div class="bottom-link">
+                Already have an account?
+                <a href="{% url 'login' %}">Sign in</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="verify-modal-overlay {% if show_verify_modal %}show{% endif %}" id="verifyModal">
+    <div class="verify-modal">
+        <div class="verify-head">
+            <div class="verify-icon">
+                {% if verify_method == 'telegram' %}
+                <svg viewBox="0 0 240 240" width="34" height="34" aria-hidden="true">
+                    <circle cx="120" cy="120" r="120" fill="#229ED9"/>
+                    <path fill="#FFFFFF"
+                          d="M179.4 74.6 157 180.1c-1.7 7.5-6.1 9.4-12.3 5.8l-34-25.1-16.4 15.8c-1.8 1.8-3.3 3.3-6.8 3.3l2.4-34.6 62.9-56.8c2.7-2.4-.6-3.8-4.2-1.4l-77.7 48.9-33.5-10.5c-7.3-2.3-7.4-7.3 1.5-10.8l130.9-50.4c6.1-2.3 11.4 1.5 9.6 10.3z"/>
+                </svg>
+                {% else %}
+                <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true">
+                    <path fill="#EA4335"
+                          d="M24 24.5 8 12.5V36c0 1.7 1.3 3 3 3h4V22l9 6.8 9-6.8v17h4c1.7 0 3-1.3 3-3V12.5L24 24.5z"/>
+                    <path fill="#FBBC04"
+                          d="M40 12.5v-.9c0-2.5-2.8-4-4.9-2.6L24 17.4 12.9 9C10.8 7.4 8 9.1 8 11.6v.9l16 12 16-12z"/>
+                    <path fill="#34A853" d="M33 39h4c1.7 0 3-1.3 3-3V12.5L33 17.8V39z"/>
+                    <path fill="#4285F4" d="M8 12.5V36c0 1.7 1.3 3 3 3h4V17.8L8 12.5z"/>
+                </svg>
+                {% endif %}
+            </div>
+            <h2>Confirm code</h2>
+            <p>
+                {% if verify_method == 'telegram' %}
+                Enter the 6-digit code sent via the Telegram bot.
+                {% else %}
+                Enter the 6-digit code sent to your Gmail address.
+                {% endif %}
+            </p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify">
+            <input type="hidden" name="identifier" value="{{ verify_identifier }}">
+
+            <div class="field">
+                <label>Verification code</label>
+                <div class="input-shell">
+                    <div class="input-icon">🔐</div>
+                    <input type="text" name="code" maxlength="6" placeholder="123456" required>
+                </div>
+            </div>
+
+            <div class="verify-actions">
+                <button type="submit" class="modal-btn primary">Confirm</button>
+                <button type="button" class="modal-btn secondary" onclick="resendCode()">Resend</button>
+            </div>
+
+            <div class="tiny-note">
+                The code is valid for 5 minutes. If it doesn't arrive, check your Gmail spam folder or the Telegram bot.
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function getSelectedMethod() {
+        const selected = document.querySelector('input[name="verification_method"]:checked');
+        return selected ? selected.value : 'gmail';
+    }
+
+    function toggleMethodFields() {
+        const method = getSelectedMethod();
+        const gmailField = document.getElementById('gmailField');
+        const telegramField = document.getElementById('telegramField');
+
+        if (method === 'gmail') {
+            gmailField.classList.add('active');
+            telegramField.classList.remove('active');
+        } else {
+            gmailField.classList.remove('active');
+            telegramField.classList.add('active');
+        }
+    }
+
+    async function resendCode() {
+        const identifier = "{{ verify_identifier }}";
+
+        if (!identifier) {
+            alert("Identifier topilmadi!");
+            return;
+        }
+
+        try {
+            const response = await fetch("{% url 'resend_code' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    identifier: identifier
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(data.message || "Code resent!");
+            } else {
+                alert(data.error || "Error sending code!");
+            }
+        } catch (error) {
+            alert("Server bilan aloqa qilishda xatolik!");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', toggleMethodFields);
+</script>
+
+<script src="{% static 'js/i18n.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,1148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Kalendar — Wall Street{% endblock %}
+
+{% block header_section %}Kalendar{% endblock %}
+{% block breadcrumb %}Kalendar{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Color override: brand green #0E5C60 ── */
+    :root {
+        --primary-rgb: 14, 92, 96;
+        --primary-400: #1a8a8f;
+        --primary-500: #0E5C60;
+        --primary-600: #0a4447;
+        --primary-700: #083538;
+        --primary-800: #052829;
+        --primary-900: #031a1b;
+        --primary-950: #020f10;
+    }
+
+    /* ── Toolbar ── */
+    .cal-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .cal-month-nav {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .cal-month-label {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-500) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        white-space: nowrap;
+        min-width: 220px;
+        text-align: center;
+    }
+
+    .cal-select {
+        height: 42px;
+        padding: 0 14px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-md);
+        background: var(--surface-solid);
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .cal-select:focus {
+        outline: none;
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
+    }
+
+    .cal-nav-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 42px;
+        padding: 0 18px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-md);
+        background: var(--surface-solid);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all var(--transition-fast);
+    }
+
+    .cal-nav-btn:hover {
+        background: var(--primary-500);
+        border-color: var(--primary-500);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.25);
+    }
+
+    .cal-nav-btn.primary {
+        background: var(--primary-500);
+        border-color: var(--primary-500);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.25);
+    }
+
+    .cal-nav-btn.primary:hover {
+        background: var(--primary-600);
+        box-shadow: 0 10px 24px rgba(var(--primary-rgb), 0.35);
+    }
+
+    /* ── Calendar Grid ── */
+    .cal-wrapper {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 32px;
+    }
+
+    .cal-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-700) 100%);
+    }
+
+    .cal-weekday {
+        padding: 16px 8px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.85);
+    }
+
+    .cal-weekday:nth-child(6),
+    .cal-weekday:nth-child(7) {
+        color: rgba(255, 165, 0, 0.9);
+    }
+
+    .cal-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: var(--border);
+    }
+
+    /* ── Day Cell ── */
+    .cal-day {
+        min-height: 128px;
+        padding: 12px;
+        background: var(--surface-solid);
+        cursor: pointer;
+        transition: background var(--transition-fast), transform var(--transition-fast);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cal-day::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.04), transparent);
+        opacity: 0;
+        transition: opacity var(--transition-fast);
+        pointer-events: none;
+    }
+
+    .cal-day:hover {
+        background: var(--bg-secondary);
+        z-index: 2;
+        transform: scale(1.02);
+        box-shadow: var(--shadow-md);
+    }
+
+    .cal-day:hover::after {
+        opacity: 1;
+    }
+
+    .cal-day.other-month {
+        background: var(--bg-tertiary);
+        cursor: default;
+        opacity: 0.45;
+    }
+
+    .cal-day.other-month:hover {
+        transform: none;
+        box-shadow: none;
+        background: var(--bg-tertiary);
+    }
+
+    .cal-day.is-today {
+        background: linear-gradient(135deg,
+            rgba(var(--primary-rgb), 0.07) 0%,
+            rgba(var(--primary-rgb), 0.03) 100%);
+        border: 2px solid var(--primary-500);
+        margin: -1px;
+    }
+
+    .cal-day.is-weekend {
+        background: var(--bg-secondary);
+    }
+
+    .cal-day.is-weekend.is-today {
+        background: linear-gradient(135deg,
+            rgba(var(--primary-rgb), 0.07) 0%,
+            rgba(var(--primary-rgb), 0.03) 100%);
+    }
+
+    /* ── Day Number ── */
+    .cal-day-num {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+
+    .cal-day-num span {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    .cal-day.other-month .cal-day-num span {
+        color: var(--text-faint);
+    }
+
+    .cal-day.is-today .cal-day-num span {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-500);
+        color: #fff;
+        border-radius: 50%;
+        font-size: 13px;
+    }
+
+    .cal-day-num .today-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--primary-500);
+        animation: pulseDot 2s ease-in-out infinite;
+        flex-shrink: 0;
+    }
+
+    @keyframes pulseDot {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.35); opacity: 0.6; }
+    }
+
+    .cal-day.is-today .today-dot {
+        display: none;
+    }
+
+    /* ── Event Badges ── */
+    .cal-day-events {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+    }
+
+    .evt-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-left: 3px solid;
+        transition: transform var(--transition-fast);
+        cursor: pointer;
+    }
+
+    .evt-badge:hover {
+        transform: translateX(3px);
+    }
+
+    .evt-badge.badge-red {
+        background: rgba(239, 68, 68, 0.1);
+        color: #991b1b;
+        border-left-color: #ef4444;
+    }
+
+    .evt-badge.badge-green {
+        background: rgba(16, 185, 129, 0.1);
+        color: #065f46;
+        border-left-color: #10b981;
+    }
+
+    .evt-badge.badge-yellow {
+        background: rgba(245, 158, 11, 0.1);
+        color: #78350f;
+        border-left-color: #f59e0b;
+    }
+
+    .evt-badge.badge-study-break {
+        background: rgba(34, 197, 94, 0.1);
+        color: #14532d;
+        border-left-color: #22c55e;
+    }
+
+    .evt-more {
+        font-size: 10px;
+        color: var(--text-faint);
+        font-style: italic;
+        padding-left: 4px;
+    }
+
+    /* ── Stats Cards ── */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .stat-card {
+        background: var(--surface-solid);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 22px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+
+    .stat-card.red::before   { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .stat-card.green::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .stat-card.amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .stat-card.teal::before  { background: linear-gradient(90deg, var(--primary-500), var(--primary-400)); }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-strong);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--radius-md);
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    .stat-card.red   .stat-icon { background: rgba(239, 68, 68, 0.1); }
+    .stat-card.green .stat-icon { background: rgba(16, 185, 129, 0.1); }
+    .stat-card.amber .stat-icon { background: rgba(245, 158, 11, 0.1); }
+    .stat-card.teal  .stat-icon { background: rgba(var(--primary-rgb), 0.1); }
+
+    .stat-info {
+        min-width: 0;
+    }
+
+    .stat-val {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--text);
+    }
+
+    .stat-lbl {
+        margin-top: 5px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-faint);
+    }
+
+    /* ── Legend ── */
+    .legend-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .legend-card {
+        background: var(--surface-solid);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        border-left: 4px solid;
+        transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .legend-card:hover {
+        transform: translateX(6px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .legend-card.red    { border-left-color: #ef4444; }
+    .legend-card.green  { border-left-color: #10b981; }
+    .legend-card.amber  { border-left-color: #f59e0b; }
+    .legend-card.teal   { border-left-color: var(--primary-500); }
+
+    .legend-card-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .legend-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: var(--radius-md);
+        display: grid;
+        place-items: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .legend-card.red   .legend-icon { background: rgba(239, 68, 68, 0.1); }
+    .legend-card.green .legend-icon { background: rgba(16, 185, 129, 0.1); }
+    .legend-card.amber .legend-icon { background: rgba(245, 158, 11, 0.1); }
+    .legend-card.teal  .legend-icon { background: rgba(var(--primary-rgb), 0.1); }
+
+    .legend-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1.2;
+    }
+
+    .legend-sub {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-faint);
+        margin-top: 2px;
+    }
+
+    .legend-desc {
+        font-size: 13px;
+        color: var(--text-soft);
+        line-height: 1.6;
+    }
+
+    /* ── Section Title ── */
+    .sec-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .sec-title-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        background: rgba(var(--primary-rgb), 0.1);
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .sec-title h2 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    .sec-divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 32px 0;
+    }
+
+    /* ── Events List ── */
+    .evt-filter-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .evt-filter-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 16px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-full);
+        background: var(--surface-solid);
+        color: var(--text-soft);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        text-decoration: none;
+    }
+
+    .evt-filter-btn:hover,
+    .evt-filter-btn.active {
+        background: var(--primary-500);
+        border-color: var(--primary-500);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);
+    }
+
+    .evt-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .evt-list-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        background: var(--surface-solid);
+        border: 1px solid var(--border);
+        border-left: 4px solid;
+        border-radius: var(--radius-lg);
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .evt-list-item:hover {
+        transform: translateX(6px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .evt-list-item.mock-day    { border-left-color: #ef4444; }
+    .evt-list-item.mock-result { border-left-color: #10b981; }
+    .evt-list-item.holiday     { border-left-color: #f59e0b; }
+    .evt-list-item.study-break { border-left-color: #22c55e; }
+
+    .evt-list-emo {
+        font-size: 36px;
+        flex-shrink: 0;
+    }
+
+    .evt-list-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .evt-list-date {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--primary-500);
+        margin-bottom: 4px;
+    }
+
+    .evt-list-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 3px;
+    }
+
+    .evt-list-desc {
+        font-size: 12px;
+        color: var(--text-soft);
+    }
+
+    .evt-list-pill {
+        flex-shrink: 0;
+        padding: 6px 14px;
+        border-radius: var(--radius-full);
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .pill-red    { background: rgba(239,68,68,0.1);   color: #991b1b; }
+    .pill-green  { background: rgba(16,185,129,0.1);  color: #065f46; }
+    .pill-amber  { background: rgba(245,158,11,0.1);  color: #78350f; }
+    .pill-teal   { background: rgba(var(--primary-rgb),0.1); color: var(--primary-700); }
+
+    /* ── Modal ── */
+    .cal-modal-bg {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(6px);
+        z-index: 999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: modalFadeIn 0.25s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    .cal-modal-bg.show {
+        display: flex;
+    }
+
+    .cal-modal {
+        background: var(--surface-solid);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-2xl);
+        padding: 32px;
+        max-width: 520px;
+        width: 100%;
+        box-shadow: var(--shadow-xl);
+        animation: modalSlideUp 0.3s ease;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    @keyframes modalSlideUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .cal-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .cal-modal-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.02em;
+    }
+
+    .cal-modal-close {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        color: var(--text-soft);
+        font-size: 18px;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: all var(--transition-fast);
+    }
+
+    .cal-modal-close:hover {
+        background: rgba(239,68,68,0.1);
+        border-color: rgba(239,68,68,0.2);
+        color: #ef4444;
+    }
+
+    .cal-modal-events {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .modal-evt {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border-left: 4px solid;
+        transition: background var(--transition-fast);
+    }
+
+    .modal-evt:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .modal-evt.mock_day    { border-left-color: #ef4444; }
+    .modal-evt.mock_result { border-left-color: #10b981; }
+    .modal-evt.holiday     { border-left-color: #f59e0b; }
+    .modal-evt.study_break { border-left-color: #22c55e; }
+
+    .modal-evt-emo {
+        font-size: 28px;
+        flex-shrink: 0;
+    }
+
+    .modal-evt-name {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 4px;
+    }
+
+    .modal-evt-type {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-faint);
+        margin-bottom: 6px;
+    }
+
+    .modal-evt-desc {
+        font-size: 13px;
+        color: var(--text-soft);
+        line-height: 1.6;
+    }
+
+    .modal-empty {
+        text-align: center;
+        padding: 48px 24px;
+        border: 2px dashed var(--border-strong);
+        border-radius: var(--radius-xl);
+    }
+
+    .modal-empty-emo {
+        font-size: 52px;
+        margin-bottom: 14px;
+    }
+
+    .modal-empty-title {
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 6px;
+    }
+
+    .modal-empty-text {
+        font-size: 13px;
+        color: var(--text-soft);
+    }
+
+    /* ── List section toggle ── */
+    .evt-section {
+        display: none;
+        margin-top: 8px;
+    }
+
+    .evt-section.visible {
+        display: block;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+        .cal-toolbar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .cal-month-label {
+            min-width: auto;
+            font-size: 18px;
+        }
+
+        .cal-day {
+            min-height: 90px;
+            padding: 8px;
+        }
+
+        .cal-day-num span {
+            font-size: 13px;
+        }
+
+        .evt-badge {
+            font-size: 9px;
+            padding: 3px 6px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .legend-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .evt-list-item {
+            flex-wrap: wrap;
+        }
+
+        .cal-modal {
+            padding: 22px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .cal-day {
+            min-height: 72px;
+            padding: 6px;
+        }
+
+        .cal-weekday {
+            padding: 12px 4px;
+            font-size: 10px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="cal-toolbar">
+    <div class="cal-month-nav">
+        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="cal-nav-btn">
+            ← Oldingi
+        </a>
+
+        <span class="cal-month-label">{{ current_month_name }} {{ current_year }}</span>
+
+        <a href="?year={{ next_year }}&month={{ next_month }}" class="cal-nav-btn">
+            Keyingi →
+        </a>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <select class="cal-select" id="yearSelect" onchange="changeMonth()">
+            {% for y in year_range %}
+            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+
+        <select class="cal-select" id="monthSelect" onchange="changeMonth()">
+            <option value="1" {% if current_month == 1 %}selected{% endif %}>Yanvar</option>
+            <option value="2" {% if current_month == 2 %}selected{% endif %}>Fevral</option>
+            <option value="3" {% if current_month == 3 %}selected{% endif %}>Mart</option>
+            <option value="4" {% if current_month == 4 %}selected{% endif %}>Aprel</option>
+            <option value="5" {% if current_month == 5 %}selected{% endif %}>May</option>
+            <option value="6" {% if current_month == 6 %}selected{% endif %}>Iyun</option>
+            <option value="7" {% if current_month == 7 %}selected{% endif %}>Iyul</option>
+            <option value="8" {% if current_month == 8 %}selected{% endif %}>Avgust</option>
+            <option value="9" {% if current_month == 9 %}selected{% endif %}>Sentabr</option>
+            <option value="10" {% if current_month == 10 %}selected{% endif %}>Oktabr</option>
+            <option value="11" {% if current_month == 11 %}selected{% endif %}>Noyabr</option>
+            <option value="12" {% if current_month == 12 %}selected{% endif %}>Dekabr</option>
+        </select>
+
+        <button class="cal-nav-btn primary" onclick="toggleEventsSection()">
+            📋 Ro'yxat
+        </button>
+    </div>
+</div>
+
+
+<!-- ══════════════════ CALENDAR GRID ══════════════════ -->
+<div class="cal-wrapper">
+    <!-- Weekday headers -->
+    <div class="cal-weekdays">
+        {% for day_name in week_names %}
+        <div class="cal-weekday">{{ day_name }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Day cells -->
+    <div class="cal-days">
+        {% for week in weeks %}
+        {% for day in week %}
+        <div class="cal-day
+                    {% if not day.is_current_month %}other-month{% endif %}
+                    {% if day.is_today %}is-today{% endif %}
+                    {% if day.is_weekend %}is-weekend{% endif %}"
+             onclick="openDayModal({{ day.date|date:'Y,n,j' }})">
+
+            <div class="cal-day-num">
+                <span>{{ day.day_number }}</span>
+                {% if day.is_today %}<span class="today-dot"></span>{% endif %}
+            </div>
+
+            {% if day.has_events %}
+            <div class="cal-day-events">
+                {% for badge in day.badges|slice:":2" %}
+                <div class="evt-badge {{ badge.class }}" title="{{ badge.title }}">
+                    {{ badge.icon }} {{ badge.title }}
+                </div>
+                {% endfor %}
+                {% if day.event_count > 2 %}
+                <span class="evt-more">+{{ day.event_count|add:"-2" }} ko'proq</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- ══════════════════ STATISTICS ══════════════════ -->
+{% if statistics %}
+<div class="sec-title">
+    <div class="sec-title-icon">📊</div>
+    <h2>Oylik Statistika</h2>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card red">
+        <div class="stat-icon">📝</div>
+        <div class="stat-info">
+            <div class="stat-val">{{ statistics.mock_days }}</div>
+            <div class="stat-lbl">Mock Days</div>
+        </div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+            <div class="stat-val">{{ statistics.mock_results }}</div>
+            <div class="stat-lbl">Mock Results</div>
+        </div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-icon">🎉</div>
+        <div class="stat-info">
+            <div class="stat-val">{{ statistics.holidays }}</div>
+            <div class="stat-lbl">Bayramlar</div>
+        </div>
+    </div>
+    <div class="stat-card teal">
+        <div class="stat-icon">🏖️</div>
+        <div class="stat-info">
+            <div class="stat-val">{{ statistics.study_breaks }}</div>
+            <div class="stat-lbl">Dam Kunlari</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════ MOCK NATIJALARI — TELEGRAM ══════════════════ -->
+<a href="https://t.me/wallstreet_lc" target="_blank" rel="noopener"
+   style="display:flex; align-items:center; gap:16px; margin:20px 0;
+          padding:18px 22px; border-radius:16px; text-decoration:none;
+          background:linear-gradient(135deg,#229ED9 0%,#0E5C60 100%);
+          box-shadow:0 8px 24px rgba(34,158,217,.28);">
+    <div style="font-size:34px; line-height:1;">📊</div>
+    <div style="flex:1;">
+        <div style="color:#fff; font-size:16px; font-weight:700;">
+            Mock Day natijalarini Telegramda kuzating
+        </div>
+        <div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:3px;">
+            Har haftalik mock testlar natijalari rasmiy kanalimizda e'lon qilinadi — @wallstreet_lc
+        </div>
+    </div>
+    <div style="color:#fff; background:rgba(255,255,255,.18); padding:9px 16px;
+                border-radius:10px; font-weight:600; font-size:14px; white-space:nowrap;">
+        ✈️ Telegramda ochish
+    </div>
+</a>
+
+<hr class="sec-divider">
+{% endif %}
+
+
+<!-- ══════════════════ LEGEND ══════════════════ -->
+{% if legend_items %}
+<div class="sec-title">
+    <div class="sec-title-icon">📌</div>
+    <h2>Belgilar Izohlanishi</h2>
+</div>
+
+<div class="legend-grid">
+    {% for item in legend_items %}
+    <div class="legend-card
+            {% if item.class == 'badge-red' %}red
+            {% elif item.class == 'badge-green' %}green
+            {% elif item.class == 'badge-yellow' %}amber
+            {% else %}teal{% endif %}">
+
+        <div class="legend-card-head">
+            <div class="legend-icon">{{ item.icon }}</div>
+            <div>
+                <div class="legend-title">{{ item.title }}</div>
+                {% if item.title_uz %}
+                <div class="legend-sub">{{ item.title_uz }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="legend-desc">{{ item.description }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<hr class="sec-divider">
+{% endif %}
+
+
+<!-- ══════════════════ EVENTS LIST SECTION ══════════════════ -->
+<div id="eventsSection" class="evt-section">
+    <div class="sec-title">
+        <div class="sec-title-icon">🗂️</div>
+        <h2>Barcha Tadbirlar</h2>
+    </div>
+
+    <div class="evt-filter-bar">
+        <a href="#" class="evt-filter-btn active" onclick="filterEvts(event, 'all')">📊 Barchasi</a>
+        <a href="#" class="evt-filter-btn" onclick="filterEvts(event, 'mock_day')">📝 Mock Days</a>
+        <a href="#" class="evt-filter-btn" onclick="filterEvts(event, 'mock_result')">✅ Mock Results</a>
+        <a href="#" class="evt-filter-btn" onclick="filterEvts(event, 'holiday')">🎉 Bayramlar</a>
+        <a href="#" class="evt-filter-btn" onclick="filterEvts(event, 'study_break')">🏖️ Dam Kunlari</a>
+    </div>
+
+    <div id="evtListContainer" class="evt-list">
+        <p style="color: var(--text-faint); font-size: 14px; padding: 20px 0;">⏳ Yuklanmoqda...</p>
+    </div>
+</div>
+
+
+<!-- ══════════════════ DAY DETAIL MODAL ══════════════════ -->
+<div id="dayModalBg" class="cal-modal-bg">
+    <div class="cal-modal">
+        <div class="cal-modal-head">
+            <div class="cal-modal-title" id="modalTitle">—</div>
+            <button class="cal-modal-close" onclick="closeDayModal()">✕</button>
+        </div>
+        <div id="modalBody" class="cal-modal-events">
+            <p style="color:var(--text-faint); text-align:center; padding:20px;">⏳ Yuklanmoqda...</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    'use strict';
+
+    const currentYear  = {{ current_year }};
+    const currentMonth = {{ current_month }};
+
+    /* ── Month navigation ── */
+    function changeMonth() {
+        const y = document.getElementById('yearSelect').value;
+        const m = document.getElementById('monthSelect').value;
+        window.location.href = `?year=${y}&month=${m}`;
+    }
+
+    /* ── Toggle events list section ── */
+    function toggleEventsSection() {
+        const sec = document.getElementById('eventsSection');
+        sec.classList.toggle('visible');
+        if (sec.classList.contains('visible')) {
+            loadEvents('all');
+            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    /* ── Filter events ── */
+    function filterEvts(e, type) {
+        e.preventDefault();
+        document.querySelectorAll('.evt-filter-btn').forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        loadEvents(type);
+    }
+
+    /* ── Load events via AJAX ── */
+    function loadEvents(type) {
+        const container = document.getElementById('evtListContainer');
+        container.innerHTML = '<p style="color:var(--text-faint);font-size:14px;padding:20px 0;">⏳ Yuklanmoqda...</p>';
+
+        const url = type === 'all'
+            ? `/calendar/events/?year=${currentYear}&month=${currentMonth}`
+            : `/calendar/events/?year=${currentYear}&month=${currentMonth}&type=${type}`;
+
+        fetch(url)
+            .then(r => r.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const inner = doc.querySelector('.events-list-container');
+                container.innerHTML = inner ? inner.innerHTML : '<p style="color:var(--text-faint);padding:20px 0;">Ma\'lumot topilmadi.</p>';
+            })
+            .catch(() => {
+                container.innerHTML = '<p style="color:#ef4444;padding:20px 0;">❌ Xato! Ma\'lumot yuklanmadi.</p>';
+            });
+    }
+
+    /* ── Open day modal ── */
+    function openDayModal(year, month, day) {
+        const monthNames = ['Yanvar','Fevral','Mart','Aprel','May','Iyun',
+                            'Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+        const dayNames   = ['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba'];
+
+        const date   = new Date(year, month - 1, day);
+        const dayIdx = date.getDay() === 0 ? 6 : date.getDay() - 1;
+
+        document.getElementById('modalTitle').textContent =
+            `${day} ${monthNames[month-1]}, ${year} — ${dayNames[dayIdx]}`;
+
+        document.getElementById('modalBody').innerHTML =
+            '<p style="color:var(--text-faint);text-align:center;padding:24px;">⏳ Yuklanmoqda...</p>';
+
+        document.getElementById('dayModalBg').classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        fetch(`/calendar/day/${year}/${month}/${day}/`)
+            .then(r => r.text())
+            .then(html => { document.getElementById('modalBody').innerHTML = html; })
+            .catch(()  => { document.getElementById('modalBody').innerHTML =
+                '<p style="color:#ef4444;padding:16px;">❌ Ma\'lumot yuklanmadi.</p>'; });
+    }
+
+    /* ── Close day modal ── */
+    function closeDayModal() {
+        document.getElementById('dayModalBg').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    /* ── Close modal on backdrop click ── */
+    document.getElementById('dayModalBg').addEventListener('click', function(e) {
+        if (e.target === this) closeDayModal();
+    });
+
+    /* ── Keyboard support ── */
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDayModal();
+    });
+</script>
+{% endblock %}
