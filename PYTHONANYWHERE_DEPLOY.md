@@ -184,7 +184,39 @@ curl -X POST https://USERNAME.pythonanywhere.com/api/auth/login/ \
 
 ---
 
-## 7-qadam — Mobil ilovani shu manzilga ulash + APK qurish
+## 7-qadam — Telegram bot (webhook) — bepul tarifda ishlaydi ✅
+
+Bot **alohida always-on jarayon EMAS**. Telegram update'larni saytingizning
+`/tg/webhook/<token>/` manziliga POST qiladi → sayt ularni botga uzatadi.
+Shuning uchun **bepul tarifda ham ishlaydi** (pullik always-on task kerak emas).
+
+`.env` da 2 qiymat to'g'ri bo'lishi shart (3-qadamda kiritilgan):
+```env
+WEBSITE_URL=https://USERNAME.pythonanywhere.com
+TELEGRAM_BOT_TOKEN=sizdagi-token
+```
+
+Web app **Reload** qilingach, webhook'ni Telegram'ga **BIR MARTA** ro'yxatdan o'tkazing:
+```bash
+cd ~/wallstreet
+source .venv/bin/activate
+cd wallstreet/telegram_bot
+python set_webhook.py set https://USERNAME.pythonanywhere.com
+python set_webhook.py info     # URL ko'rinsa — o'rnatildi
+```
+
+> ⭐ Bu yerdagi `USERNAME` — **PythonAnywhere foydalanuvchi nomingiz** (domeningiz
+> `https://USERNAME.pythonanywhere.com`). **GitHub username EMAS.**
+
+Tekshirish: brauzerda `https://USERNAME.pythonanywhere.com/tg/webhook/<token>/`
+ochsangiz **"Wall Street bot webhook ✅"** chiqadi. So'ng botga `/start` yozing.
+
+> ⚠️ Lokalda `python bot.py` (polling) ishga tushirsangiz — serverdagi webhook
+> o'chadi. Qaytadan yoqish uchun yuqoridagi `set_webhook.py set ...` ni takrorlang.
+
+---
+
+## 8-qadam — Mobil ilovani shu manzilga ulash + APK qurish
 
 Ilova manzilini deploy qilingan manzilga o'zgartiring. **2 yo'l bor:**
 
@@ -215,7 +247,7 @@ muammosi yo'qoladi**, chunki manzil endi real internetда.
 - [ ] APK shu manzil bilan qurilgan (LAN IP emas)
 - [ ] Telefonda login ishlaydi, "Mening kurslarim" va "To'lovlar" ko'rinadi
 - [ ] Telegram tugmasi kanalni ochadi
+- [ ] Telegram botga `/start` yozilganda javob beradi (webhook o'rnatilgan)
 
-> **Telegram bot** (`run_bot.py`) bepul PythonAnywhere'da 24/7 ishlamaydi
-> (always-on task — pullik). Bot kerak bo'lsa: pullik tarif yoki Railway/VPS.
-> Mobil ilova uchun esa faqat yuqoridagi **web/API** yetarli.
+> **Telegram bot webhook rejimida ishlaydi** (7-qadam) — bepul PythonAnywhere
+> tarifida ham, always-on task'siz. `run_bot.py` (polling) faqat lokal test uchun.
