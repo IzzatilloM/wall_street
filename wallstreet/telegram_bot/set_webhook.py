@@ -14,8 +14,9 @@ import asyncio
 import sys
 
 from aiogram import Bot
+from aiogram.client.session.aiohttp import AiohttpSession
 
-from config import BOT_TOKEN
+from config import BOT_TOKEN, PROXY_URL
 
 WEBHOOK_PATH = f"/tg/webhook/{BOT_TOKEN}/"
 
@@ -26,7 +27,8 @@ async def _run():
         return
 
     cmd = sys.argv[1].lower()
-    bot = Bot(token=BOT_TOKEN)
+    _session = AiohttpSession(proxy=PROXY_URL) if PROXY_URL else None
+    bot = Bot(token=BOT_TOKEN, session=_session)
     try:
         if cmd == "set":
             if len(sys.argv) < 3:

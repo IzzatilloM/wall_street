@@ -43,9 +43,15 @@ async def _feed(dp, token, data):
     # so'ng sessiyani yopamiz.
     from aiogram import Bot
     from aiogram.client.default import DefaultBotProperties
+    from aiogram.client.session.aiohttp import AiohttpSession
     from aiogram.enums import ParseMode
+    from config import PROXY_URL
 
-    bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    # PythonAnywhere bepul tarifda tashqi internet faqat proxy orqali chiqadi —
+    # aiohttp uni avtomatik olmaydi, shu sabab oshkora beramiz.
+    session = AiohttpSession(proxy=PROXY_URL) if PROXY_URL else None
+    bot = Bot(token=token, session=session,
+              default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     try:
         await dp.feed_raw_update(bot, data)
     finally:

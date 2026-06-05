@@ -13,10 +13,11 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.context import FSMContext
 from storage import DjangoFSMStorage  # FSM holati bazada (webhook uchun barqaror)
 
-from config import BOT_TOKEN, BOT_NAME, BOT_VERSION, ADMIN_USERNAME, LOGIN_URL
+from config import BOT_TOKEN, BOT_NAME, BOT_VERSION, ADMIN_USERNAME, LOGIN_URL, PROXY_URL
 from states import StudentRegistration
 from keyboards import (
     main_menu, phone_request_kb, skip_kb, cancel_kb,
@@ -37,7 +38,9 @@ logger = logging.getLogger("wallstreet_bot")
 if not BOT_TOKEN:
     raise RuntimeError("TELEGRAM_BOT_TOKEN topilmadi! .env faylga qo'shing.")
 
-bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+_session = AiohttpSession(proxy=PROXY_URL) if PROXY_URL else None
+bot = Bot(token=BOT_TOKEN, session=_session,
+          default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=DjangoFSMStorage())
 
 DIV = "━━━━━━━━━━━━━━━━━━━━━━━━━━"
