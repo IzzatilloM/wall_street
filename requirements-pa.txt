@@ -20,6 +20,7 @@ qrcode==8.2
 
 # Telegram bot — WEBHOOK rejimi (sayt bilan bitta jarayonda, always-on task KERAK EMAS)
 aiogram
+aiohttp-socks  # proxy orqali Telegram API (PythonAnywhere bepul tarif)
 
 # Mobil ilova API (DRF)
 djangorestframework==3.17.1

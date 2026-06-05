@@ -14,6 +14,7 @@ qrcode==8.2
 
 # Telegram bot
 aiogram
+aiohttp-socks  # webhook rejimida proxy orqali (PythonAnywhere bepul tarif)
 
 # Mobil ilova API (DRF)
 djangorestframework==3.17.1
