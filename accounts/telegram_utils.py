@@ -27,8 +27,12 @@ def send_telegram_code(chat_id, code):
         "text": text,
     }
 
+    # PythonAnywhere bepul tarifda tashqi internet faqat proxy orqali chiqadi.
+    _proxy = getattr(settings, 'PROXY_URL', '') or ''
+    proxies = {'http': _proxy, 'https': _proxy} if _proxy else None
+
     try:
-        response = requests.post(url, json=payload, timeout=10)
+        response = requests.post(url, json=payload, timeout=10, proxies=proxies)
         data = response.json()
 
         if response.status_code == 200 and data.get("ok"):

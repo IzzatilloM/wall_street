@@ -132,6 +132,9 @@ MIDDLEWARE = [
 ]
 
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+# PythonAnywhere bepul tarif: tashqi internet (api.telegram.org) faqat proxy orqali.
+# .env da PROXY_URL=http://proxy.server:3128 (lokalda bo'sh).
+PROXY_URL = config('PROXY_URL', default='')
 MAX_ADMIN_COUNT = 2
 SMS_CODE_EXPIRE_MINUTES = 5
 
