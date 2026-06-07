@@ -36,6 +36,14 @@ def redirect_by_role(user):
     return redirect('login')
 
 
+def post_login_redirect(request):
+    """Google OAuth (yoki Django auth) muvaffaqiyatli kirishidan keyin
+    foydalanuvchini roliga qarab to'g'ri sahifaga yo'naltiradi."""
+    if not request.user.is_authenticated:
+        return redirect('login')
+    return redirect_by_role(request.user)
+
+
 def build_register_context(
     form_data=None,
     show_verify_modal=False,

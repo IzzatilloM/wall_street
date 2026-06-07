@@ -60,11 +60,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',  # allauth talab qiladi
 
     # Tashqi paketlar (mobil API)
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+
+    # Google OAuth ("Google bilan kirish") — bepul hostda SMTP'siz kirish
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 
     # Bizning applar
     'accounts',
@@ -128,6 +135,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Google OAuth uchun
     'wallstreet.error_notifications.DeveloperErrorEmailMiddleware',  # auto-email errors
 ]
 
@@ -228,6 +236,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'enrollments.context_processors.telegram_leads',
+                'accounts.context_processors.google_oauth',  # "Google bilan kirish" tugmasi
             ],
         },
     },
@@ -296,8 +305,53 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
+# Google OAuth'dan keyin rolga qarab yo'naltiramiz (admin→dashboard, teacher→davomat)
+LOGIN_REDIRECT_URL = '/accounts/post-login/'
 LOGOUT_REDIRECT_URL = 'login'
+
+# ─── Google OAuth ("Google bilan kirish") ────────────────────────────────────
+# Nima uchun: PythonAnywhere bepul tarif tashqi SMTP'ni bloklaydi, shuning uchun
+# Gmail'ga kod yuborib bo'lmaydi. Google OAuth esa brauzer Google'ga yo'naltirishi
+# orqali ishlaydi (SMTP kerak emas) — Google domeni PA whitelist'ida.
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',           # username/parol bilan kirish
+    'allauth.account.auth_backends.AuthenticationBackend',  # Google OAuth
+]
+
+# Google Cloud Console > Credentials > OAuth 2.0 Client ID dan oling.
+# Authorized redirect URI: https://SIZNING-DOMEN/accounts/google/login/callback/
+GOOGLE_CLIENT_ID     = config('GOOGLE_CLIENT_ID', default='')
+GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
+
+# Provider sozlamasi to'g'ridan-to'g'ri settings'da — DB'da SocialApp yaratish shart emas.
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': GOOGLE_CLIENT_ID,
+            'secret':    GOOGLE_CLIENT_SECRET,
+            'key':       '',
+        },
+        'SCOPE':       ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+    }
+}
+
+# Bizning maxsus adapter: Google bilan kirgan foydalanuvchini 'teacher' qiladi,
+# is_verified=True qo'yadi va Instructor profilini yaratadi.
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.WallStreetSocialAdapter'
+
+SOCIALACCOUNT_LOGIN_ON_GET = True   # tugma bosilganda to'g'ridan-to'g'ri Google'ga
+SOCIALACCOUNT_AUTO_SIGNUP  = True   # oraliq forma ko'rsatmasdan ro'yxatga oladi
+# Email mos kelsa — mavjud hisobga ulanadi (admin allaqachon ro'yxatdan o'tgan bo'lsa)
+SOCIALACCOUNT_EMAIL_AUTHENTICATION              = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+# allauth'ning o'z email tasdiqlashini o'chiramiz (SMTP kerak bo'lmasligi uchun)
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_LOGIN_METHODS      = {'username'}
+ACCOUNT_SIGNUP_FIELDS      = ['username*', 'password1*', 'password2*']
 
 # ─── Production xavfsizligi (faqat DEBUG=False bo'lganda) ────────────────────
 # PythonAnywhere saytni HTTPS orqali uzatadi. DEBUG=False bo'lганда quyidagilar

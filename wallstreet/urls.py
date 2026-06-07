@@ -17,6 +17,9 @@ urlpatterns = [
     path('api/', include('api.urls')),
 
     path('accounts/', include('accounts.urls')),
+    # Google OAuth: /accounts/google/login/ va callback. accounts.urls'dan KEYIN
+    # turadi — login/register/logout bizning maxsus view'larimizda qoladi.
+    path('accounts/', include('allauth.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('courses/', include('courses.urls', namespace='courses')),
     path('instructors/', include('instructors.urls', namespace='instructors')),

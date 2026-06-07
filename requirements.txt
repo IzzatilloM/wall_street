@@ -12,6 +12,9 @@ reportlab==4.4.10
 openpyxl==3.1.5
 qrcode==8.2
 
+# Google OAuth ("Google bilan kirish") — bepul hostda SMTP'siz ro'yxatdan o'tish
+django-allauth[socialaccount]==65.16.0
+
 # Telegram bot
 aiogram
 aiohttp-socks  # webhook rejimida proxy orqali (PythonAnywhere bepul tarif)
