@@ -39,15 +39,21 @@
     },
     {
       "name": "fanlider",
-      "runtimeExecutable": "D:/Loyihalarim/Fan_lider_CRM/.venv/Scripts/python.exe",
-      "runtimeArgs": ["D:/Loyihalarim/Fan_lider_CRM/manage.py", "runserver", "127.0.0.1:8066", "--noreload"],
+      "runtimeExecutable": "D:/MURODJON  CRM/Fan_lider_CRM/.venv/Scripts/python.exe",
+      "runtimeArgs": ["D:/MURODJON  CRM/Fan_lider_CRM/manage.py", "runserver", "127.0.0.1:8066", "--noreload"],
       "port": 8066
     },
     {
       "name": "fanlider-static",
-      "runtimeExecutable": "D:/Loyihalarim/Fan_lider_CRM/.venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "http.server", "8077", "--bind", "127.0.0.1", "-d", "D:/Loyihalarim/Fan_lider_CRM/static"],
+      "runtimeExecutable": "D:/MURODJON  CRM/Fan_lider_CRM/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "http.server", "8077", "--bind", "127.0.0.1", "-d", "D:/MURODJON  CRM/Fan_lider_CRM/static"],
       "port": 8077
+    },
+    {
+      "name": "fanlider-mrd",
+      "runtimeExecutable": "D:/MURODJON  CRM/Fan_lider_CRM/.venv/Scripts/python.exe",
+      "runtimeArgs": ["D:/MURODJON  CRM/Fan_lider_CRM/manage.py", "runserver", "127.0.0.1:8067", "--noreload"],
+      "port": 8067
     }
   ]
 }

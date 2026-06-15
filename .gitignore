@@ -30,8 +30,15 @@ ENV/
 *.log
 db.sqlite3
 db.sqlite3-journal
+# Zaxira nusxalar (.mybak, .polluted_bak, ...)
+db.sqlite3.*
+*.mybak
 /staticfiles/
 /media/
+
+# --- BMI taqdimot artefaktlari (app uchun kerak emas) ---
+_pptx_shots/
+student_logins.xlsx
 
 # --- IDE / Editor ---
 .idea/

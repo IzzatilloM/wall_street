@@ -8,6 +8,7 @@ from .views import (
     student_toggle_status,
     student_search_ajax,
     student_panel,
+    student_churn_risk,
 )
 
 app_name = 'students'
@@ -21,5 +22,6 @@ urlpatterns = [
     path('<int:pk>/update/', student_update, name='student_update'),
     path('<int:pk>/delete/', student_delete, name='student_delete'),
     path('<int:pk>/toggle-status/', student_toggle_status, name='student_toggle_status'),
+    path('<int:pk>/churn-risk/', student_churn_risk, name='student_churn_risk'),
     path('ajax/search/', student_search_ajax, name='student_search_ajax'),
 ]

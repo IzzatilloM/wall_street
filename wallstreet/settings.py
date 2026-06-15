@@ -43,7 +43,7 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in config(
         'CSRF_TRUSTED_ORIGINS',
-        default='https://*.railway.app,https://*.pythonanywhere.com'
+        default='https://*.railway.app,https://*.pythonanywhere.com,https://*.onrender.com'
     ).split(',') if o.strip()
 ]
 
@@ -90,6 +90,10 @@ INSTALLED_APPS = [
     'settings_app',
     'news',
     'api',
+    'teacher_api',   # O'qituvchi mobil ilovasi (DRF + JWT)
+
+    # AI tahlillar (Claude API: churn, o'qituvchi hisoboti, kurs tavsiyasi)
+    'ai',
 ]
 
 # ─── REST Framework (mobil ilova API) ────────────────────────────────────────
@@ -140,11 +144,65 @@ MIDDLEWARE = [
 ]
 
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+# Register sahifasida "Botni ochish" havolasi uchun (https://t.me/<username>)
+TELEGRAM_BOT_USERNAME = config('TELEGRAM_BOT_USERNAME', default='wall_street_crm_bot')
+
+# ─── Wall Street Technic Bot (texnik yordam) ─────────────────────────────────
+# Alohida bot: texnik nosozliklar, parol tiklash va h.k. murojaatlarini qabul
+# qiladi → Settings > «Yordam markazi» bo'limiga tushadi. .env ga tokenni yozing:
+#   TECHNIC_BOT_TOKEN=123456:ABC...   (@BotFather dan olingan)
+TECHNIC_BOT_TOKEN = config('TECHNIC_BOT_TOKEN', default='')
+TECHNIC_BOT_USERNAME = config('TECHNIC_BOT_USERNAME', default='wall_street_technic_bot')
+# Yangi murojaat kelganda xabar boradigan admin chat ID lari (vergul bilan).
+# Bo'sh bo'lsa — DB dagi role='admin' foydalanuvchilarning telegram_chat_id si.
+TECHNIC_ADMIN_CHAT_IDS = config('TECHNIC_ADMIN_CHAT_IDS', default='')
+
+# ─── Anthropic Claude AI ─────────────────────────────────────────────────────
+# Kalitni .env fayliga yozing: ANTHROPIC_API_KEY=sk-ant-...
+# (https://console.anthropic.com → API Keys)
+ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
+# Eslatma: 'claude-sonnet-4-20250514' eskirgan va 2026-06-15 da o'chiriladi.
+# Rasmiy o'rnini bosuvchi model — claude-sonnet-4-6.
+ANTHROPIC_MODEL = config('ANTHROPIC_MODEL', default='claude-sonnet-4-6')
+
+# ─── Google Gemini AI (asosiy provayder) ─────────────────────────────────────
+# Kalitni https://aistudio.google.com/app/apikey dan oling.
+# GEMINI_API_KEY sozlangan bo'lsa AI funksiyalar Gemini'dan foydalanadi
+# (Anthropic kreditidan mustaqil). Bo'sh bo'lsa — Claude, u ham yo'q bo'lsa
+# lokal (offline) tahlil ishlaydi.
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-2.5-flash')
+
+# Churn riski shu chegaradan oshsa avtomatik ogohlantirish yuboriladi
+AI_CHURN_ALERT_THRESHOLD = config('AI_CHURN_ALERT_THRESHOLD', default=70, cast=int)
 # PythonAnywhere bepul tarif: tashqi internet (api.telegram.org) faqat proxy orqali.
 # .env da PROXY_URL=http://proxy.server:3128 (lokalda bo'sh).
 PROXY_URL = config('PROXY_URL', default='')
 MAX_ADMIN_COUNT = 2
 SMS_CODE_EXPIRE_MINUTES = 5
+
+# ─── Onlayn to'lov: Payme ─────────────────────────────────────────────────────
+# Payme bilan shartnomadan keyin olinadigan qiymatlar (.env ga yozing):
+#   PAYME_MERCHANT_ID=...        (kassa ID)
+#   PAYME_KEY=...                (kassa kaliti — PerformTransaction callback uchun)
+#   PAYME_TEST_KEY=...           (sandbox kaliti)
+# Sandbox (test) rejimi uchun PAYME_TEST=True.
+PAYME_MERCHANT_ID = config('PAYME_MERCHANT_ID', default='')
+PAYME_KEY = config('PAYME_KEY', default='')
+PAYME_TEST_KEY = config('PAYME_TEST_KEY', default='')
+PAYME_TEST = config('PAYME_TEST', default=True, cast=bool)
+# Checkout sahifasi: prod — https://checkout.paycom.uz, test — https://checkout.test.paycom.uz
+PAYME_CHECKOUT_URL = config(
+    'PAYME_CHECKOUT_URL',
+    default='https://checkout.test.paycom.uz' if PAYME_TEST else 'https://checkout.paycom.uz'
+)
+
+# ─── Onlayn to'lov: Click ─────────────────────────────────────────────────────
+#   CLICK_SERVICE_ID=...   CLICK_MERCHANT_ID=...   CLICK_SECRET_KEY=...
+CLICK_SERVICE_ID = config('CLICK_SERVICE_ID', default='')
+CLICK_MERCHANT_ID = config('CLICK_MERCHANT_ID', default='')
+CLICK_SECRET_KEY = config('CLICK_SECRET_KEY', default='')
+CLICK_CHECKOUT_URL = config('CLICK_CHECKOUT_URL', default='https://my.click.uz/services/pay')
 
 EMAIL_BACKEND = config(
     'EMAIL_BACKEND',
@@ -248,13 +306,27 @@ WSGI_APPLICATION = 'wallstreet.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+#
+# Render/Railway kabi hostlar `DATABASE_URL` muhit o'zgaruvchisini beradi
+# (PostgreSQL). Agar u bo'lsa — o'shanga ulanamiz; bo'lmasa lokal sqlite3.
+#   DATABASE_URL=postgres://user:pass@host:5432/dbname
+_database_url = config('DATABASE_URL', default='')
+if _database_url:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(
+            _database_url,
+            conn_max_age=600,
+            ssl_require=config('DB_SSL_REQUIRE', default=True, cast=bool),
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

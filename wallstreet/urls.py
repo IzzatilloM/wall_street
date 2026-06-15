@@ -13,8 +13,14 @@ urlpatterns = [
     # Telegram bot webhook (always-on task kerak emas)
     path('tg/webhook/<str:token>/', telegram_webhook),
 
-    # Mobil ilova API
+    # Mobil ilova API (talaba)
     path('api/', include('api.urls')),
+
+    # Onlayn to'lov API (Payme/Click) + mobil
+    path('api/payments/', include('payments.api_urls')),
+
+    # O'qituvchi mobil ilovasi API (DRF + JWT)
+    path('api/teacher/', include('teacher_api.urls')),
 
     path('accounts/', include('accounts.urls')),
     # Google OAuth: /accounts/google/login/ va callback. accounts.urls'dan KEYIN
@@ -34,5 +40,14 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Media (yuklangan rasmlar) — production'da ham xizmat qiladi, chunki mobil
+# ilova o'qituvchi/o'quvchi rasmlarini ko'rsatadi. (Render free diski vaqtinchalik
+# bo'lgani uchun doimiy saqlash kerak bo'lsa, bulutli storage ulang.)
+from django.views.static import serve as _media_serve  # noqa: E402
+from django.urls import re_path  # noqa: E402
+
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', _media_serve, {'document_root': settings.MEDIA_ROOT}),
+]

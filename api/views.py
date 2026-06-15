@@ -9,7 +9,7 @@ from students.models import Student
 from payments.models import Payment
 from news.models import News
 from enrollments.models import Enrollment
-from attendance.models import CoinAward
+from attendance.models import CoinAward, Attendance, Student as AttStudent
 
 from .serializers import (
     MyTokenObtainPairSerializer,
@@ -137,3 +137,112 @@ class NewsDetailView(generics.RetrieveAPIView):
     serializer_class = NewsSerializer
     permission_classes = [permissions.AllowAny]
     queryset = News.objects.filter(is_published=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  REYTING (coin bo'yicha) + DARSLAR
+# ═══════════════════════════════════════════════════════════════════════════
+def _avatar_url(request, student):
+    if student and student.image and hasattr(student.image, 'url'):
+        url = student.image.url
+        return request.build_absolute_uri(url) if request else url
+    return None
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def my_rank(request):
+    """GET /api/me/rank/  →  joriy studentning coin bo'yicha o'rni."""
+    student = _get_student(request.user)
+    if not student:
+        return Response({'rank': None, 'total': 0, 'coins': 0, 'percentile': 0})
+
+    total = Student.objects.filter(is_active=True).count()
+    coins = student.coins or 0
+    # Undan ko'p coinga ega studentlar soni + 1 = o'rin
+    higher = Student.objects.filter(is_active=True, coins__gt=coins).count()
+    rank = higher + 1
+    percentile = round((1 - (rank - 1) / total) * 100) if total else 0
+    return Response({
+        'rank': rank,
+        'total': total,
+        'coins': coins,
+        'percentile': percentile,
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def leaderboard(request):
+    """GET /api/leaderboard/  →  eng ko'p coinli top studentlar + mening o'rnim."""
+    try:
+        limit = min(int(request.GET.get('limit', 50)), 100)
+    except (TypeError, ValueError):
+        limit = 50
+
+    me = _get_student(request.user)
+    top = Student.objects.filter(is_active=True).order_by('-coins', 'id')[:limit]
+    rows = []
+    for i, s in enumerate(top, start=1):
+        rows.append({
+            'rank': i,
+            'name': s.full_name,
+            'coins': s.coins or 0,
+            'avatar': _avatar_url(request, s),
+            'is_me': bool(me and s.id == me.id),
+        })
+
+    # Agar joriy student top ro'yxatda bo'lmasa — uning o'rnini alohida qo'shamiz
+    my_rank = None
+    if me:
+        higher = Student.objects.filter(is_active=True, coins__gt=(me.coins or 0)).count()
+        my_rank = higher + 1
+
+    return Response({
+        'leaderboard': rows,
+        'my_rank': my_rank,
+        'total': Student.objects.filter(is_active=True).count(),
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def my_lessons(request):
+    """GET /api/me/lessons/  →  joriy studentning darslari (davomat) + xulosa."""
+    ats = AttStudent.objects.filter(user=request.user).first()
+    if not ats:
+        return Response({
+            'lessons': [],
+            'summary': {'total_classes': 0, 'attended': 0, 'absent': 0,
+                        'late': 0, 'attendance_percent': 0},
+            'by_course': [],
+        })
+
+    recs = (Attendance.objects.filter(student=ats)
+            .select_related('course').order_by('-date')[:100])
+    lessons = [{
+        'date': str(r.date),
+        'course': r.course.name if r.course else '',
+        'status': r.status,
+        'status_display': r.get_status_display(),
+    } for r in recs]
+
+    summary = Attendance.get_student_overall_attendance(ats)
+
+    # Kurslar bo'yicha davomat foizi
+    by_course = []
+    for course in ats.courses.all():
+        stats = Attendance.get_course_attendance_stats(course)
+        percent = Attendance.get_student_course_attendance(ats, course)
+        total = Attendance.objects.filter(student=ats, course=course).count()
+        by_course.append({
+            'course': course.name,
+            'total': total,
+            'attendance_percent': percent,
+        })
+
+    return Response({
+        'lessons': lessons,
+        'summary': summary,
+        'by_course': by_course,
+    })

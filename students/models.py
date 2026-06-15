@@ -37,6 +37,22 @@ class Student(models.Model):
 
     coins = models.PositiveIntegerField(default=0)
 
+    # ─── AI churn bashorati (Claude API) ───
+    # 0-100: talabaning o'qishni tashlab ketish ehtimoli.
+    # None — hali hisoblanmagan.
+    churn_risk_score = models.FloatField(
+        blank=True, null=True,
+        verbose_name='Churn risk (0-100)',
+    )
+    churn_risk_reason = models.TextField(
+        blank=True, default='',
+        verbose_name='Churn risk sababi (AI)',
+    )
+    churn_risk_updated_at = models.DateTimeField(
+        blank=True, null=True,
+        verbose_name='Churn risk yangilangan vaqt',
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -51,3 +67,14 @@ class Student(models.Model):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def churn_risk_level(self):
+        """Badge rangi uchun: low / medium / high (None — hisoblanmagan)."""
+        if self.churn_risk_score is None:
+            return ''
+        if self.churn_risk_score >= 70:
+            return 'high'
+        if self.churn_risk_score >= 40:
+            return 'medium'
+        return 'low'

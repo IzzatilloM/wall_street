@@ -24,6 +24,13 @@ djangorestframework==3.17.1
 djangorestframework-simplejwt==5.5.1
 django-cors-headers==4.9.0
 
-# Deploy (Railway / PythonAnywhere)
+# AI tahlillar (churn bashorati, o'qituvchi hisoboti, kurs tavsiyasi)
+anthropic
+
+# Deploy (Render / Railway / PythonAnywhere)
 gunicorn
 whitenoise
+
+# PostgreSQL (Render/Railway DATABASE_URL uchun)
+dj-database-url==2.3.0
+psycopg[binary]==3.2.3

@@ -2,9 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash, get_user_model
 from django.contrib import messages
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .models import CenterSettings
+from .models import CenterSettings, SupportTicket
+from .notifications import notify_ticket_reply
 from .forms import (
     ProfileForm,
     CenterSettingsForm,
@@ -77,6 +79,18 @@ def settings_view(request):
 
     teacher_users, student_users = _managed_users()
 
+    # ── Texnik murojaatlar (faqat admin) ──────────────────────────────
+    support_tickets = []
+    support_counts = {}
+    if _is_admin(user):
+        support_tickets = list(SupportTicket.objects.all()[:200])
+        support_counts = {
+            'all':         len(support_tickets),
+            'new':         sum(1 for t in support_tickets if t.status == 'new'),
+            'in_progress': sum(1 for t in support_tickets if t.status == 'in_progress'),
+            'resolved':    sum(1 for t in support_tickets if t.status in ('resolved', 'closed')),
+        }
+
     context = {
         'profile_form': profile_form,
         'center_form': center_form,
@@ -85,6 +99,9 @@ def settings_view(request):
         'teacher_users': teacher_users,
         'student_users': student_users,
         'can_manage_users': _is_admin(user),
+        'support_tickets': support_tickets,
+        'support_counts': support_counts,
+        'ticket_status_choices': SupportTicket.STATUS_CHOICES,
     }
     return render(request, 'settings/settings.html', context)
 
@@ -143,3 +160,71 @@ def user_delete(request, pk):
 
     messages.success(request, f'«{label}» has been deleted.')
     return redirect('/settings/?tab=users')
+
+
+# ══════════════════════════════════════════════════════════════
+#  YORDAM MARKAZI — texnik murojaatlar (Wall Street Technic Bot)
+# ══════════════════════════════════════════════════════════════
+
+@login_required
+@require_POST
+def ticket_update(request, pk):
+    """Murojaatga javob yozadi va/yoki holatini o'zgartiradi (faqat admin).
+
+    Javob yozilsa — foydalanuvchining Telegramiga avtomatik yetkaziladi.
+    """
+    if not _is_admin(request.user):
+        messages.error(request, 'You do not have permission for this action.')
+        return redirect('settings')
+
+    ticket = get_object_or_404(SupportTicket, pk=pk)
+
+    reply = (request.POST.get('reply') or '').strip()
+    new_status = (request.POST.get('status') or ticket.status).strip()
+    valid_statuses = dict(SupportTicket.STATUS_CHOICES)
+    if new_status not in valid_statuses:
+        new_status = ticket.status
+
+    ticket.status = new_status
+    if reply:
+        ticket.admin_reply = reply
+
+    if new_status in ('resolved', 'closed') and not ticket.resolved_at:
+        ticket.resolved_by = request.user
+        ticket.resolved_at = timezone.now()
+    elif new_status in ('new', 'in_progress'):
+        ticket.resolved_at = None
+        ticket.resolved_by = None
+
+    ticket.save()
+
+    # Javobni foydalanuvchiga Telegram orqali yuborish
+    if reply:
+        delivered = notify_ticket_reply(ticket)
+        if delivered:
+            messages.success(request, f'«{ticket.code}» — javob foydalanuvchiga yuborildi.')
+        else:
+            messages.warning(
+                request,
+                f'«{ticket.code}» saqlandi, ammo Telegramga yuborib bo\'lmadi '
+                '(token yoki chat ID tekshiring).'
+            )
+    else:
+        messages.success(request, f'«{ticket.code}» holati yangilandi.')
+
+    return redirect('/settings/?tab=support')
+
+
+@login_required
+@require_POST
+def ticket_delete(request, pk):
+    """Murojaatni o'chiradi (faqat admin)."""
+    if not _is_admin(request.user):
+        messages.error(request, 'You do not have permission for this action.')
+        return redirect('settings')
+
+    ticket = get_object_or_404(SupportTicket, pk=pk)
+    code = ticket.code
+    ticket.delete()
+    messages.success(request, f'«{code}» murojaat o\'chirildi.')
+    return redirect('/settings/?tab=support')

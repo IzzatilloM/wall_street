@@ -33,6 +33,8 @@ def redirect_by_role(user):
         return redirect('dashboard')
     if user.role == 'teacher':
         return redirect('attendance:attendance_list')
+    if user.role == 'student':
+        return redirect('student:panel')
     return redirect('login')
 
 
@@ -143,11 +145,66 @@ def forgot_password_view(request):
             request.session['reset_identifier'] = identifier
             request.session['reset_user_id'] = user.id
             messages.success(request, "Parolni tiklash kodi yuborildi!")
-        else:
-            messages.error(request, f"Kod yuborishda xatolik: {msg}")
+            # Kod yuborildi — endi kod + yangi parol kiritish bosqichi ochiladi
+            return render(request, 'login.html', {
+                'show_reset_modal': True,
+                'reset_method': user.verification_method,
+            })
 
+        messages.error(request, f"Kod yuborishda xatolik: {msg}")
         return render(request, 'login.html', {'show_forgot_modal': True})
 
+    return redirect('login')
+
+
+def reset_password_view(request):
+    """Forgot-password 2-bosqich: yuborilgan kodni tekshirib yangi parol o'rnatadi."""
+    if request.method != 'POST':
+        return redirect('login')
+
+    identifier = request.session.get('reset_identifier', '')
+    user_id    = request.session.get('reset_user_id')
+
+    if not identifier or not user_id:
+        messages.error(request, "Tiklash sessiyasi topilmadi! Qaytadan urinib ko'ring.")
+        return render(request, 'login.html', {'show_forgot_modal': True})
+
+    code      = request.POST.get('code', '').strip()
+    password  = request.POST.get('new_password', '').strip()
+    password2 = request.POST.get('new_password2', '').strip()
+
+    context = {'show_reset_modal': True}
+
+    if not code or not password or not password2:
+        messages.error(request, "Kod va yangi parolni to'liq kiriting!")
+        return render(request, 'login.html', context)
+
+    if password != password2:
+        messages.error(request, "Parollar mos kelmadi!")
+        return render(request, 'login.html', context)
+
+    if len(password) < 8:
+        messages.error(request, "Parol kamida 8 ta belgidan iborat bo'lishi kerak!")
+        return render(request, 'login.html', context)
+
+    is_valid, msg = verify_sms_code(identifier, code)
+    if not is_valid:
+        messages.error(request, msg)
+        return render(request, 'login.html', context)
+
+    user = CustomUser.objects.filter(id=user_id).first()
+    if not user:
+        messages.error(request, "Foydalanuvchi topilmadi!")
+        return render(request, 'login.html', {'show_forgot_modal': True})
+
+    user.set_password(password)
+    user.plain_password = password
+    user.save(update_fields=['password', 'plain_password'])
+
+    request.session.pop('reset_identifier', None)
+    request.session.pop('reset_user_id', None)
+
+    messages.success(request, "Parol muvaffaqiyatli yangilandi! Endi yangi parol bilan kiring.")
     return redirect('login')
 
 

@@ -249,6 +249,93 @@
         color: var(--text-soft); font-size: 14px; padding: 6px 9px; border-radius: 6px;
     }
     .pass-toggle:hover { color: var(--primary-500); }
+
+    /* ══ Yordam markazi (Tech support) ══ */
+    .tk-tab-badge {
+        display: inline-grid; place-items: center; min-width: 18px; height: 18px;
+        padding: 0 5px; margin-left: 2px; border-radius: var(--radius-full);
+        font-size: 10px; font-weight: 800; color: #fff; background: var(--status-danger);
+    }
+    .tk-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tk-chip {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 8px 15px; border-radius: var(--radius-full);
+        font-size: 12.5px; font-weight: 700; color: var(--text-soft);
+        background: var(--surface); border: 1.5px solid var(--border-strong);
+        cursor: pointer; transition: all var(--transition-fast);
+    }
+    .tk-chip:hover { color: var(--text); border-color: var(--primary-500); }
+    .tk-chip.active {
+        color: #fff; border-color: transparent;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        box-shadow: 0 8px 18px rgba(14,165,176,0.28);
+    }
+    .tk-chip .cnt {
+        display: inline-grid; place-items: center; min-width: 20px; height: 18px; padding: 0 6px;
+        border-radius: var(--radius-full); font-size: 10.5px; font-weight: 800;
+        background: rgba(14,165,176,0.14); color: var(--primary-500);
+    }
+    .tk-chip.active .cnt { background: rgba(255,255,255,0.25); color: #fff; }
+
+    .tk-list { display: flex; flex-direction: column; gap: 12px; }
+    .ticket-card {
+        display: flex; gap: 14px; align-items: flex-start;
+        padding: 16px 18px; border-radius: var(--radius-md);
+        background: var(--surface-solid); border: 1px solid var(--border);
+        box-shadow: var(--shadow-xs); transition: all var(--transition-fast);
+        animation: fadeUp .4s ease;
+    }
+    .ticket-card:hover {
+        box-shadow: var(--shadow-sm); transform: translateY(-2px);
+        border-color: var(--border-strong);
+    }
+    .tk-icon {
+        width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--radius-sm);
+        display: grid; place-items: center; font-size: 17px; color: #fff;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+        box-shadow: 0 8px 18px rgba(14,165,176,0.25);
+    }
+    .tk-body { flex: 1; min-width: 0; }
+    .tk-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+    .tk-code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; font-weight: 800; color: var(--text); }
+    .tk-cat { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .tk-desc {
+        font-size: 12.5px; color: var(--text-soft); line-height: 1.5;
+        overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .tk-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 9px; font-size: 11.5px; color: var(--text-faint); }
+    .tk-meta i { margin-right: 4px; color: var(--primary-500); }
+    .tk-actions { display: flex; flex-direction: column; gap: 6px; }
+    .tk-view:hover { color: var(--primary-500); border-color: var(--primary-500); background: rgba(14,165,176,0.08); }
+
+    .tk-badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-full); font-size: 10.5px; font-weight: 800; letter-spacing: .02em; }
+    .tk-status-new { background: rgba(14,165,176,0.14); color: var(--primary-500); }
+    .tk-status-in_progress { background: rgba(245,158,11,0.16); color: #d97706; }
+    .tk-status-resolved, .tk-status-closed { background: rgba(16,185,129,0.15); color: #059669; }
+    .tk-prio-low { background: rgba(148,163,184,0.18); color: #64748b; }
+    .tk-prio-normal { background: rgba(59,130,246,0.14); color: #2563eb; }
+    .tk-prio-high { background: rgba(245,158,11,0.16); color: #d97706; }
+    .tk-prio-urgent { background: rgba(239,68,68,0.14); color: var(--status-danger); }
+
+    .tk-empty { text-align: center; padding: 40px 20px; color: var(--text-faint); font-size: 13.5px; }
+    .tk-empty i { font-size: 34px; color: var(--border-strong); margin-bottom: 12px; display: block; }
+
+    .tk-detail { margin-bottom: 14px; }
+    .tk-detail .lbl { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text-faint); margin-bottom: 4px; }
+    .tk-detail .val { font-size: 13.5px; color: var(--text); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+    .ws-textarea {
+        width: 100%; min-height: 100px; padding: 12px 14px; border-radius: var(--radius-sm);
+        border: 1.5px solid var(--border-strong); background: var(--surface-solid); color: var(--text);
+        font-size: 14px; font-family: inherit; line-height: 1.5; resize: vertical;
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .ws-textarea:focus { border-color: var(--primary-500); box-shadow: 0 0 0 4px rgba(14,165,176,0.12); outline: none; }
+    .ws-select {
+        width: 100%; height: 46px; padding: 0 12px; border-radius: var(--radius-sm);
+        border: 1.5px solid var(--border-strong); background: var(--surface-solid);
+        color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .ws-select:focus { border-color: var(--primary-500); outline: none; }
 </style>
 {% endblock %}
 
@@ -290,6 +377,10 @@
     {% if can_manage_users %}
     <div class="set-tab {% if active_tab == 'users' %}active{% endif %}" data-tab="users">
         <i class="fas fa-users-cog"></i> Users
+    </div>
+    <div class="set-tab {% if active_tab == 'support' %}active{% endif %}" data-tab="support">
+        <i class="fas fa-headset"></i> Yordam markazi
+        {% if support_open_count %}<span class="tk-tab-badge">{{ support_open_count }}</span>{% endif %}
     </div>
     {% endif %}
 </div>
@@ -458,6 +549,123 @@
         </form>
     </div>
 </div>
+
+<!-- ══ Yordam markazi (texnik murojaatlar) ══ -->
+<div class="set-panel {% if active_tab == 'support' %}active{% endif %}" id="panel-support">
+    <div class="set-card users-card">
+        <h3>Yordam markazi — texnik murojaatlar</h3>
+        <div class="card-sub">«Wall Street Technic Bot» orqali kelgan murojaatlar. Javob yozsangiz — foydalanuvchining Telegramiga avtomatik yetkaziladi.</div>
+
+        <div class="tk-toolbar">
+            <button type="button" class="tk-chip active" data-filter="all">📥 Barchasi <span class="cnt">{{ support_counts.all|default:0 }}</span></button>
+            <button type="button" class="tk-chip" data-filter="new">🆕 Yangi <span class="cnt">{{ support_counts.new|default:0 }}</span></button>
+            <button type="button" class="tk-chip" data-filter="in_progress">⏳ Jarayonda <span class="cnt">{{ support_counts.in_progress|default:0 }}</span></button>
+            <button type="button" class="tk-chip" data-filter="resolved">✅ Hal qilingan <span class="cnt">{{ support_counts.resolved|default:0 }}</span></button>
+        </div>
+
+        <div class="tk-list" id="tkList">
+            {% for t in support_tickets %}
+            <div class="ticket-card" data-status="{{ t.status }}">
+                <div class="tk-icon"><i class="fas {{ t.category_icon }}"></i></div>
+                <div class="tk-body">
+                    <div class="tk-top">
+                        <span class="tk-code">{{ t.code }}</span>
+                        <span class="tk-badge tk-prio-{{ t.priority }}">{{ t.get_priority_display }}</span>
+                        <span class="tk-badge tk-status-{{ t.status }}">{{ t.get_status_display }}</span>
+                    </div>
+                    <div class="tk-cat">{{ t.category_emoji }} {{ t.get_category_display }}</div>
+                    <div class="tk-desc">{{ t.description }}</div>
+                    <div class="tk-meta">
+                        <span><i class="fas fa-user"></i>{{ t.full_name|default:"—" }}</span>
+                        <span><i class="fas fa-phone"></i>{% if t.phone %}+998 {{ t.phone }}{% elif t.contact %}{{ t.contact }}{% else %}—{% endif %}</span>
+                        {% if t.telegram_username %}<span><i class="fab fa-telegram"></i>@{{ t.telegram_username }}</span>{% endif %}
+                        <span><i class="fas fa-clock"></i>{{ t.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                </div>
+                <div class="tk-actions">
+                    <button type="button" class="ut-btn tk-view"
+                            data-id="{{ t.pk }}"
+                            data-code="{{ t.code }}"
+                            data-cat="{{ t.category_emoji }} {{ t.get_category_display }}"
+                            data-name="{{ t.full_name|default:'—' }}"
+                            data-contact="{% if t.phone %}+998 {{ t.phone }}{% elif t.contact %}{{ t.contact }}{% else %}—{% endif %}"
+                            data-tg="{% if t.telegram_username %}@{{ t.telegram_username }}{% else %}—{% endif %}"
+                            data-prio="{{ t.get_priority_display }}"
+                            data-status="{{ t.status }}"
+                            data-created="{{ t.created_at|date:'d.m.Y H:i' }}"
+                            data-desc="{{ t.description }}"
+                            data-reply="{{ t.admin_reply }}"
+                            title="Ko'rish / javob berish">
+                        <i class="fas fa-reply"></i>
+                    </button>
+                    <button type="button" class="ut-btn ut-del tk-del" data-id="{{ t.pk }}" data-code="{{ t.code }}" title="O'chirish">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="tk-empty">
+                <i class="fas fa-inbox"></i>
+                Hozircha murojaatlar yo'q. Bot ishga tushgach, murojaatlar shu yerda paydo bo'ladi.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Ticket reply modal -->
+<div class="su-overlay" id="ticketOverlay">
+    <div class="su-modal" style="max-width:520px;">
+        <div class="su-head">
+            <span id="tk-title">Murojaat</span>
+            <button type="button" class="su-close" data-close="ticketOverlay">&times;</button>
+        </div>
+        <form method="post" id="ticketForm" class="su-body">
+            {% csrf_token %}
+            <div class="tk-detail"><div class="lbl">Murojaatchi</div><div class="val" id="tk-d-name">—</div></div>
+            <div class="tk-detail"><div class="lbl">Aloqa</div><div class="val" id="tk-d-contact">—</div></div>
+            <div class="tk-detail"><div class="lbl">Telegram</div><div class="val" id="tk-d-tg">—</div></div>
+            <div class="tk-detail"><div class="lbl">Kelgan vaqt</div><div class="val" id="tk-d-created">—</div></div>
+            <div class="tk-detail"><div class="lbl">Muammo tavsifi</div><div class="val" id="tk-d-desc">—</div></div>
+            <div class="divider"></div>
+            <div class="form-row">
+                <label>Javob <span style="font-weight:500;color:var(--text-faint);">(foydalanuvchining Telegramiga yuboriladi)</span></label>
+                <textarea name="reply" id="tk-reply" class="ws-textarea" placeholder="Javobingizni yozing..."></textarea>
+            </div>
+            <div class="form-row">
+                <label>Holat</label>
+                <select name="status" id="tk-status" class="ws-select">
+                    {% for val, label in ticket_status_choices %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="su-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-close="ticketOverlay">Yopish</button>
+                <button type="submit" class="ws-btn ws-btn-primary"><i class="fas fa-paper-plane"></i> Saqlash &amp; yuborish</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Ticket delete modal -->
+<div class="su-overlay" id="ticketDelOverlay">
+    <div class="su-modal">
+        <div class="su-head danger">
+            Murojaatni o'chirish
+            <button type="button" class="su-close" data-close="ticketDelOverlay">&times;</button>
+        </div>
+        <form method="post" id="ticketDelForm" class="su-body">
+            {% csrf_token %}
+            <p>Rostdan ham <strong id="tkd-code">bu murojaat</strong>ni o'chirmoqchimisiz?</p>
+            <p style="color:var(--status-danger);font-weight:600;">Bu amalni qaytarib bo'lmaydi.</p>
+            <div class="su-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-close="ticketDelOverlay">Bekor</button>
+                <button type="submit" class="ws-btn ws-btn-danger"><i class="fas fa-trash"></i> O'chirish</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endif %}
 {% endblock %}
 
@@ -584,6 +792,74 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('ud-name').textContent = btn.getAttribute('data-name') || 'this account';
                 openOverlay(delOverlay);
             });
+        });
+    }
+
+    // ── Yordam markazi (texnik murojaatlar) ───────────────────────
+    const supportPanel = document.getElementById('panel-support');
+    if (supportPanel) {
+        // Filter chips
+        const chips = supportPanel.querySelectorAll('.tk-chip');
+        const cards = supportPanel.querySelectorAll('.ticket-card');
+        chips.forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                chips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                const f = chip.getAttribute('data-filter');
+                cards.forEach(function (card) {
+                    const s = card.getAttribute('data-status');
+                    const show = (f === 'all') || (s === f) ||
+                                 (f === 'resolved' && (s === 'resolved' || s === 'closed'));
+                    card.style.display = show ? '' : 'none';
+                });
+            });
+        });
+
+        const tkOverlay = document.getElementById('ticketOverlay');
+        const tkDelOverlay = document.getElementById('ticketDelOverlay');
+        const tkForm = document.getElementById('ticketForm');
+        const tkDelForm = document.getElementById('ticketDelForm');
+
+        function closeTk(o) { if (o) o.classList.remove('open'); }
+
+        // Open reply modal
+        supportPanel.querySelectorAll('.tk-view').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const id = btn.getAttribute('data-id');
+                tkForm.action = '/settings/tickets/' + id + '/update/';
+                document.getElementById('tk-title').textContent =
+                    (btn.getAttribute('data-code') || '') + ' — ' + (btn.getAttribute('data-cat') || '');
+                document.getElementById('tk-d-name').textContent = btn.getAttribute('data-name') || '—';
+                document.getElementById('tk-d-contact').textContent = btn.getAttribute('data-contact') || '—';
+                document.getElementById('tk-d-tg').textContent = btn.getAttribute('data-tg') || '—';
+                document.getElementById('tk-d-created').textContent = btn.getAttribute('data-created') || '—';
+                document.getElementById('tk-d-desc').textContent = btn.getAttribute('data-desc') || '—';
+                document.getElementById('tk-reply').value = btn.getAttribute('data-reply') || '';
+                document.getElementById('tk-status').value = btn.getAttribute('data-status') || 'new';
+                tkOverlay.classList.add('open');
+            });
+        });
+
+        // Open delete modal
+        supportPanel.querySelectorAll('.tk-del').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const id = btn.getAttribute('data-id');
+                tkDelForm.action = '/settings/tickets/' + id + '/delete/';
+                document.getElementById('tkd-code').textContent = btn.getAttribute('data-code') || 'bu murojaat';
+                tkDelOverlay.classList.add('open');
+            });
+        });
+
+        // Close (overlay click + [data-close] + Esc)
+        [tkOverlay, tkDelOverlay].forEach(function (o) {
+            if (!o) return;
+            o.addEventListener('click', function (e) { if (e.target === o) closeTk(o); });
+            o.querySelectorAll('[data-close]').forEach(function (el) {
+                el.addEventListener('click', function () { closeTk(o); });
+            });
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { closeTk(tkOverlay); closeTk(tkDelOverlay); }
         });
     }
 });

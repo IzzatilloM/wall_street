@@ -16,6 +16,11 @@ urlpatterns = [
     path('me/payments/', views.MyPaymentsView.as_view(), name='api_my_payments'),
     path('me/payments/summary/', views.payments_summary, name='api_payments_summary'),
 
+    # Reyting + darslar
+    path('me/rank/', views.my_rank, name='api_my_rank'),
+    path('me/lessons/', views.my_lessons, name='api_my_lessons'),
+    path('leaderboard/', views.leaderboard, name='api_leaderboard'),
+
     # Yangiliklar
     path('news/', views.NewsListView.as_view(), name='api_news'),
     path('news/<int:pk>/', views.NewsDetailView.as_view(), name='api_news_detail'),

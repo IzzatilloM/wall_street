@@ -10,4 +10,5 @@ def google_oauth(request):
     """
     return {
         'google_oauth_enabled': bool(getattr(settings, 'GOOGLE_CLIENT_ID', '')),
+        'telegram_bot_username': getattr(settings, 'TELEGRAM_BOT_USERNAME', ''),
     }

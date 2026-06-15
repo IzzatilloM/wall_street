@@ -93,3 +93,54 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.receipt_number} | {self.student} — {self.course}"
+
+
+class PaymentTransaction(models.Model):
+    """Mobil ilova orqali onlayn to'lov (Payme / Click) tranzaksiyasi.
+
+    Har bir tranzaksiya bitta `Payment` (status='pending') bilan bog'lanadi.
+    To'lov muvaffaqiyatli yakunlanganda (perform/complete) Payment.status='paid'
+    bo'ladi va tegishli Enrollment.paid_amount yangilanadi → CRM'da ko'rinadi.
+    """
+
+    PROVIDER_CHOICES = [
+        ('payme', 'Payme'),
+        ('click', 'Click'),
+    ]
+
+    # Payme holatlari: 1 — yaratildi, 2 — to'landi, -1/-2 — bekor qilindi
+    STATE_CREATED = 1
+    STATE_COMPLETED = 2
+    STATE_CANCELLED = -1
+    STATE_CANCELLED_AFTER = -2
+
+    payment = models.ForeignKey(
+        Payment, on_delete=models.CASCADE, related_name='transactions'
+    )
+    provider = models.CharField(max_length=10, choices=PROVIDER_CHOICES)
+    provider_tx_id = models.CharField(
+        max_length=64, blank=True, default='', db_index=True,
+        verbose_name="Provayder tranzaksiya ID"
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    state = models.IntegerField(default=STATE_CREATED)
+    reason = models.IntegerField(null=True, blank=True)
+
+    # Payme vaqtlari (millisekund)
+    create_time = models.BigIntegerField(default=0)
+    perform_time = models.BigIntegerField(default=0)
+    cancel_time = models.BigIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Onlayn to'lov tranzaksiyasi"
+        verbose_name_plural = "Onlayn to'lov tranzaksiyalari"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['provider', 'provider_tx_id']),
+        ]
+
+    def __str__(self):
+        return f"{self.provider}:{self.provider_tx_id} → {self.payment.receipt_number}"

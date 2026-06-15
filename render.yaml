@@ -1,0 +1,76 @@
+# ============================================================
+# Render Blueprint — Wall Street CRM (Django + PostgreSQL)
+# Hujjat: https://render.com/docs/blueprint-spec
+#
+# Foydalanish:
+#   1. Bu repozitoriyni GitHub'ga yuklang.
+#   2. Render dashboard → "New +" → "Blueprint" → repoyingizni tanlang.
+#   3. Render bu fayldan baza + web servisni avtomatik yaratadi.
+# ============================================================
+
+databases:
+  - name: wallstreet-db
+    databaseName: wallstreet
+    user: wallstreet
+    plan: free            # bepul tarif (90 kun, keyin yangilash kerak)
+
+services:
+  - type: web
+    name: wallstreet-crm
+    runtime: python
+    plan: free
+    region: frankfurt      # O'zbekistonga eng yaqin bepul region
+    buildCommand: "bash ./build.sh"
+    startCommand: "gunicorn wallstreet.wsgi:application --log-file -"
+    healthCheckPath: /api/news/
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: wallstreet-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true        # Render xavfsiz kalit yaratadi
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: RUN_SEED
+        value: "true"              # birinchi deploy'dan keyin "false" qiling
+
+      # --- AI tahlillar: Google Gemini (asosiy provayder) ---
+      - key: GEMINI_API_KEY
+        sync: false                # Render dashboard'da qo'lda kiriting (maxfiy)
+      - key: GEMINI_MODEL
+        value: "gemini-2.5-flash"
+      # Anthropic Claude (ixtiyoriy zaxira — GEMINI_API_KEY bo'lsa shart emas)
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+      # --- Platforma manzili (deploy'dan keyin o'z URL'ingizni kiriting) ---
+      # Masalan: https://wallstreet-crm.onrender.com
+      - key: WEBSITE_URL
+        sync: false
+
+      # --- Telegram botlar (webhook rejimida) ---
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        value: "wall_street_crm_bot"
+      - key: TECHNIC_BOT_TOKEN
+        sync: false
+
+      # --- Email (OTP/parol tiklash uchun — Gmail App Password) ---
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+      # --- Google OAuth ("Google bilan kirish" — ixtiyoriy) ---
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

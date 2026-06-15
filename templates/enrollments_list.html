@@ -199,7 +199,33 @@
     .en-act-edit   { background:var(--en-teal-pale);   color:var(--en-teal); }
     .en-act-toggle { background:var(--en-gold-pale);   color:var(--en-gold); }
     .en-act-del    { background:var(--en-red-pale);    color:var(--en-red);  }
+    .en-act-ai     { background:rgba(109,79,195,.12);  color:#6d4fc3; }
     .en-act:hover  { transform:scale(1.14); box-shadow:0 6px 14px rgba(0,0,0,.12); }
+
+    /* ─── AI kurs tavsiyasi modali ─── */
+    @keyframes aiSpin { to { transform: rotate(360deg); } }
+    .ai-rec-loading {
+        display:flex; align-items:center; gap:10px;
+        padding:26px 6px; font-weight:800; color:#6d4fc3;
+    }
+    .ai-rec-spinner {
+        width:22px; height:22px; border-radius:50%;
+        border:3px solid rgba(109,79,195,.2); border-top-color:#6d4fc3;
+        animation: aiSpin .8s linear infinite;
+    }
+    .ai-rec-card {
+        display:flex; gap:12px; align-items:flex-start;
+        padding:14px; border-radius:14px; margin-bottom:10px;
+        background:linear-gradient(135deg, rgba(109,79,195,.06), rgba(14,92,96,.04));
+        border:1px solid rgba(109,79,195,.16);
+    }
+    .ai-rec-num {
+        width:34px; height:34px; flex-shrink:0; border-radius:11px;
+        display:grid; place-items:center; font-weight:900; color:#fff;
+        background:linear-gradient(135deg,#6d4fc3,#8e6fe0);
+    }
+    .ai-rec-card b { display:block; font-size:14px; margin-bottom:4px; }
+    .ai-rec-card p { margin:0; font-size:13px; line-height:1.6; color:var(--text-soft,#64748b); }
 
     /* ── EMPTY ───────────────────────────────────────── */
     .en-empty { padding:64px; text-align:center; color:var(--text-soft); }
@@ -779,6 +805,11 @@
                 <!-- Amallar -->
                 <td>
                     <div class="en-acts">
+                        <button class="en-act en-act-ai"
+                                onclick="openAiRecommend({{ en.student.pk }}, '{{ en.student.full_name|escapejs }}', this)"
+                                title="Keyingi kurs tavsiyasi — talaba shu kursni tugatgach yana qaysi kursga yozilishi mumkinligi">🤖
+                        </button>
+
                         <button class="en-act en-act-view"
                                 onclick="openDetailModal({{ en.pk }})"
                                 title="View details">👁
@@ -1176,6 +1207,35 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════
+     AI KURS TAVSIYASI MODAL (Claude API)
+══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="aiRecModal">
+    <div class="en-modal" style="max-width:520px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div>
+                <div style="font-size:18px;font-weight:900;color:#6d4fc3;">🎯 Keyingi kurs tavsiyasi</div>
+                <div id="aiRecStudent" style="font-size:13px;color:var(--text-soft,#64748b);font-weight:700;margin-top:3px;">—</div>
+                <div style="font-size:12px;color:var(--text-soft,#94a3b8);font-weight:600;margin-top:5px;line-height:1.5;">
+                    Talabaning hozirgi va tugatgan kurslari asosida, u <b>hali yozilmagan</b>
+                    kurslardan keyingi bosqich uchun eng mosini tavsiya qiladi.
+                </div>
+            </div>
+            <button type="button" class="det-hdr-close" onclick="closeModal('aiRecModal')">×</button>
+        </div>
+
+        <div class="ai-rec-loading" id="aiRecLoading" style="display:none;">
+            <div class="ai-rec-spinner"></div>
+            Talabaga mos keyingi kurslar tanlanmoqda...
+        </div>
+
+        <div id="aiRecResult" style="display:none;"></div>
+
+        <div id="aiRecError"
+             style="display:none;color:var(--en-red,#d63031);font-weight:700;padding:12px 4px;"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
      DETAIL MODAL — To'liq ma'lumot (AJAX)
 ══════════════════════════════════════════════════════════════ -->
 <div class="modal-bg" id="detailModal">
@@ -1514,10 +1574,86 @@
         el.value = val ?? '';
     }
 
+    /* ─── AI kurs tavsiyasi (Claude API) ───────────── */
+    function _aiCsrf() {
+        const el = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        return el ? el.value : '';
+    }
+
+    async function openAiRecommend(studentId, studentName, btn) {
+        document.getElementById('aiRecStudent').textContent = studentName;
+        document.getElementById('aiRecLoading').style.display = 'flex';
+        document.getElementById('aiRecResult').style.display  = 'none';
+        document.getElementById('aiRecError').style.display   = 'none';
+        document.getElementById('aiRecModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+
+        try {
+            const resp = await fetch(`/enrollments/ai-recommend/${studentId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': _aiCsrf() },
+            });
+            const data = await resp.json();
+
+            document.getElementById('aiRecLoading').style.display = 'none';
+
+            if (data.success) {
+                const box = document.getElementById('aiRecResult');
+                box.innerHTML = '';
+
+                if (data.offline) {
+                    const note = document.createElement('p');
+                    note.style.cssText = 'font-size:12px;font-weight:800;color:#6d4fc3;margin:0 0 10px;';
+                    note.textContent = '📊 Lokal tahlil (AI kreditsiz rejim)';
+                    box.appendChild(note);
+                }
+
+                if (!data.recommendations || !data.recommendations.length) {
+                    const empty = document.createElement('p');
+                    empty.style.cssText = 'font-size:13px;color:var(--text-soft,#64748b);margin:6px 0;';
+                    empty.textContent = "Talaba markazdagi barcha mos kurslarga allaqachon yozilgan — "
+                                      + "tavsiya qilish uchun yangi kurs qolmadi.";
+                    box.appendChild(empty);
+                }
+
+                data.recommendations.forEach((rec, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'ai-rec-card';
+
+                    const num = document.createElement('div');
+                    num.className = 'ai-rec-num';
+                    num.textContent = i + 1;
+
+                    const body = document.createElement('div');
+                    const title = document.createElement('b');
+                    title.textContent = rec.nomi;
+                    const reason = document.createElement('p');
+                    reason.textContent = rec.sabab;
+                    body.appendChild(title);
+                    body.appendChild(reason);
+
+                    card.appendChild(num);
+                    card.appendChild(body);
+                    box.appendChild(card);
+                });
+                box.style.display = 'block';
+            } else {
+                const err = document.getElementById('aiRecError');
+                err.textContent = data.error || 'AI tavsiyasini olishda xatolik!';
+                err.style.display = 'block';
+            }
+        } catch (e) {
+            document.getElementById('aiRecLoading').style.display = 'none';
+            const err = document.getElementById('aiRecError');
+            err.textContent = 'Server bilan aloqa xatosi!';
+            err.style.display = 'block';
+        }
+    }
+
     /* ─── Keyboard & backdrop close ────────────────── */
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape')
-            ['addModal','editModal','delModal','detailModal'].forEach(closeModal);
+            ['addModal','editModal','delModal','detailModal','aiRecModal'].forEach(closeModal);
     });
 
     document.querySelectorAll('.modal-bg').forEach(bg => {

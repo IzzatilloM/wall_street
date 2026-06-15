@@ -486,6 +486,51 @@
             to { opacity: 1; }
         }
 
+        @keyframes shellIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(.985);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .auth-shell {
+            animation: shellIn .55s cubic-bezier(.22,.9,.3,1) both;
+        }
+
+        .hero-badges .badge {
+            animation: shellIn .6s cubic-bezier(.22,.9,.3,1) both;
+        }
+
+        .hero-badges .badge:nth-child(1) { animation-delay: .15s; }
+        .hero-badges .badge:nth-child(2) { animation-delay: .25s; }
+        .hero-badges .badge:nth-child(3) { animation-delay: .35s; }
+
+        .submit-btn.loading {
+            pointer-events: none;
+            opacity: .75;
+        }
+
+        .submit-btn.loading::after {
+            content: "";
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin-left: 10px;
+            vertical-align: -2px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,.35);
+            border-top-color: #fff;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @keyframes modalScale {
             from {
                 opacity: 0;
@@ -670,6 +715,65 @@
     </div>
 </div>
 
+<!-- ─── Reset password (2-bosqich: kod + yangi parol) ─── -->
+<div class="forgot-modal-overlay {% if show_reset_modal %}active{% endif %}" id="resetModal">
+    <div class="forgot-modal">
+        <button type="button" class="forgot-close" onclick="closeResetModal()">×</button>
+
+        <div class="forgot-icon">🔑</div>
+
+        <h2>New password</h2>
+        <p>
+            {% if reset_method == 'telegram' %}
+            Enter the 6-digit code sent via the Telegram bot, then choose a new password.
+            {% else %}
+            Enter the 6-digit code sent to your Gmail address, then choose a new password.
+            {% endif %}
+        </p>
+
+        <form method="post" action="{% url 'reset_password' %}">
+            {% csrf_token %}
+
+            <div class="field">
+                <label>Verification code</label>
+                <div class="input-wrap">
+                    <div class="input-icon">🔐</div>
+                    <input type="text" name="code" maxlength="6" inputmode="numeric"
+                           placeholder="123456" autocomplete="one-time-code" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>New password</label>
+                <div class="input-wrap">
+                    <div class="input-icon">🔒</div>
+                    <input type="password" name="new_password" id="resetPassword1"
+                           placeholder="At least 8 characters" minlength="8" required>
+                    <button class="toggle-pass" type="button"
+                            onclick="toggleResetPassword('resetPassword1')">👁</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Confirm new password</label>
+                <div class="input-wrap">
+                    <div class="input-icon">🔐</div>
+                    <input type="password" name="new_password2" id="resetPassword2"
+                           placeholder="Re-enter the password" minlength="8" required>
+                    <button class="toggle-pass" type="button"
+                            onclick="toggleResetPassword('resetPassword2')">👁</button>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Save new password</button>
+        </form>
+
+        <div class="forgot-note">
+            The code is valid for 5 minutes. If it doesn't arrive, check your spam folder or the Telegram bot.
+        </div>
+    </div>
+</div>
+
 <script>
     function togglePassword() {
         const input = document.getElementById('passwordInput');
@@ -686,9 +790,20 @@
         modal.classList.remove('active');
     }
 
+    function closeResetModal() {
+        const modal = document.getElementById('resetModal');
+        modal.classList.remove('active');
+    }
+
+    function toggleResetPassword(id) {
+        const input = document.getElementById(id);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeForgotModal();
+            closeResetModal();
         }
     });
 
@@ -696,6 +811,20 @@
         if (e.target === this) {
             closeForgotModal();
         }
+    });
+
+    document.getElementById('resetModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeResetModal();
+        }
+    });
+
+    // Submit tugmasida yuklash holati (ikki marta bosishning oldini oladi)
+    document.querySelectorAll('form').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            const btn = form.querySelector('.submit-btn');
+            if (btn) btn.classList.add('loading');
+        });
     });
 </script>
 

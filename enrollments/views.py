@@ -1,9 +1,12 @@
+import json
 import uuid
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum
+from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -13,6 +16,249 @@ from .models import Enrollment, EnrollmentNote
 from .forms import EnrollmentForm, EnrollmentUpdateForm, EnrollmentNoteForm
 
 User = get_user_model()
+
+
+# ─── AI KURS TAVSIYA MOTORI (Claude API) ─────────────────────────────────────
+
+# Daraja kodlarini tartiblash (lokal tahlilda "keyingi bosqich" ni topish uchun).
+# English (CEFR) va IT yo'nalishlari uchun alohida o'sish tartibi.
+LEVEL_ORDER = {
+    'beginner': 1, 'elementary': 2, 'pre_intermediate': 3, 'intermediate': 4,
+    'upper_intermediate': 5, 'advanced': 6, 'ielts': 7,
+    'foundation': 1, 'standard': 2, 'bootcamp': 3, 'pro': 4,
+}
+
+
+def _collect_recommendation_data(student):
+    """Talabaning o'qish tarixi + markazdagi mavjud kurslar ro'yxati.
+
+    Returns: (data, available)
+        data       — Claude promptiga yuboriladigan toza ma'lumot
+        available  — lokal tahlil uchun boyitilgan ro'yxat (raw kodlar bilan)
+    """
+    from attendance.models import Attendance
+    from courses.models import Course
+
+    enrollments = list(
+        student.enrollments.select_related('course').all()
+    )
+
+    def course_info(e):
+        return {
+            'kurs':       e.course.title if e.course else "Noma'lum",
+            'daraja':     e.course.get_level_display() if e.course else '',
+            'yonalish':   e.course.get_category_display() if e.course else '',
+            'holat':      e.get_status_display(),
+        }
+
+    completed = [course_info(e) for e in enrollments if e.status == 'completed']
+    active    = [course_info(e) for e in enrollments if e.status == 'active']
+    enrolled_course_ids = {e.course_id for e in enrollments if e.course_id}
+
+    # Talabaning yo'nalish/daraja tarixi — lokal "keyingi qadam" mantig'i uchun
+    hist_categories = [e.course.category for e in enrollments if e.course]
+    hist_levels     = [LEVEL_ORDER.get(e.course.level, 0) for e in enrollments if e.course]
+    max_level     = max(hist_levels) if hist_levels else 0
+    main_category = (
+        max(set(hist_categories), key=hist_categories.count) if hist_categories else None
+    )
+
+    # Davomat (umumiy)
+    att_qs = (
+        Attendance.objects.filter(student__user=student.user)
+        if student.user else Attendance.objects.none()
+    )
+    att_total   = att_qs.count()
+    att_present = att_qs.filter(Q(status='present') | Q(status='late')).count()
+    att_percent = round(att_present / att_total * 100, 1) if att_total else None
+
+    # Tavsiya qilish mumkin bo'lgan kurslar (hali yozilmaganlari)
+    courses_qs = Course.objects.filter(is_active=True).exclude(pk__in=enrolled_course_ids)
+
+    # AI promptiga — toza ro'yxat
+    ai_available = [
+        {
+            'id':          c.pk,
+            'nomi':        c.title,
+            'yonalish':    c.get_category_display(),
+            'daraja':      c.get_level_display(),
+            'davomiyligi': c.duration_display,
+            'narxi':       float(c.price),
+        }
+        for c in courses_qs
+    ]
+    # Lokal tahlilga — raw kategoriya/daraja kodlari bilan
+    available = [
+        dict(ai, _cat=c.category, _level=LEVEL_ORDER.get(c.level, 0))
+        for ai, c in zip(ai_available, courses_qs)
+    ]
+
+    return {
+        'talaba': {
+            'ism':                  student.full_name,
+            'tugatgan_kurslar':     completed,
+            'faol_kurslar':         active,
+            'umumiy_davomat_foizi': att_percent,
+            'asosiy_yonalish':      main_category,
+            'eng_yuqori_daraja':    max_level,
+        },
+        'mavjud_kurslar': ai_available,
+    }, available
+
+
+def _recommendation_reason(c, main_cat, max_level, has_history, cheapest):
+    """Bitta kurs uchun lokal, mazmunli izoh — har bir kursga turlicha chiqadi."""
+    same_cat = bool(main_cat) and c.get('_cat') == main_cat
+    lvl      = c.get('_level', 0)
+    parts    = []
+
+    if has_history and same_cat and lvl > max_level:
+        parts.append(
+            f"Sizning {c['yonalish']} yo'nalishingizdagi mantiqiy keyingi bosqich "
+            f"({c['daraja']})."
+        )
+    elif has_history and same_cat:
+        parts.append(
+            f"{c['yonalish']} yo'nalishini mustahkamlash uchun {c['daraja']} darajadagi kurs."
+        )
+    elif has_history:
+        parts.append(
+            f"Bilimlaringizni kengaytirish uchun yangi yo'nalish: "
+            f"{c['yonalish']} ({c['daraja']})."
+        )
+    else:
+        parts.append(
+            f"Boshlash uchun qulay: {c['yonalish']} yo'nalishi, {c['daraja']} darajadagi kurs."
+        )
+
+    parts.append(f"Davomiyligi: {c['davomiyligi']}.")
+    if cheapest is not None and c.get('narxi', 0) <= cheapest:
+        parts.append("Narxi eng qulaylaridan biri.")
+    return " ".join(parts)
+
+
+def _fallback_recommendations(data, available):
+    """AI kreditsiz rejimda qoidaviy tavsiya — talabaning tarixiga moslab tartiblaydi.
+
+    - Tarixi bor talaba: avval shu yo'nalishdagi keyingi bosqich kurslari.
+    - Tarixi yo'q talaba: avval boshlovchi (past daraja) kurslari, yo'nalishlar aralash.
+    """
+    talaba      = data['talaba']
+    main_cat    = talaba.get('asosiy_yonalish')
+    max_level   = talaba.get('eng_yuqori_daraja', 0)
+    # Tarix faqat haqiqiy kurs ma'lumoti bo'lganda hisobga olinadi
+    has_history = bool(main_cat) or max_level > 0
+
+    prices   = [c['narxi'] for c in available if c.get('narxi')]
+    cheapest = min(prices) if prices else None
+
+    def rank_key(c):
+        same_cat = 0 if (main_cat and c.get('_cat') == main_cat) else 1
+        lvl      = c.get('_level', 0)
+        if has_history:
+            # keyingi bosqichga (max_level+1) eng yaqin darajalar oldinda
+            level_gap = abs(lvl - (max_level + 1))
+        else:
+            # tarixsiz — past (boshlovchi) darajalar oldinda
+            level_gap = lvl
+        return (same_cat, level_gap, c.get('narxi', 0))
+
+    ranked = sorted(available, key=rank_key)
+
+    return [
+        {
+            'id':    c['id'],
+            'nomi':  c['nomi'],
+            'sabab': _recommendation_reason(c, main_cat, max_level, has_history, cheapest),
+        }
+        for c in ranked[:3]
+    ]
+
+
+def recommend_next_course(student_id, user=None):
+    """
+    Talabaga eng mos keyingi 3 ta kursni Claude API orqali tavsiya qiladi.
+
+    Returns:
+        dict: {'success': bool, 'recommendations': list, 'error': str}
+    """
+    from students.models import Student
+    from ai.services import ask_claude, extract_json
+
+    student = get_object_or_404(Student, pk=student_id)
+    data, available = _collect_recommendation_data(student)
+
+    if not available:
+        return {'success': False,
+                'error': "Tavsiya qilish uchun mavjud kurslar topilmadi!"}
+
+    system_prompt = (
+        "Siz ta'lim markazi CRM tizimining kurs-tavsiya yordamchisisiz. "
+        "Sizga talabaning tugatgan/faol kurslari, davomati va markazdagi "
+        "mavjud kurslar ro'yxati beriladi. Mavjud kurslar ichidan talabaga "
+        "ENG MOS 3 TASINI tanlang (3 tadan kam bo'lsa — borini).\n\n"
+        "Qoidalar:\n"
+        "- Faqat 'mavjud_kurslar' ro'yxatidagi kurslardan tanlang, id ni o'zgartirmang\n"
+        "- Talabaning darajasi va yo'nalishiga mantiqan mos keladigan keyingi qadamni tanlang\n"
+        "- Har bir tavsiyaga o'zbek tilida 1-2 jumlali sabab yozing\n\n"
+        "Javobni FAQAT quyidagi JSON formatda qaytaring:\n"
+        '{"tavsiyalar": [{"id": <kurs id>, "nomi": "<kurs nomi>", '
+        '"sabab": "<o\'zbekcha izoh>"}]}'
+    )
+
+    user_prompt = (
+        f"Ma'lumotlar (JSON):\n{json.dumps(data, ensure_ascii=False, indent=2)}"
+    )
+
+    success, text = ask_claude(
+        feature='course_recommend',
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        related_object=f"student:{student.pk}",
+        max_tokens=800,
+        user=user,
+    )
+
+    offline = False
+    recommendations = []
+
+    if success:
+        parsed = extract_json(text)
+        if parsed and isinstance(parsed.get('tavsiyalar'), list):
+            # Faqat haqiqatda mavjud kurslarni qoldiramiz
+            valid_ids = {c['id'] for c in available}
+            recommendations = [
+                {
+                    'id':    r.get('id'),
+                    'nomi':  str(r.get('nomi', '')),
+                    'sabab': str(r.get('sabab', '')),
+                }
+                for r in parsed['tavsiyalar']
+                if r.get('id') in valid_ids
+            ][:3]
+
+    if not recommendations:
+        # AI ishlamadi (kredit/kalit yo'q yoki javob buzilgan) — lokal tavsiya
+        offline = True
+        recommendations = _fallback_recommendations(data, available)
+
+    return {
+        'success':         True,
+        'student_name':    student.full_name,
+        'recommendations': recommendations,
+        'offline':         offline,
+    }
+
+
+@login_required
+@require_POST
+def enrollment_ai_recommend(request, student_id):
+    """AJAX: talaba uchun AI kurs tavsiyasi."""
+    if request.user.role != 'admin':
+        return JsonResponse({'success': False, 'error': "Ruxsat yo'q!"}, status=403)
+
+    result = recommend_next_course(student_id, user=request.user)
+    return JsonResponse(result)
 
 
 # ─── helpers ────────────────────────────────────────────────────────────────

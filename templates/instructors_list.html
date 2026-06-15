@@ -330,6 +330,43 @@
     .act-delete { color: var(--danger); }
     .act-delete:hover { background: var(--danger-soft); border-color: rgba(214,48,49,.25); box-shadow: var(--shadow-xs); }
 
+    /* ─── AI hisobot tugmasi va paneli ─── */
+    .act-ai { color: #6d4fc3; }
+    .act-ai:hover { background: rgba(109,79,195,.10); border-color: rgba(109,79,195,.28); box-shadow: var(--shadow-xs); }
+    .act-ai.loading i { animation: aiSpin 1s linear infinite; }
+    @keyframes aiSpin { to { transform: rotate(360deg); } }
+
+    .ai-report-box {
+        padding: 18px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(109,79,195,.07), rgba(14,92,96,.05));
+        border: 1px solid rgba(109,79,195,.18);
+        font-size: 14px;
+        line-height: 1.75;
+        white-space: pre-wrap;
+    }
+    .ai-stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .ai-stat {
+        padding: 12px;
+        border-radius: 12px;
+        text-align: center;
+        background: var(--surface, #fff);
+        border: 1px solid rgba(109,79,195,.14);
+    }
+    .ai-stat b { display: block; font-size: 20px; color: #6d4fc3; }
+    .ai-stat span { font-size: 11px; color: var(--text-secondary, #777); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    .ai-loading-row { display: flex; align-items: center; gap: 10px; padding: 24px 4px; font-weight: 700; color: #6d4fc3; }
+    .ai-spinner {
+        width: 22px; height: 22px; border-radius: 50%;
+        border: 3px solid rgba(109,79,195,.2); border-top-color: #6d4fc3;
+        animation: aiSpin .8s linear infinite;
+    }
+
     /* BUTTONS */
     .btn-ws {
       display: inline-flex; align-items: center; gap: 8px;
@@ -857,6 +894,10 @@
                     </td>
                     <td>
                         <div class="acts">
+                            <button class="act-btn act-ai" title="AI samaradorlik hisoboti"
+                                    onclick="openAiReport('{{ instructor.id }}', '{{ instructor.full_name|escapejs }}', this)">
+                                <i class="bi bi-robot"></i>
+                            </button>
                             <button class="act-btn act-view" title="View"
                                     onclick="openDetailFromRow(this.closest('tr'))">
                                 <i class="bi bi-eye-fill"></i>
@@ -976,6 +1017,10 @@
                     </td>
                     <td>
                         <div class="acts">
+                            <button class="act-btn act-ai" title="AI samaradorlik hisoboti"
+                                    onclick="openAiReport('{{ instructor.id }}', '{{ instructor.full_name|escapejs }}', this)">
+                                <i class="bi bi-robot"></i>
+                            </button>
                             <button class="act-btn act-view" title="View"
                                     onclick="openDetailFromRow(this.closest('tr'))">
                                 <i class="bi bi-eye-fill"></i>
@@ -1311,6 +1356,46 @@
         </div>
     </div>
 
+    <!-- MODAL 5 — AI SAMARADORLIK HISOBOTI -->
+    <div class="modal-overlay" id="modal-ai">
+        <div class="ws-modal modal-sm">
+            <div class="modal-hdr">
+                <div class="modal-hdr-accent"></div>
+                <div class="modal-hdr-left">
+                    <h2 style="color:#6d4fc3;">🤖 AI samaradorlik hisoboti</h2>
+                    <p id="ai-instructor-name">—</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeModal('modal-ai')">×</button>
+            </div>
+            <div class="modal-bd">
+                <div class="ai-loading-row" id="ai-loading" style="display:none;">
+                    <div class="ai-spinner"></div>
+                    Gemini AI tahlil qilmoqda...
+                </div>
+
+                <div id="ai-result" style="display:none;">
+                    <div class="ai-stats-row">
+                        <div class="ai-stat">
+                            <b id="ai-stat-retention">—</b>
+                            <span>Retention</span>
+                        </div>
+                        <div class="ai-stat">
+                            <b id="ai-stat-attendance">—</b>
+                            <span>Davomat</span>
+                        </div>
+                        <div class="ai-stat">
+                            <b id="ai-stat-enrollments">—</b>
+                            <span>Enrollment</span>
+                        </div>
+                    </div>
+                    <div class="ai-report-box" id="ai-report-text"></div>
+                </div>
+
+                <div id="ai-error" style="display:none;color:var(--danger);font-weight:700;padding:14px 4px;"></div>
+            </div>
+        </div>
+    </div>
+
 </div><!-- /page-wrap -->
 {% endblock %}
 
@@ -1381,6 +1466,59 @@
         document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
       }
     });
+
+    /* ── AI samaradorlik hisoboti (Claude API) ── */
+    function _csrfToken() {
+      const el = document.querySelector('input[name="csrfmiddlewaretoken"]');
+      return el ? el.value : '';
+    }
+
+    async function openAiReport(id, name, btn) {
+      document.getElementById('ai-instructor-name').textContent = name;
+      document.getElementById('ai-loading').style.display = 'flex';
+      document.getElementById('ai-result').style.display  = 'none';
+      document.getElementById('ai-error').style.display   = 'none';
+      openModal('modal-ai');
+
+      if (btn) btn.classList.add('loading');
+
+      try {
+        const resp = await fetch(`/instructors/${id}/ai-report/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': _csrfToken() },
+        });
+        const data = await resp.json();
+
+        document.getElementById('ai-loading').style.display = 'none';
+
+        if (data.success) {
+          const ret = data.stats.retention || {};
+          const dav = data.stats.davomat   || {};
+
+          document.getElementById('ai-stat-retention').textContent =
+              ret.retention_foizi != null ? ret.retention_foizi + '%' : '—';
+          document.getElementById('ai-stat-attendance').textContent =
+              dav.davomat_foizi != null ? dav.davomat_foizi + '%' : '—';
+          document.getElementById('ai-stat-enrollments').textContent =
+              ret.jami_enrollment != null ? ret.jami_enrollment + ' ta' : '—';
+
+          document.getElementById('ai-report-text').textContent =
+              (data.offline ? '📊 Lokal tahlil (AI kreditsiz rejim)\n\n' : '') + data.report;
+          document.getElementById('ai-result').style.display = 'block';
+        } else {
+          const err = document.getElementById('ai-error');
+          err.textContent = data.error || 'AI hisobotini olishda xatolik!';
+          err.style.display = 'block';
+        }
+      } catch (e) {
+        document.getElementById('ai-loading').style.display = 'none';
+        const err = document.getElementById('ai-error');
+        err.textContent = 'Server bilan aloqa xatosi!';
+        err.style.display = 'block';
+      } finally {
+        if (btn) btn.classList.remove('loading');
+      }
+    }
 
     /* ── Read data from <tr> dataset ── */
     function rowToData(row) {

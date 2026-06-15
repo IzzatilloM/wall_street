@@ -12,4 +12,5 @@ urlpatterns = [
     path('create/',          views.instructor_create, name='instructor_create'),  # ← shu
     path('<int:pk>/update/', views.instructor_update, name='instructor_update'),
     path('<int:pk>/delete/', views.instructor_delete, name='instructor_delete'),
+    path('<int:pk>/ai-report/', views.instructor_ai_report, name='instructor_ai_report'),
 ]

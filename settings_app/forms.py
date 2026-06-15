@@ -28,7 +28,10 @@ class ProfileForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': 'ws-input'}),
             'email': forms.EmailInput(attrs={'class': 'ws-input'}),
             'phone': forms.TextInput(attrs={'class': 'ws-input'}),
-            'avatar': forms.ClearableFileInput(attrs={'class': 'ws-file', 'accept': 'image/*'}),
+            # FileInput (ClearableFileInput emas) — "Currently: avatars/..." va "Clear"
+            # checkbox'ini ko'rsatmaydi. Rasm preview va "Remove photo" tugmasi
+            # allaqachon shablonda alohida bor, shuning uchun ortiqcha matn kerak emas.
+            'avatar': forms.FileInput(attrs={'class': 'ws-file', 'accept': 'image/*'}),
         }
         labels = {
             'first_name': 'First name',

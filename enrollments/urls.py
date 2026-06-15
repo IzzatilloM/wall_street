@@ -10,4 +10,5 @@ urlpatterns = [
     path('<int:pk>/delete/',        views.enrollment_delete,        name='enrollment_delete'),
     path('<int:pk>/toggle-status/', views.enrollment_toggle_status, name='enrollment_toggle_status'),
     path('<int:pk>/note/',          views.enrollment_add_note,      name='enrollment_add_note'),
+    path('ai-recommend/<int:student_id>/', views.enrollment_ai_recommend, name='enrollment_ai_recommend'),
 ]

@@ -556,9 +556,127 @@
             font-weight: 700;
         }
 
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(.985);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .register-card {
+            animation: cardIn .55s cubic-bezier(.22,.9,.3,1) both;
+        }
+
+        /* ─── Telegram bot yordamchi havola ─── */
+        .tg-help {
+            margin-top: 8px;
+            padding: 10px 12px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(34,158,217,.10);
+            border: 1px solid rgba(34,158,217,.26);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.5;
+            color: rgba(232,241,241,.85);
+        }
+
+        .tg-help a {
+            color: #4fc3f7;
+            font-weight: 900;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .tg-help a:hover {
+            text-decoration: underline;
+        }
+
+        /* ─── Parol kuchi indikatori ─── */
+        .pass-meter {
+            height: 5px;
+            margin-top: 7px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            overflow: hidden;
+        }
+
+        .pass-meter-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            background: var(--danger);
+            transition: width .3s ease, background .3s ease;
+        }
+
+        .pass-meter-fill.weak   { width: 33%;  background: #ff7385; }
+        .pass-meter-fill.medium { width: 66%;  background: var(--gold); }
+        .pass-meter-fill.strong { width: 100%; background: var(--success); }
+
+        .pass-hint {
+            margin-top: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        /* ─── OTP segmentli kod kiritish ─── */
+        .otp-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 6px 0 4px;
+        }
+
+        .otp-box {
+            width: 48px;
+            height: 56px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--text);
+            background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 14px;
+            outline: none;
+            transition: .22s ease;
+        }
+
+        .otp-box:focus {
+            border-color: rgba(231,197,111,.55);
+            box-shadow: 0 0 0 4px rgba(231,197,111,.12);
+            transform: translateY(-2px);
+        }
+
+        .otp-box.filled {
+            border-color: rgba(87,216,159,.45);
+        }
+
+        .resend-timer {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .modal-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
         @media(max-width: 760px) {
             .register-inner {
                 padding: 20px 14px;
+            }
+
+            .otp-box {
+                width: 40px;
+                height: 50px;
+                font-size: 19px;
             }
 
             .grid-2,
@@ -742,9 +860,17 @@
                         <label>Telegram Chat ID</label>
                         <div class="input-shell">
                             <div class="input-icon">✈</div>
-                            <input type="text" name="telegram_chat_id" placeholder="ID given by the Telegram bot"
+                            <input type="text" name="telegram_chat_id" inputmode="numeric"
+                                   placeholder="ID given by the Telegram bot"
                                    value="{{ form_data.telegram_chat_id|default:'' }}">
                         </div>
+                        {% if telegram_bot_username %}
+                        <div class="tg-help">
+                            <span>1️⃣ Open the bot → 2️⃣ press <b>/start</b> → 3️⃣ copy your <b>Chat ID</b> here.</span>
+                            <a href="https://t.me/{{ telegram_bot_username }}" target="_blank"
+                               rel="noopener">@{{ telegram_bot_username }} ↗</a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -756,9 +882,13 @@
                         <div class="input-shell">
                             <div class="input-icon">🔒</div>
                             <input type="password" name="password" id="password1" placeholder="At least 8 characters"
-                                   required>
+                                   oninput="updatePassMeter()" required>
                             <button class="toggle-pass" type="button" onclick="togglePassword('password1')">👁</button>
                         </div>
+                        <div class="pass-meter">
+                            <div class="pass-meter-fill" id="passMeterFill"></div>
+                        </div>
+                        <div class="pass-hint" id="passHint">At least 8 characters</div>
                     </div>
 
                     <div class="field">
@@ -836,16 +966,23 @@
             <input type="hidden" name="identifier" value="{{ verify_identifier }}">
 
             <div class="field">
-                <label>Verification code</label>
-                <div class="input-shell">
-                    <div class="input-icon">🔐</div>
-                    <input type="text" name="code" maxlength="6" placeholder="123456" required>
+                <label style="text-align:center;">Verification code</label>
+                <input type="hidden" name="code" id="otpValue" required>
+                <div class="otp-row" id="otpRow">
+                    <input type="text" class="otp-box" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+                    <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                    <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                    <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                    <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                    <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
                 </div>
             </div>
 
             <div class="verify-actions">
                 <button type="submit" class="modal-btn primary">Confirm</button>
-                <button type="button" class="modal-btn secondary" onclick="resendCode()">Resend</button>
+                <button type="button" class="modal-btn secondary" id="resendBtn" onclick="resendCode()">
+                    Resend
+                </button>
             </div>
 
             <div class="tiny-note">
@@ -880,6 +1017,30 @@
         }
     }
 
+    // ─── Resend taymeri (60 soniya) ───
+    let resendSeconds = 0;
+    let resendInterval = null;
+
+    function startResendTimer() {
+        const btn = document.getElementById('resendBtn');
+        if (!btn) return;
+
+        resendSeconds = 60;
+        btn.disabled = true;
+        clearInterval(resendInterval);
+
+        resendInterval = setInterval(function() {
+            resendSeconds -= 1;
+            if (resendSeconds <= 0) {
+                clearInterval(resendInterval);
+                btn.disabled = false;
+                btn.innerHTML = 'Resend';
+                return;
+            }
+            btn.innerHTML = 'Resend <span class="resend-timer">(' + resendSeconds + 's)</span>';
+        }, 1000);
+    }
+
     async function resendCode() {
         const identifier = "{{ verify_identifier }}";
 
@@ -902,6 +1063,7 @@
             const data = await response.json();
 
             if (data.success) {
+                startResendTimer();
                 alert(data.message || "Code resent!");
             } else {
                 alert(data.error || "Error sending code!");
@@ -911,7 +1073,93 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', toggleMethodFields);
+    // ─── Parol kuchi indikatori ───
+    function updatePassMeter() {
+        const value = document.getElementById('password1').value;
+        const fill  = document.getElementById('passMeterFill');
+        const hint  = document.getElementById('passHint');
+
+        let score = 0;
+        if (value.length >= 8) score += 1;
+        if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score += 1;
+        if (/\d/.test(value)) score += 1;
+        if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+        fill.className = 'pass-meter-fill';
+        if (!value) {
+            hint.textContent = 'At least 8 characters';
+        } else if (score <= 1) {
+            fill.classList.add('weak');
+            hint.textContent = 'Weak password';
+        } else if (score <= 2) {
+            fill.classList.add('medium');
+            hint.textContent = 'Medium — add numbers or symbols';
+        } else {
+            fill.classList.add('strong');
+            hint.textContent = 'Strong password ✓';
+        }
+    }
+
+    // ─── OTP segmentli kiritish ───
+    function initOtpBoxes() {
+        const boxes  = Array.from(document.querySelectorAll('.otp-box'));
+        const hidden = document.getElementById('otpValue');
+        if (!boxes.length || !hidden) return;
+
+        function syncValue() {
+            hidden.value = boxes.map(b => b.value).join('');
+            boxes.forEach(b => b.classList.toggle('filled', !!b.value));
+        }
+
+        boxes.forEach(function(box, i) {
+            box.addEventListener('input', function() {
+                box.value = box.value.replace(/\D/g, '').slice(0, 1);
+                if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+                syncValue();
+            });
+
+            box.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !box.value && i > 0) {
+                    boxes[i - 1].focus();
+                }
+            });
+
+            box.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const digits = (e.clipboardData.getData('text') || '')
+                    .replace(/\D/g, '').slice(0, boxes.length);
+                digits.split('').forEach(function(d, j) {
+                    if (boxes[j]) boxes[j].value = d;
+                });
+                const next = Math.min(digits.length, boxes.length - 1);
+                boxes[next].focus();
+                syncValue();
+            });
+        });
+    }
+
+    // ─── Telefon: faqat raqam ───
+    function initPhoneInput() {
+        const phone = document.querySelector('input[name="phone"]');
+        if (!phone) return;
+        phone.addEventListener('input', function() {
+            phone.value = phone.value.replace(/\D/g, '').slice(0, 9);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleMethodFields();
+        initOtpBoxes();
+        initPhoneInput();
+
+        // Modal ochiq holda kelsa (kod yuborilgan) — taymer va birinchi katakka fokus
+        const modal = document.getElementById('verifyModal');
+        if (modal && modal.classList.contains('show')) {
+            startResendTimer();
+            const first = document.querySelector('.otp-box');
+            if (first) first.focus();
+        }
+    });
 </script>
 
 <script src="{% static 'js/i18n.js' %}"></script>

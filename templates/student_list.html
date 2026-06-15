@@ -152,6 +152,65 @@
     .pill-inactive{ background: rgba(214,69,69,.12);  color: var(--danger);  border-color: rgba(214,69,69,.20); }
     .pill-gender  { background: rgba(14,92,96,.10);   color: var(--primary); border-color: rgba(14,92,96,.16); }
 
+    /* ─── AI churn risk badge'lari ─── */
+    .risk-cell { display: flex; align-items: center; gap: 6px; }
+    .pill-risk-low    { background: rgba(31,157,103,.12); color: var(--success); border-color: rgba(31,157,103,.20); }
+    .pill-risk-medium { background: rgba(222,168,47,.14); color: #b8860b;        border-color: rgba(222,168,47,.25); }
+    .pill-risk-high   { background: rgba(214,69,69,.14);  color: var(--danger);  border-color: rgba(214,69,69,.28); }
+    .pill-risk-none   { background: rgba(120,130,140,.10); color: var(--text-secondary); border-color: rgba(120,130,140,.18); }
+
+    .act-ai {
+        background: linear-gradient(135deg, #6d4fc3, #8e6fe0);
+        color: #fff;
+    }
+    .act-ai:disabled { opacity: .55; cursor: wait; }
+
+    @keyframes aiPulse {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.12); }
+    }
+    .act-ai.loading { animation: aiPulse .8s ease infinite; }
+
+    /* ─── AI churn risk modali ─── */
+    .ai-modal { max-width: 480px; }
+    .ai-modal-title-wrap { display: flex; flex-direction: column; gap: 3px; }
+    .ai-modal-sub { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+    .ai-loading {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 4px; font-size: 14px; color: var(--text-secondary); font-weight: 600;
+    }
+    .ai-spinner {
+        width: 26px; height: 26px; border-radius: 50%;
+        border: 3px solid rgba(109,79,195,.25); border-top-color: #6d4fc3;
+        animation: aiSpin .8s linear infinite;
+    }
+    @keyframes aiSpin { to { transform: rotate(360deg); } }
+    .ai-score-ring {
+        display: flex; align-items: center; gap: 16px;
+        padding: 18px; border-radius: 18px; margin-bottom: 16px;
+        background: rgba(109,79,195,.06); border: 1px solid rgba(109,79,195,.14);
+    }
+    .ai-score-num { font-size: 34px; font-weight: 900; line-height: 1; }
+    .ai-score-num small { font-size: 16px; font-weight: 700; opacity: .6; }
+    .ai-score-meta { display: flex; flex-direction: column; gap: 4px; }
+    .ai-reason {
+        font-size: 14px; line-height: 1.7; color: var(--text-primary);
+        padding: 14px 16px; border-radius: 14px;
+        background: rgba(14,92,96,.05); border: 1px solid rgba(14,92,96,.10);
+    }
+    .ai-mode-note {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; font-weight: 700; margin-bottom: 14px;
+        padding: 6px 11px; border-radius: 9px;
+    }
+    .ai-mode-online  { background: rgba(109,79,195,.12); color: #6d4fc3; }
+    .ai-mode-offline { background: rgba(200,149,42,.14); color: #b8860b; }
+    .ai-alert-note {
+        margin-top: 14px; font-size: 13px; font-weight: 700; color: var(--danger);
+        padding: 10px 14px; border-radius: 12px;
+        background: rgba(214,69,69,.10); border: 1px solid rgba(214,69,69,.20);
+    }
+
     .action-btns { display: flex; gap: 8px; }
     .act {
         width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer;
@@ -410,6 +469,7 @@
                 <th>Gender</th>
                 <th>Enrollments</th>
                 <th>Status</th>
+                <th>AI Risk</th>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -457,6 +517,21 @@
                     {% endif %}
                 </td>
                 <td>
+                    <div class="risk-cell" id="riskCell{{ student.pk }}"
+                         data-reason="{{ student.churn_risk_reason|default:''|escapejs }}">
+                        {% if student.churn_risk_score is not None %}
+                        <span class="pill pill-risk-{{ student.churn_risk_level }}"
+                              title="{{ student.churn_risk_reason }}">
+                            {{ student.churn_risk_score|floatformat:0 }}/100
+                        </span>
+                        {% else %}
+                        <span class="pill pill-risk-none">—</span>
+                        {% endif %}
+                        <button class="act act-ai" title="AI churn riskini hisoblash"
+                                onclick="calcChurnRisk({{ student.pk }}, this)">🤖</button>
+                    </div>
+                </td>
+                <td>
                     <div class="action-btns">
                         <a href="{% url 'enrollments:enrollment_list' %}?q={{ student.phone }}"
                            class="act act-view" title="Enrollmentlarini ko'rish">📋</a>
@@ -496,7 +571,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8">
+                <td colspan="9">
                     <div class="empty-box">
                         <span class="emoji">🎓</span>
                         <p>
@@ -645,6 +720,29 @@
         </form>
     </div>
 </div>
+
+<!-- AI CHURN RISK MODAL -->
+<div class="modal-bg" id="aiChurnModal">
+    <div class="modal ai-modal">
+        <div class="modal-head">
+            <div class="ai-modal-title-wrap">
+                <div class="modal-title" style="color:#6d4fc3;">🤖 AI churn tahlili</div>
+                <div class="ai-modal-sub" id="aiChurnStudent">—</div>
+            </div>
+            <button class="close-btn" onclick="closeModal('aiChurnModal')">×</button>
+        </div>
+
+        <div class="ai-loading" id="aiChurnLoading">
+            <div class="ai-spinner"></div>
+            Talaba ma'lumotlari tahlil qilinmoqda...
+        </div>
+
+        <div id="aiChurnResult" style="display:none;"></div>
+
+        <div id="aiChurnError"
+             style="display:none; color:var(--danger); font-weight:700; padding:14px 0;"></div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -704,10 +802,102 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') ['editModal','delModal'].forEach(closeModal);
+        if (e.key === 'Escape') ['editModal','delModal','aiChurnModal'].forEach(closeModal);
     });
     document.querySelectorAll('.modal-bg').forEach(bg => {
         bg.addEventListener('click', e => { if (e.target === bg) closeModal(bg.id); });
     });
+
+    // ─── AI churn risk hisoblash ───
+    function getCsrf() {
+        const el = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        return el ? el.value : '';
+    }
+
+    const RISK_COLORS = { low: 'var(--success)', medium: '#b8860b', high: 'var(--danger)' };
+    const RISK_LABELS = { low: 'Past xavf', medium: "O'rtacha xavf", high: 'Yuqori xavf' };
+
+    function openChurnModal(name) {
+        document.getElementById('aiChurnStudent').textContent = name || '—';
+        document.getElementById('aiChurnLoading').style.display = 'flex';
+        document.getElementById('aiChurnResult').style.display  = 'none';
+        document.getElementById('aiChurnError').style.display   = 'none';
+        document.getElementById('aiChurnModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    async function calcChurnRisk(pk, btn) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+
+        const row  = btn.closest('tr');
+        const name = row ? (row.querySelector('.name-cell')?.textContent || '').trim() : '';
+        openChurnModal(name);
+
+        try {
+            const resp = await fetch(`/students/${pk}/churn-risk/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrf() },
+            });
+            const data = await resp.json();
+
+            document.getElementById('aiChurnLoading').style.display = 'none';
+
+            if (data.success) {
+                const level = data.level || 'low';
+                const score = Math.round(data.score);
+                const color = RISK_COLORS[level] || RISK_COLORS.low;
+
+                // Jadvaldagi pill'ni yangilaymiz
+                const cell = document.getElementById('riskCell' + pk);
+                const old  = cell.querySelector('.pill');
+                if (old) old.remove();
+                const pill = document.createElement('span');
+                pill.className = 'pill pill-risk-' + level;
+                pill.title = data.reason || '';
+                pill.textContent = score + '/100';
+                cell.prepend(pill);
+
+                // Modal natijasi
+                const modeNote = data.offline
+                    ? '<span class="ai-mode-note ai-mode-offline">📊 Lokal tahlil (AI kreditsiz rejim)</span>'
+                    : '<span class="ai-mode-note ai-mode-online">🤖 Gemini AI tahlili</span>';
+
+                let alertNote = '';
+                if (data.alert_sent && data.alert_sent.length) {
+                    alertNote = '<div class="ai-alert-note">⚠️ Ogohlantirish yuborildi: '
+                              + data.alert_sent.join(', ') + '</div>';
+                }
+
+                document.getElementById('aiChurnResult').innerHTML =
+                    modeNote +
+                    '<div class="ai-score-ring">' +
+                        '<div class="ai-score-num" style="color:' + color + '">' +
+                            score + '<small>/100</small></div>' +
+                        '<div class="ai-score-meta">' +
+                            '<span class="pill pill-risk-' + level + '">' +
+                                (RISK_LABELS[level] || level) + '</span>' +
+                            '<span style="font-size:12px;color:var(--text-secondary);font-weight:700;">' +
+                                "O'qishni tashlab ketish ehtimoli</span>" +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="ai-reason">' + (data.reason || "Izoh mavjud emas.") + '</div>' +
+                    alertNote;
+                document.getElementById('aiChurnResult').style.display = 'block';
+            } else {
+                const err = document.getElementById('aiChurnError');
+                err.textContent = 'Xatolik: ' + (data.error || "AI bilan bog'lanib bo'lmadi");
+                err.style.display = 'block';
+            }
+        } catch (err) {
+            document.getElementById('aiChurnLoading').style.display = 'none';
+            const box = document.getElementById('aiChurnError');
+            box.textContent = 'Server bilan aloqa xatosi!';
+            box.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        }
+    }
 </script>
 {% endblock %}
