@@ -13,6 +13,8 @@ databases:
     databaseName: wallstreet
     user: wallstreet
     plan: free            # bepul tarif (90 kun, keyin yangilash kerak)
+    region: frankfurt     # MUHIM: web servis bilan BIR XIL region bo'lishi shart
+                          # (aks holda internal ulanish "Name or service not known" beradi)
 
 services:
   - type: web
