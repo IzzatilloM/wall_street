@@ -48,9 +48,14 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
-      # --- Media (rasm) saqlash: Cloudinary (TAVSIYA — Render free disk efemeral) ---
-      # cloudinary.com → Dashboard → "API Environment variable" dan oling.
-      # Bo'sh qoldirilsa rasmlar lokal diskda saqlanadi (redeploy'da yo'qoladi!).
+      # --- Media (rasm) saqlash ---
+      # Render bepul disk efemeral. Rasmlar Postgres bazada saqlanadi (doimiy,
+      # chet el xizmati kerak emas, O'zbekistonda ishlaydi).
+      - key: USE_DB_MEDIA
+        value: "true"
+      # CLOUDINARY_URL — ixtiyoriy. Cloudinary ba'zi davlatlarda (O'zbekiston)
+      # bloklangan. Bo'sh qoldiring (USE_DB_MEDIA ishlaydi). To'ldirilsa Cloudinary
+      # ustun bo'ladi.
       - key: CLOUDINARY_URL
         sync: false
 

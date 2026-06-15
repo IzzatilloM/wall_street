@@ -376,17 +376,31 @@ STORAGES = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ─── Cloudinary media (Render uchun TAVSIYA etiladi) ─────────────────────────
-# Render bepul disk EFEMERAL — yuklangan rasmlar redeploy/restart/uxlab-uyg'onishda
-# yo'qoladi (rasm "buzilib"/ko'rinmay qoladi). CLOUDINARY_URL sozlansa, media
-# fayllar Cloudinary bulutida saqlanadi (bepul tarif) va doimiy ko'rinadi.
-# Bo'sh bo'lsa — lokal disk (lokal development uchun).
-# Format: cloudinary://API_KEY:API_SECRET@CLOUD_NAME  (cloudinary.com dashboard'dan)
+# ─── Media (rasm) saqlash — Render bepul disk EFEMERAL muammosi yechimi ──────
+# Render bepul disk redeploy/restart/uxlab-uyg'onishda tozalanadi → yuklangan
+# rasm "buzilib"/ko'rinmay qoladi. Doimiy saqlash uchun 3 variant (tartib bilan):
+#
+#   1) CLOUDINARY_URL bo'lsa → Cloudinary buluti (ba'zi davlatlarda bloklangan).
+#   2) USE_DB_MEDIA True bo'lsa → media to'g'ridan-to'g'ri Postgres bazada saqlanadi
+#      (chet el xizmati kerak emas, O'zbekistonda ham ishlaydi — TAVSIYA etiladi).
+#      Postgres (DATABASE_URL) bor va Cloudinary yo'q bo'lsa — avtomatik yoqiladi.
+#   3) Aks holda → lokal disk (lokal development uchun).
 CLOUDINARY_URL = config('CLOUDINARY_URL', default='')
+USE_DB_MEDIA = config(
+    'USE_DB_MEDIA',
+    default=bool(_database_url) and not CLOUDINARY_URL,
+    cast=bool,
+)
+
 if CLOUDINARY_URL:
     INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
     STORAGES['default'] = {
         'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+    }
+elif USE_DB_MEDIA:
+    INSTALLED_APPS += ['dbmedia']
+    STORAGES['default'] = {
+        'BACKEND': 'dbmedia.storage.DatabaseStorage',
     }
 
 LOGIN_URL = 'login'
