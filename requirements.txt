@@ -31,6 +31,11 @@ anthropic
 gunicorn
 whitenoise
 
+# Media fayllar uchun bulutli saqlash (Render free disk efemeral — rasmlar
+# yo'qolmasligi uchun). CLOUDINARY_URL sozlanmasa ishlatilmaydi.
+cloudinary==1.44.2
+django-cloudinary-storage==0.3.0
+
 # PostgreSQL (Render/Railway DATABASE_URL uchun)
 dj-database-url==2.3.0
 psycopg[binary]==3.2.3

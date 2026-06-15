@@ -376,6 +376,19 @@ STORAGES = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ─── Cloudinary media (Render uchun TAVSIYA etiladi) ─────────────────────────
+# Render bepul disk EFEMERAL — yuklangan rasmlar redeploy/restart/uxlab-uyg'onishda
+# yo'qoladi (rasm "buzilib"/ko'rinmay qoladi). CLOUDINARY_URL sozlansa, media
+# fayllar Cloudinary bulutida saqlanadi (bepul tarif) va doimiy ko'rinadi.
+# Bo'sh bo'lsa — lokal disk (lokal development uchun).
+# Format: cloudinary://API_KEY:API_SECRET@CLOUD_NAME  (cloudinary.com dashboard'dan)
+CLOUDINARY_URL = config('CLOUDINARY_URL', default='')
+if CLOUDINARY_URL:
+    INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
+    STORAGES['default'] = {
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+    }
+
 LOGIN_URL = 'login'
 # Google OAuth'dan keyin rolga qarab yo'naltiramiz (admin→dashboard, teacher→davomat)
 LOGIN_REDIRECT_URL = '/accounts/post-login/'

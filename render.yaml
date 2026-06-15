@@ -48,6 +48,12 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
+      # --- Media (rasm) saqlash: Cloudinary (TAVSIYA — Render free disk efemeral) ---
+      # cloudinary.com → Dashboard → "API Environment variable" dan oling.
+      # Bo'sh qoldirilsa rasmlar lokal diskda saqlanadi (redeploy'da yo'qoladi!).
+      - key: CLOUDINARY_URL
+        sync: false
+
       # --- Platforma manzili (deploy'dan keyin o'z URL'ingizni kiriting) ---
       # Masalan: https://wallstreet-crm.onrender.com
       - key: WEBSITE_URL
