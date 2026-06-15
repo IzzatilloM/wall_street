@@ -46,7 +46,8 @@ def _set_one(token: str, base_url: str, label: str):
         logger.exception("❌ Webhook so'rovida xato (%s)", label)
 
 
-def _run():
+def set_webhooks_sync():
+    """Webhook'larni SINXRON o'rnatadi (boot paytida, thread'siz — eng xavfsiz)."""
     from django.conf import settings
 
     base = (getattr(settings, "WEBSITE_URL", "") or "").strip()
@@ -69,5 +70,5 @@ def _run():
 
 
 def auto_set_webhooks():
-    """Webhook'larni fon thread'ida o'rnatadi (server bootini bloklamaydi)."""
-    threading.Thread(target=_run, name="tg-webhook-setup", daemon=True).start()
+    """Webhook'larni fon thread'ida o'rnatadi (boshqaruv buyrug'i/eski chaqiruvlar uchun)."""
+    threading.Thread(target=set_webhooks_sync, name="tg-webhook-setup", daemon=True).start()

@@ -18,12 +18,16 @@ python manage.py migrate --no-input
 # Bo'lmasa cache operatsiyalari xato beradi. Idempotent — qayta yaratmaydi.
 python manage.py createcachetable
 
-# Admin + 20 o'qituvchi + 50 talaba + kurslarni seed qiladi (idempotent).
-# Birinchi deploy uchun shart. Keyin Render env'da RUN_SEED=false qo'ysangiz
-# qayta seed bo'lmaydi.
-if [ "${RUN_SEED:-true}" = "true" ]; then
+# Admin + o'qituvchi + talaba + kurslarni seed qiladi — FAQAT birinchi deploy uchun.
+# ⚠️ Default = false: takror seed dublikat user yaratadi / login nomlarini qayta
+# nomlashda "duplicate key" xatosi beradi va deployni yiqitadi. Birinchi deployda
+# bir marta RUN_SEED=true qo'ying, muvaffaqiyatdan keyin false ga qaytaring.
+# `|| echo ...` — seed yiqilsa ham deploy davom etadi (seed ixtiyoriy, sayt'ga shart emas).
+if [ "${RUN_SEED:-false}" = "true" ]; then
   echo ">>> Seed (1/2): seed_wallstreet.py — admin/o'qituvchi/talaba/kurslar..."
-  python manage.py shell -c "exec(open('seed_wallstreet.py', encoding='utf-8').read())"
+  python manage.py shell -c "exec(open('seed_wallstreet.py', encoding='utf-8').read())" \
+    || echo "⚠️ Seed 1 o'tkazib yuborildi (xato yoki allaqachon mavjud)."
   echo ">>> Seed (2/2): seed_rename_logins.py — loginlarni ism.familiya ko'rinishiga..."
-  python manage.py shell -c "exec(open('seed_rename_logins.py', encoding='utf-8').read())"
+  python manage.py shell -c "exec(open('seed_rename_logins.py', encoding='utf-8').read())" \
+    || echo "⚠️ Seed 2 o'tkazib yuborildi (xato yoki allaqachon mavjud)."
 fi
